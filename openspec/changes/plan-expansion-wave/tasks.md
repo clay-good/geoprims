@@ -1,6 +1,6 @@
 ## 1. Sequencing
 
-- [ ] 1.1 Add a pointer to this change under "Order of work" in `AGENTS.md`; verify the file names the nine changes in W1's order
+- [x] 1.1 Add a pointer to this change under "Order of work" in `AGENTS.md`; verify the file names the nine changes in W1's order
 - [ ] 1.2 At the 90-day review (December 22, 2026), re-rank changes 5 to 9 from the SEO log and problem reports; verify the decision record is committed with this change's W1 table updated
 
 ## 2. Budget checks

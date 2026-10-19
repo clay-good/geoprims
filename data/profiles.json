@@ -1,0 +1,76 @@
+{
+  "note": "Equipment profile kinds (web/equipment-profiles). Per kind, the tool inputs a profile keeps: values that belong to the equipment, never to the job (no location, date, time, wind, or load). `tables` names the kept inputs that are arrays of rows. Checked against the catalog by tools/trust/profiles.test.mjs.",
+  "format": "geoprims-profile",
+  "version": 1,
+  "limits": {
+    "maxBytes": 1000000,
+    "maxName": 60,
+    "perKind": 50
+  },
+  "kinds": {
+    "aircraft": {
+      "title": "Aircraft",
+      "tables": ["stations", "envelope", "table", "corrections", "calibration"],
+      "tools": {
+        "aviation.loading.weight-balance": ["stations", "envelope", "fuel_arm", "lemac", "mac"],
+        "aviation.loading.fuel-plan": ["category", "usable_fuel", "taxi", "climb", "cruise_burn"],
+        "aviation.loading.table-interpolate": ["table", "names", "corrections"],
+        "aviation.airspeed.cas-to-tas": ["calibration", "vs0", "vs1", "vfe", "vno", "vne"],
+        "aviation.airspeed.tas-to-cas": ["vs0", "vs1", "vfe", "vno", "vne"]
+      }
+    },
+    "drone": {
+      "title": "Drone",
+      "tables": [],
+      "tools": {
+        "drone.sensors.vlos": ["characteristic_dimension", "aircraft_type"],
+        "drone.ops.wind-limit": ["wind_rating", "airspeed"],
+        "drone.power.endurance": ["energy", "usable", "power", "cruise_power"],
+        "drone.power.rth-budget": ["airspeed", "power"],
+        "drone.mission.sorties": ["flight_time", "energy", "usable", "power", "groundspeed", "transit_speed"],
+        "drone.ops.kinetic-energy": ["mass"],
+        "drone.ops.speed-check": ["airspeed"]
+      }
+    },
+    "camera": {
+      "title": "Camera",
+      "tables": [],
+      "tools": {
+        "drone.photogrammetry.gsd": ["sensor_width", "sensor_height", "image_width", "image_height", "focal_length", "focal_length_type", "crop_factor"],
+        "drone.photogrammetry.altitude-for-gsd": ["sensor_width", "sensor_height", "image_width", "image_height", "focal_length", "focal_length_type", "crop_factor"],
+        "drone.photogrammetry.footprint": ["sensor_width", "sensor_height", "focal_length", "focal_length_type", "crop_factor"],
+        "drone.photogrammetry.crop-factor": ["sensor_width", "sensor_height", "focal_length"],
+        "drone.photogrammetry.line-spacing": ["sensor_width", "sensor_height", "focal_length", "focal_length_type", "crop_factor"],
+        "drone.photogrammetry.trigger": ["sensor_width", "sensor_height", "image_width", "image_height", "focal_length", "focal_length_type", "crop_factor", "min_interval"],
+        "drone.photogrammetry.trigger-distance": ["sensor_width", "sensor_height", "focal_length", "focal_length_type", "crop_factor"],
+        "drone.photogrammetry.trigger-interval": ["sensor_width", "sensor_height", "focal_length", "focal_length_type", "crop_factor", "min_interval"],
+        "drone.photogrammetry.oblique-gsd": ["sensor_width", "sensor_height", "image_width", "image_height", "focal_length"],
+        "drone.photogrammetry.terrain-overlap": ["sensor_width", "image_width", "focal_length"],
+        "drone.sensors.thermal-footprint": ["ifov", "pixel_pitch", "focal_length"]
+      }
+    },
+    "lidar": {
+      "title": "Lidar sensor",
+      "tables": [],
+      "tools": {
+        "drone.sensors.lidar-plan": ["pulse_rate", "fov", "returns"],
+        "drone.sensors.dataset-size": ["point_format"]
+      }
+    },
+    "gnss-receiver": {
+      "title": "GNSS receiver",
+      "tables": [],
+      "tools": {
+        "survey.gnss.rtk-budget": ["h_constant", "h_ppm", "v_constant", "v_ppm"],
+        "survey.gnss.antenna-height": ["radius", "offset"]
+      }
+    },
+    "radio": {
+      "title": "Radio link",
+      "tables": [],
+      "tools": {
+        "drone.links.link-budget": ["frequency", "tx_power", "tx_gain", "rx_gain", "cable_loss", "rx_sensitivity"]
+      }
+    }
+  }
+}

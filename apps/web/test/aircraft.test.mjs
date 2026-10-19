@@ -64,7 +64,7 @@ test('import refuses what is not a profile and drops what it does not keep', () 
     assert.match(r.message, re);
   };
   bad('not json', /not JSON/);
-  bad('{"type":"FeatureCollection"}', /not a geoprims aircraft profile/);
+  bad('{"type":"FeatureCollection"}', /not a geoprims equipment profile/);
   bad(JSON.stringify({ format: 'geoprims-aircraft', version: 2, name: 'x', tools: {} }), /version 2/);
   bad(JSON.stringify({ format: 'geoprims-aircraft', version: 1, name: ' ', tools: {} }), /needs a name/);
   bad('x'.repeat(1_000_001), /too large/);

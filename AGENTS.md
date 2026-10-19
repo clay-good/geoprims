@@ -22,6 +22,7 @@ Follow `openspec/changes/plan-launch-and-value-proof/design.md`:
 - **Phase 0:** platform changes.
 - **Phase 1:** hero tools.
 - **Phase 2:** complete the domains by demand.
+- **Expansion wave:** after Phase 2 promotions, in the order of `openspec/changes/plan-expansion-wave/design.md` (W1): `add-equipment-profiles`, `add-aviation-practical-additions`, `add-photogrammetry-classics`, `add-survey-partition-and-adjustment`, `add-sampling-and-grids`, `add-marine-navigation`, `add-celestial-and-moon`, `add-raster-hydrology`, `add-international-grids`.
 
 Within a change, work its `tasks.md` top to bottom and tick boxes only when the stated verification passes.
 

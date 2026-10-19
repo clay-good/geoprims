@@ -47,6 +47,21 @@ test('a profile keeps only its kind’s fields: equipment, not the job', () => {
   assert.equal(P.takesProfile('geodesy.utm.forward'), false);
 });
 
+test('a camera saved on one tool fills the same fields on the kind\'s other tools', () => {
+  const p = camera();
+  assert.deepEqual(P.valuesFor(p, 'drone.photogrammetry.trigger'), {
+    sensor_width: '35.9 mm',
+    sensor_height: '24 mm',
+    image_width: 8192,
+    image_height: 5460,
+    focal_length: '35 mm',
+  });
+  // A tool's own saved value comes first.
+  const own = P.saveTool(p, 'drone.photogrammetry.footprint', { focal_length: '24 mm' });
+  assert.equal(P.valuesFor(own, 'drone.photogrammetry.footprint').focal_length, '24 mm');
+  assert.equal(P.valuesFor(own, 'drone.photogrammetry.trigger').focal_length, '35 mm');
+});
+
 test('export and import round-trip in the geoprims-profile format', () => {
   const p = camera();
   const text = P.toFile(p);

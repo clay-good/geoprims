@@ -373,7 +373,11 @@ export function metaHandlers({ host, catalog, modules = [], limits, workflows = 
       }
       let profileFilled;
       if (profile !== undefined) {
-        const values = plainObject(profile.tools?.[id]) ? profile.tools[id] : {};
+        // As saved for this tool, or else as saved for another tool of the
+        // profile: the website's rule, so both fill the same values.
+        const tools = Object.values(profile.tools ?? {}).filter(plainObject);
+        const own = plainObject(profile.tools?.[id]) ? profile.tools[id] : {};
+        const values = Object.fromEntries(kept(id).map((f) => [f, [own, ...tools].find((t) => t[f] !== undefined)?.[f]]));
         profileFilled = fromProfile(kept(id), values, args);
         input = { ...input, ...Object.fromEntries(profileFilled.map((f) => [f, values[f]])) };
       }

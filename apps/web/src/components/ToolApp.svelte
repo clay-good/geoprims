@@ -20,7 +20,6 @@
   import { assetMessage } from '../lib/messages.js';
   import { publicInputs } from '../lib/private.mjs';
   import { cameFrom, chainHref, chainState, chainTargets, routeOf, windHandoff } from '../lib/chain.mjs';
-  import { takesProfile } from '../lib/aircraft.mjs';
   import { degrees, pairOf } from '../lib/coordinate.mjs';
   import { checkSize } from '../lib/import.mjs';
   import { csvProjected, csvRows, importReport, rowsFor, rowsText } from '../lib/import-rows.mjs';
@@ -31,7 +30,7 @@
   // `firstDiagram` and `firstInline` are the example's drawings, made at build
   // time; the tool's own diagram code loads on demand (`hasDiagram`) and draws
   // from then on, so a page carries only its domain's drawings.
-  let { tool, example, initial, embedded = false, hasDiagram = false, firstDiagram = null, firstInline = null } = $props();
+  let { tool, example, initial, embedded = false, hasDiagram = false, firstDiagram = null, firstInline = null, profileKinds = [] } = $props();
   let draw = $state(null);
   onMount(() => {
     if (hasDiagram) loadDiagram(tool.id).then((f) => (draw = f), () => {});
@@ -142,9 +141,19 @@
   // Local GeoTIFF mode is present only when the manifest names its band roles.
   let RasterPanel = $state(null);
   const loadRaster = async () => (RasterPanel ??= (await import('./RasterPanel.svelte')).default);
-  // Aircraft profiles load only when a reader opens them, on tools that take aircraft data.
-  let AircraftPanel = $state(null);
-  const loadAircraft = async () => (AircraftPanel ??= (await import('./AircraftPanel.svelte')).default);
+  // Equipment profiles load only when a reader opens them, on tools that take
+  // equipment data. The page passes this tool's kinds (data/profiles.json), so
+  // the kinds themselves load with the panel rather than with every tool.
+  let ProfilePanel = $state(null);
+  const loadProfiles = async () => (ProfilePanel ??= (await import('./ProfilePanel.svelte')).default);
+  // The profile that last filled the form, for the reader only: its name
+  // never enters the fragment, a report, or a request.
+  let profileSource = $state(null);
+  const profileChip = $derived.by(() => {
+    if (!profileSource) return '';
+    const same = Object.entries(profileSource.values).every(([k, v]) => values[k] === toText(k, v));
+    return same ? `From profile: ${profileSource.name}` : `Edited from ${profileSource.name}`;
+  });
   /** Fills the form from a saved profile's inputs, then recomputes. */
   function setInputs(v) {
     for (const [k] of fields) if (v[k] !== undefined) values[k] = toText(k, v[k]);
@@ -674,6 +683,7 @@
   {#if from}
     <p class="came-from">From <a href={from.href}>{from.title}</a></p>
   {/if}
+  {#if profileChip}<p class="came-from profile-chip">{profileChip}</p>{/if}
   {#if result?.ok}
     <div class="value" bind:this={answerCard}>{answerParts[0]}{#if answerParts[1]}<span class="unit"> {answerParts[1]}</span>{/if}</div>
     <p class="sentence">{result.summary}</p>
@@ -957,11 +967,13 @@
       <button type="button" class="quiet" onclick={clearAll}>Clear</button>
     </div>
   {/if}
-  {#if !embedded && takesProfile(tool.id)}
-    <details class="batch" ontoggle={(e) => e.currentTarget.open && loadAircraft()}>
-      <summary>Aircraft profiles</summary>
-      {#if AircraftPanel}<AircraftPanel {tool} getInputs={args} {setInputs} />{:else}<p class="help">Loading…</p>{/if}
-    </details>
+  {#if !embedded}
+    {#each profileKinds as { kind, title } (kind)}
+      <details class="batch" ontoggle={(e) => e.currentTarget.open && loadProfiles()}>
+        <summary>{title} profiles</summary>
+        {#if ProfilePanel}<ProfilePanel {tool} {kind} getInputs={args} {setInputs} onLoaded={(name, v) => (profileSource = { name, values: v })} />{:else}<p class="help">Loading…</p>{/if}
+      </details>
+    {/each}
   {/if}
   {#if !embedded && tool['x-raster']}
     <details class="batch" ontoggle={(e) => e.currentTarget.open && loadRaster()}>

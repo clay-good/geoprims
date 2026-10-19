@@ -171,6 +171,11 @@ test('a camera profile fills the GSD tool, and the answer is the page\'s for the
   assert.equal(profileFilled.includes('wind_rating'), false);
 });
 
+test('a camera saved for the GSD tool fills the trigger tool too, as on the website', async () => {
+  const r = await c.call('geoprims_run', { id: 'drone.photogrammetry.trigger', profile: P1 });
+  assert.deepEqual(r.structuredContent.meta.profileFilled, ['sensor_width', 'sensor_height', 'image_width', 'image_height', 'focal_length']);
+});
+
 test('an explicit argument wins over the profile', async () => {
   const r = await c.call('geoprims_run', { id: 'drone.photogrammetry.gsd', args: { height: '100 m', focal_length: '24 mm' }, profile: P1 });
   assert.equal(r.structuredContent.meta.profileFilled.includes('focal_length'), false);

@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { blank, fileName, fromFile, PROFILE_FIELDS, saveTool, TABLES, toFile, valuesFor } from '../src/lib/aircraft.mjs';
+import { blank as blankOf, fileName, fromFile, KINDS, saveTool, toFile, valuesFor } from '../src/lib/profiles.mjs';
 import { nodeHost } from '../../../packages/runtime/src/node.mjs';
 
 const web = new URL('..', import.meta.url).pathname;
@@ -14,6 +14,10 @@ const root = join(web, '../..');
 const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
 const host = nodeHost(join(root, 'dist/wasm'));
 const byId = (id) => catalog.tools.find((t) => t.id === id);
+// The aircraft kind of the equipment profiles (data/profiles.json).
+const PROFILE_FIELDS = KINDS.aircraft.tools;
+const TABLES = new Set(KINDS.aircraft.tables);
+const blank = (name) => blankOf('aircraft', name, '2026-10-19');
 const exampleOf = (t) => (t.examples.find((e) => e.id === t['x-primary-example']) ?? t.examples[0]).input;
 
 test('every field a profile keeps is a real input of its tool, tables included', () => {

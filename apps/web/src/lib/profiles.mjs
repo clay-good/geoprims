@@ -37,8 +37,20 @@ export function saveTool(profile, toolId, inputs) {
   return { ...profile, tools: { ...profile.tools, [toolId]: kept } };
 }
 
-/** This tool's saved inputs, or an empty object when the profile has none. */
-export const valuesFor = (profile, toolId) => profile.tools?.[toolId] ?? {};
+/**
+ * The inputs a profile fills on this tool: each field the kind keeps for it,
+ * as saved for this tool, or else as saved for another tool of the profile,
+ * so a camera saved on the GSD tool fills the trigger tool too.
+ */
+export function valuesFor(profile, toolId) {
+  const tools = profile.tools ?? {};
+  const out = {};
+  for (const f of fieldsFor(profile.kind, toolId)) {
+    const from = [tools[toolId], ...Object.values(tools)].find((t) => t?.[f] !== undefined);
+    if (from) out[f] = from[f];
+  }
+  return out;
+}
 
 /** The file a profile exports to. */
 export const toFile = (profile) => JSON.stringify(profile, null, 2) + '\n';

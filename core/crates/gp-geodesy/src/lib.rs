@@ -1731,6 +1731,7 @@ pub static CONVERGENCE: ToolDef = ToolDef {
     sentence: "Grid north is {convergence} from true north here, in UTM zone {zone}.",
     limits: UTM_FORWARD.limits,
     run: run_convergence,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 

@@ -152,8 +152,8 @@
     "lastmod": "2026-10-13"
   },
   "/aviation/loading/fuel-weight/": {
-    "hash": "3863d6a28030000c",
-    "lastmod": "2026-10-13"
+    "hash": "09a666e94592b5d2",
+    "lastmod": "2026-10-19"
   },
   "/aviation/loading/table-interpolate/": {
     "hash": "1f635b2d32a6de61",
@@ -184,8 +184,8 @@
     "lastmod": "2026-10-09"
   },
   "/aviation/performance/glide/": {
-    "hash": "2bdd0798557b097a",
-    "lastmod": "2026-10-13"
+    "hash": "9a61140784cc59f4",
+    "lastmod": "2026-10-19"
   },
   "/aviation/performance/pivotal-altitude/": {
     "hash": "bb3050cb117abd6e",
@@ -772,96 +772,96 @@
     "lastmod": "2026-10-14"
   },
   "/geodesy/projection/albers-forward/": {
-    "hash": "5fce9f4219875f5c",
-    "lastmod": "2026-10-09"
+    "hash": "4a66d149fe86716b",
+    "lastmod": "2026-10-19"
   },
   "/geodesy/projection/albers-inverse/": {
-    "hash": "9c299306479e31c8",
-    "lastmod": "2026-10-09"
+    "hash": "7d34465b1bde250c",
+    "lastmod": "2026-10-19"
   },
   "/geodesy/projection/arc-to-chord/": {
     "hash": "b3b1040205a150a1",
     "lastmod": "2026-10-14"
   },
   "/geodesy/projection/azimuthal-equidistant-forward/": {
-    "hash": "eb81ef15619c597d",
-    "lastmod": "2026-10-09"
+    "hash": "935bf6bdb1341f3b",
+    "lastmod": "2026-10-19"
   },
   "/geodesy/projection/azimuthal-equidistant-inverse/": {
-    "hash": "8a39f562657bed0e",
-    "lastmod": "2026-10-14"
+    "hash": "82c7b28d83e2243e",
+    "lastmod": "2026-10-19"
   },
   "/geodesy/projection/convergence/": {
-    "hash": "31f2ff6e0c4ec6cc",
-    "lastmod": "2026-10-14"
+    "hash": "d045be784f819e46",
+    "lastmod": "2026-10-19"
   },
   "/geodesy/projection/equidistant-cylindrical-forward/": {
-    "hash": "af55e68618cca957",
-    "lastmod": "2026-10-14"
+    "hash": "aa9cf695ac281b99",
+    "lastmod": "2026-10-19"
   },
   "/geodesy/projection/equidistant-cylindrical-inverse/": {
-    "hash": "39466c5ede4f1932",
-    "lastmod": "2026-10-09"
+    "hash": "bcc6c815b47c04a0",
+    "lastmod": "2026-10-19"
   },
   "/geodesy/projection/gnomonic-forward/": {
-    "hash": "bf9c16ead589c110",
-    "lastmod": "2026-10-09"
+    "hash": "c64ee54e53809bde",
+    "lastmod": "2026-10-19"
   },
   "/geodesy/projection/gnomonic-inverse/": {
-    "hash": "9ac5b2f0ad76be61",
-    "lastmod": "2026-10-09"
+    "hash": "7eea419a103e82c2",
+    "lastmod": "2026-10-19"
   },
   "/geodesy/projection/hotine-forward/": {
-    "hash": "00dc29a19c95ec51",
-    "lastmod": "2026-10-09"
+    "hash": "f34d63be98dc64e4",
+    "lastmod": "2026-10-19"
   },
   "/geodesy/projection/hotine-inverse/": {
-    "hash": "351ff375272e9332",
-    "lastmod": "2026-10-09"
+    "hash": "793b5b0436b45088",
+    "lastmod": "2026-10-19"
   },
   "/geodesy/projection/lcc-forward/": {
-    "hash": "31b61a8216230037",
-    "lastmod": "2026-10-09"
+    "hash": "32df226f2061f00f",
+    "lastmod": "2026-10-19"
   },
   "/geodesy/projection/lcc-inverse/": {
-    "hash": "fbcc344fd847a809",
-    "lastmod": "2026-10-09"
+    "hash": "3ac99899f6ca71ed",
+    "lastmod": "2026-10-19"
   },
   "/geodesy/projection/orthographic-forward/": {
-    "hash": "26d8a74b0f7b6644",
-    "lastmod": "2026-10-09"
+    "hash": "f858c38a7c055207",
+    "lastmod": "2026-10-19"
   },
   "/geodesy/projection/orthographic-inverse/": {
-    "hash": "0e0ad1cebd8887e4",
-    "lastmod": "2026-10-09"
+    "hash": "58376dfd9d7502f7",
+    "lastmod": "2026-10-19"
   },
   "/geodesy/projection/polar-stereographic-forward/": {
-    "hash": "f9858549cddb5012",
-    "lastmod": "2026-10-09"
+    "hash": "cfd93cda74df5421",
+    "lastmod": "2026-10-19"
   },
   "/geodesy/projection/polar-stereographic-inverse/": {
-    "hash": "7334ae53277ec072",
-    "lastmod": "2026-10-14"
+    "hash": "5e478ffe7b1324bf",
+    "lastmod": "2026-10-19"
   },
   "/geodesy/projection/scale-factor/": {
     "hash": "3a1bed096a9ea5a9",
     "lastmod": "2026-10-14"
   },
   "/geodesy/projection/tm-exact-forward/": {
-    "hash": "2aedce41d253020d",
-    "lastmod": "2026-10-14"
+    "hash": "db0815d03cd6c5e8",
+    "lastmod": "2026-10-19"
   },
   "/geodesy/projection/tm-exact-inverse/": {
-    "hash": "8a18c7787a7ceec0",
-    "lastmod": "2026-10-09"
+    "hash": "8fbea22ea377667b",
+    "lastmod": "2026-10-19"
   },
   "/geodesy/projection/tm-forward/": {
-    "hash": "31b6ac3acb818d7e",
-    "lastmod": "2026-10-09"
+    "hash": "c0ec44bcc910a5eb",
+    "lastmod": "2026-10-19"
   },
   "/geodesy/projection/tm-inverse/": {
-    "hash": "fff766bff35219b5",
-    "lastmod": "2026-10-09"
+    "hash": "74fe8c25aaf9597d",
+    "lastmod": "2026-10-19"
   },
   "/geodesy/projection/web-mercator-forward/": {
     "hash": "1722d20aea3d4381",
@@ -1956,8 +1956,8 @@
     "lastmod": "2026-10-10"
   },
   "/survey/land/plss-parse/": {
-    "hash": "83592b95b43dae7b",
-    "lastmod": "2026-10-09"
+    "hash": "e37eb4b7f0e2114f",
+    "lastmod": "2026-10-19"
   },
   "/survey/reduction/": {
     "hash": "265236b95876c3e8",
@@ -2184,8 +2184,8 @@
     "lastmod": "2026-09-23"
   },
   "/units/fuel/convert/": {
-    "hash": "2daa70223b015ecf",
-    "lastmod": "2026-10-09"
+    "hash": "5a503b349c35b25a",
+    "lastmod": "2026-10-19"
   },
   "/units/length/": {
     "hash": "2fcd7908f3d2c07d",
@@ -2352,7 +2352,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "ffdd85d63309f074",
+    "hash": "69516f3c8172b9d4",
     "lastmod": "2026-10-19"
   },
   "/workflows/": {

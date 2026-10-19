@@ -650,6 +650,7 @@ pub static LCC_FORWARD: ToolDef = ToolDef {
     sentence: FORWARD_SENTENCE,
     limits: &[("batchRows", 10_000)],
     run: run_lcc_forward,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 
@@ -720,6 +721,7 @@ pub static LCC_INVERSE: ToolDef = ToolDef {
     sentence: INVERSE_SENTENCE,
     limits: &[("batchRows", 10_000)],
     run: run_lcc_inverse,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 
@@ -798,6 +800,7 @@ pub static ALBERS_FORWARD: ToolDef = ToolDef {
     sentence: FORWARD_SENTENCE,
     limits: &[("batchRows", 10_000)],
     run: run_albers_forward,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 
@@ -856,6 +859,7 @@ pub static ALBERS_INVERSE: ToolDef = ToolDef {
     sentence: INVERSE_SENTENCE,
     limits: &[("batchRows", 10_000)],
     run: run_albers_inverse,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 
@@ -979,6 +983,7 @@ pub static POLAR_FORWARD: ToolDef = ToolDef {
     sentence: FORWARD_SENTENCE,
     limits: &[("batchRows", 10_000)],
     run: run_polar_forward,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 
@@ -1050,6 +1055,7 @@ pub static POLAR_INVERSE: ToolDef = ToolDef {
     sentence: INVERSE_SENTENCE,
     limits: &[("batchRows", 10_000)],
     run: run_polar_inverse,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 
@@ -1130,6 +1136,7 @@ pub static EQC_FORWARD: ToolDef = ToolDef {
     sentence: FORWARD_SENTENCE,
     limits: &[("batchRows", 10_000)],
     run: run_eqc_forward,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 
@@ -1196,6 +1203,7 @@ pub static EQC_INVERSE: ToolDef = ToolDef {
     sentence: INVERSE_SENTENCE,
     limits: &[("batchRows", 10_000)],
     run: run_eqc_inverse,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 
@@ -1301,6 +1309,7 @@ pub static AEQD_FORWARD: ToolDef = ToolDef {
     sentence: FORWARD_SENTENCE,
     limits: &[("batchRows", 10_000)],
     run: run_aeqd_forward,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 
@@ -1365,6 +1374,7 @@ pub static AEQD_INVERSE: ToolDef = ToolDef {
     sentence: INVERSE_SENTENCE,
     limits: &[("batchRows", 10_000)],
     run: run_aeqd_inverse,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 
@@ -1425,6 +1435,7 @@ pub static GNOMONIC_FORWARD: ToolDef = ToolDef {
     sentence: FORWARD_SENTENCE,
     limits: &[("batchRows", 10_000)],
     run: run_gnomonic_forward,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 
@@ -1491,6 +1502,7 @@ pub static GNOMONIC_INVERSE: ToolDef = ToolDef {
     sentence: INVERSE_SENTENCE,
     limits: &[("batchRows", 10_000)],
     run: run_gnomonic_inverse,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 
@@ -1563,6 +1575,7 @@ pub static ORTHO_FORWARD: ToolDef = ToolDef {
     sentence: FORWARD_SENTENCE,
     limits: &[("batchRows", 10_000)],
     run: run_ortho_forward,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 
@@ -1628,6 +1641,7 @@ pub static ORTHO_INVERSE: ToolDef = ToolDef {
     sentence: INVERSE_SENTENCE,
     limits: &[("batchRows", 10_000)],
     run: run_ortho_inverse,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 
@@ -1792,6 +1806,7 @@ pub static HOTINE_FORWARD: ToolDef = ToolDef {
     sentence: FORWARD_SENTENCE,
     limits: &[("batchRows", 10_000)],
     run: run_hotine_forward,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 
@@ -1862,6 +1877,7 @@ pub static HOTINE_INVERSE: ToolDef = ToolDef {
     sentence: INVERSE_SENTENCE,
     limits: &[("batchRows", 10_000)],
     run: run_hotine_inverse,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 
@@ -1986,6 +2002,7 @@ pub static TM_FORWARD: ToolDef = ToolDef {
     sentence: FORWARD_SENTENCE,
     limits: &[("batchRows", 10_000)],
     run: run_tm_forward,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 
@@ -2046,6 +2063,7 @@ pub static TM_INVERSE: ToolDef = ToolDef {
     sentence: INVERSE_SENTENCE,
     limits: &[("batchRows", 10_000)],
     run: run_tm_inverse,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 
@@ -2131,6 +2149,7 @@ pub static TM_EXACT_FORWARD: ToolDef = ToolDef {
     sentence: FORWARD_SENTENCE,
     limits: &[("batchRows", 10_000)],
     run: run_tm_exact_forward,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 
@@ -2202,6 +2221,7 @@ pub static TM_EXACT_INVERSE: ToolDef = ToolDef {
     sentence: INVERSE_SENTENCE,
     limits: &[("batchRows", 10_000)],
     run: run_tm_exact_inverse,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 

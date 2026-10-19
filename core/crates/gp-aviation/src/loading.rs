@@ -132,6 +132,20 @@ pub static FUEL_WEIGHT: ToolDef = ToolDef {
     sentence: "{volume} of fuel weighs {weight}.{warn NOMINAL_VALUE_USED} This uses a nominal density.{/warn}",
     limits: &[("batchRows", 10_000)],
     run: run_fuel_weight,
+    assumptions: &[
+        gp_base::tool::Assumption {
+            name: "Nominal density of 100LL avgas",
+            value: "6.0",
+            unit: "lb/galUS",
+            source: "faa-wbh",
+        },
+        gp_base::tool::Assumption {
+            name: "Nominal density of Jet A",
+            value: "6.7",
+            unit: "lb/galUS",
+            source: "faa-wbh",
+        },
+    ],
     ..ToolDef::BLANK
 };
 

@@ -1329,6 +1329,7 @@ pub static GLIDE: ToolDef = ToolDef {
     sentence: "You can glide about {wind_range} with this wind, or {still_air_range} in still air, for {time_aloft}.",
     limits: &[("batchRows", 10_000)],
     run: run_glide,
+    assumptions: &gp_base::tool::WGS84_ASSUMPTIONS,
     ..ToolDef::BLANK
 };
 

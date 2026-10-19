@@ -1730,6 +1730,12 @@ pub static PLSS_PARSE: ToolDef = ToolDef {
     sentence: "This is {plain}.{if nominal_area > 0} Nominal area: {nominal_area}.{/if}",
     limits: &[("batchRows", 10_000)],
     run: run_plss,
+    assumptions: &[gp_base::tool::Assumption {
+        name: "Area of a standard section",
+        value: "640",
+        unit: "acre",
+        source: "blm-manual",
+    }],
     ..ToolDef::BLANK
 };
 

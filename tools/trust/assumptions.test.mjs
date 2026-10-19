@@ -200,6 +200,31 @@ const MUST_DECLARE = [
   'navigation.route.course-intersection',
   'navigation.route.range-rings',
   'geometry.distance.tracks',
+  'geodesy.projection.albers-forward',
+  'geodesy.projection.albers-inverse',
+  'geodesy.projection.azimuthal-equidistant-forward',
+  'geodesy.projection.azimuthal-equidistant-inverse',
+  'geodesy.projection.convergence',
+  'geodesy.projection.equidistant-cylindrical-forward',
+  'geodesy.projection.equidistant-cylindrical-inverse',
+  'geodesy.projection.gnomonic-forward',
+  'geodesy.projection.gnomonic-inverse',
+  'geodesy.projection.hotine-forward',
+  'geodesy.projection.hotine-inverse',
+  'geodesy.projection.lcc-forward',
+  'geodesy.projection.lcc-inverse',
+  'geodesy.projection.orthographic-forward',
+  'geodesy.projection.orthographic-inverse',
+  'geodesy.projection.polar-stereographic-forward',
+  'geodesy.projection.polar-stereographic-inverse',
+  'geodesy.projection.tm-exact-forward',
+  'geodesy.projection.tm-exact-inverse',
+  'geodesy.projection.tm-forward',
+  'geodesy.projection.tm-inverse',
+  'aviation.performance.glide',
+  'aviation.loading.fuel-weight',
+  'units.fuel.convert',
+  'survey.land.plss-parse',
 ];
 
 test('the density-altitude tool says which gas constant it used', () => {
@@ -693,8 +718,30 @@ test('the GCP planner exposes its complete ASPRS table and product default', () 
   ]);
 });
 
-test('the ellipsoidal navigation tools name the WGS 84 ellipsoid they default to', () => {
+test('the ellipsoidal navigation and projection tools name the WGS 84 ellipsoid they default to', () => {
   for (const id of [
+    'geodesy.projection.albers-forward',
+    'geodesy.projection.albers-inverse',
+    'geodesy.projection.azimuthal-equidistant-forward',
+    'geodesy.projection.azimuthal-equidistant-inverse',
+    'geodesy.projection.convergence',
+    'geodesy.projection.equidistant-cylindrical-forward',
+    'geodesy.projection.equidistant-cylindrical-inverse',
+    'geodesy.projection.gnomonic-forward',
+    'geodesy.projection.gnomonic-inverse',
+    'geodesy.projection.hotine-forward',
+    'geodesy.projection.hotine-inverse',
+    'geodesy.projection.lcc-forward',
+    'geodesy.projection.lcc-inverse',
+    'geodesy.projection.orthographic-forward',
+    'geodesy.projection.orthographic-inverse',
+    'geodesy.projection.polar-stereographic-forward',
+    'geodesy.projection.polar-stereographic-inverse',
+    'geodesy.projection.tm-exact-forward',
+    'geodesy.projection.tm-exact-inverse',
+    'geodesy.projection.tm-forward',
+    'geodesy.projection.tm-inverse',
+    'aviation.performance.glide',
     'navigation.geodesic.intersection',
     'navigation.geodesic.vertex',
     'navigation.geodesic.vincenty-direct',
@@ -709,6 +756,21 @@ test('the ellipsoidal navigation tools name the WGS 84 ellipsoid they default to
       ['298.257223563', '1', 'nga-wgs84'],
     ], id);
   }
+});
+
+test('both fuel converters name the nominal densities they fall back on', () => {
+  for (const id of ['aviation.loading.fuel-weight', 'units.fuel.convert']) {
+    const assumptions = byId(id)['x-assumptions'];
+    assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [
+      ['6.0', 'lb/galUS', 'faa-wbh'],
+      ['6.7', 'lb/galUS', 'faa-wbh'],
+    ], id);
+  }
+});
+
+test('the PLSS reader names the standard section behind its nominal acres', () => {
+  const assumptions = byId('survey.land.plss-parse')['x-assumptions'];
+  assert.deepEqual(assumptions.map(({ value, unit, source }) => [value, unit, source]), [['640', 'acre', 'blm-manual']]);
 });
 
 test('every tool that rests on constants declares them', () => {

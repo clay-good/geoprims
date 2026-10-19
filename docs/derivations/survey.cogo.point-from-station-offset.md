@@ -29,21 +29,21 @@ The construction is exact plane geometry subject to binary floating-point evalua
 
 ## Worked example
 
-- sourcePublisher: Pearson
-- sourceTitle: Elementary Surveying: An Introduction to Geomatics
-- sourceEdition: 16th edition (2021)
-- sourceLocator: Chapter 11, coordinate geometry and station-offset calculation
+- sourcePublisher: Autodesk
+- sourceTitle: Civil 3D User Guide, To Create a Point From a Survey Baseline Using a Station and Offset
+- sourceEdition: Civil 3D 2024 online help
+- sourceLocator: help.autodesk.com/cloudhelp/2024/ENG/Civil3D-UserGuide/files/GUID-5D79BE01-65E7-4A68-A807-D05B7D8CA155.htm (BL TP 3 220 15.24 and BL TP 4 270 -15.24)
 - independent: yes
-- inputs: line start N 5,000.00 ft, E 5,000.00 ft at 10+00, direction 60°; target station 13+50, offset −12.5 ft
-- outputs: point N 5,185.82531755 ft, E 5,296.85889132 ft, left of the line
-- tolerance: relative 1e-12 in the golden vector
-- verifiedBy: golden vector v001 and the `named_direction_and_station_modes_match_their_general_tools` integration test
-- verifiedOn: 2026-10-13
+- inputs: baseline from N 1,000, E 1,000 at station 0+000, azimuth 100°; station 220 with offset 15.24 m right, and station 270 with offset 15.24 m left
+- outputs: N 946.7889, E 1,214.0113 (right) and N 968.1235, E 1,268.5445 (left), matching the page's points 3 and 4 to every printed digit
+- tolerance: 1e-4 m against the page; 1e-9 relative against the Python evaluation in the golden vectors
+- verifiedBy: golden vectors v024 and v025
+- verifiedOn: 2026-10-19
 
 ## Differential tests
 
 - `tools/vectors/gen_survey.py` independently constructs each point from tangent and normal vectors.
-- `core/vectors/survey.cogo.point-from-station-offset.jsonl` contains 20 successful setout calculations and three refusal cases across all supported length units.
+- `core/vectors/survey.cogo.point-from-station-offset.jsonl` contains 20 successful setout calculations and three refusal cases across all supported length units, plus the two Autodesk points (v024, v025).
 - Cases alternate between direction-defined and two-point lines and cover positive, negative, and zero offsets.
 - The integration suite requires exact parity with the setout mode of `survey.cogo.station-offset`.
 

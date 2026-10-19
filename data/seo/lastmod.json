@@ -1,15 +1,15 @@
 {
   "/": {
-    "hash": "a529f46481d69ebd",
-    "lastmod": "2026-10-17"
+    "hash": "69ae46e1120ac73d",
+    "lastmod": "2026-10-19"
   },
   "/accuracy/": {
     "hash": "c114ed2bae28332d",
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "8c0d12b045c610d0",
-    "lastmod": "2026-10-17"
+    "hash": "edc39938712b44b5",
+    "lastmod": "2026-10-19"
   },
   "/aviation/": {
     "hash": "429347ebf243360f",
@@ -268,8 +268,8 @@
     "lastmod": "2026-10-09"
   },
   "/changelog/": {
-    "hash": "e4e55bc60380d37d",
-    "lastmod": "2026-10-14"
+    "hash": "0e383de210d41a98",
+    "lastmod": "2026-10-19"
   },
   "/disclaimer/": {
     "hash": "e80b39ff27cd55c5",
@@ -1044,8 +1044,8 @@
     "lastmod": "2026-10-12"
   },
   "/indexing/convert/": {
-    "hash": "ff702d1ddbd1acfb",
-    "lastmod": "2026-09-25"
+    "hash": "173d1307f3a44d6c",
+    "lastmod": "2026-10-19"
   },
   "/indexing/convert/cross-index/": {
     "hash": "69e2013d8009bfd7",
@@ -1420,8 +1420,8 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "e0d1fa1624856497",
-    "lastmod": "2026-10-17"
+    "hash": "83aeb32a4982d447",
+    "lastmod": "2026-10-19"
   },
   "/navigation/": {
     "hash": "43588b842e94b597",
@@ -1776,12 +1776,12 @@
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/perpendicular-foot/": {
-    "hash": "e3a3977516237eb0",
-    "lastmod": "2026-10-13"
+    "hash": "cabae9271d49ef90",
+    "lastmod": "2026-10-19"
   },
   "/survey/cogo/point-from-station-offset/": {
-    "hash": "4a300c4f7c1d97c5",
-    "lastmod": "2026-10-13"
+    "hash": "0b40e1453f04e8b5",
+    "lastmod": "2026-10-19"
   },
   "/survey/cogo/radial-sideshots/": {
     "hash": "e39bc7890366f720",
@@ -1792,8 +1792,8 @@
     "lastmod": "2026-10-13"
   },
   "/survey/cogo/station-offset/": {
-    "hash": "5b9bf62880972631",
-    "lastmod": "2026-10-13"
+    "hash": "3dee61e62a80183b",
+    "lastmod": "2026-10-19"
   },
   "/survey/cogo/transit/": {
     "hash": "def23c197c53338d",
@@ -2088,8 +2088,8 @@
     "lastmod": "2026-10-13"
   },
   "/tools/": {
-    "hash": "97c12d86d0014dc3",
-    "lastmod": "2026-10-17"
+    "hash": "99f2c5ba3a32ea13",
+    "lastmod": "2026-10-19"
   },
   "/units/": {
     "hash": "227e11d074c56226",
@@ -2352,8 +2352,8 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "eeeb4bc2bca576e8",
-    "lastmod": "2026-10-17"
+    "hash": "70e2c66fd821b5dc",
+    "lastmod": "2026-10-19"
   },
   "/workflows/": {
     "hash": "ae01dae8923fdd1d",

@@ -133,6 +133,63 @@ fn lines() -> Vec<(f64, Value, Value)> {
 }
 
 #[test]
+fn station_offset_invariants() {
+    // The general tool, both directions. The station string as feet.
+    let feet = |r: &Value| {
+        r["station"]
+            .as_str()
+            .unwrap()
+            .replace('+', "")
+            .parse::<f64>()
+            .unwrap()
+    };
+    for (az, by_dir, _) in lines() {
+        for (pn, pe) in [(5100.0_f64, 5200.0_f64), (4800.0, 4950.0), (5000.0, 5000.0)] {
+            let mut p = by_dir.clone();
+            p["northing"] = json!(format!("{pn} ft"));
+            p["easting"] = json!(format!("{pe} ft"));
+            let a = call("survey.cogo.station-offset", p.clone());
+            // Pythagoras: along² + offset² is the squared distance to the start,
+            // within what the 0.01 ft station rounding allows.
+            let along = feet(&a) - 1000.0;
+            let d2 = (pn - 5000.0).powi(2) + (pe - 5000.0).powi(2);
+            assert!(
+                (along * along + num(&a, "offset").powi(2) - d2).abs()
+                    < 0.0102 * along.abs() + 1e-3,
+                "{az}"
+            );
+            // Moving the whole figure moves nothing about the answer.
+            let mut moved = p.clone();
+            for (k, v) in [
+                ("start_northing", 5000.0 - 1234.5),
+                ("start_easting", 5000.0 + 678.25),
+                ("northing", pn - 1234.5),
+                ("easting", pe + 678.25),
+            ] {
+                moved[k] = json!(format!("{v} ft"));
+            }
+            let b = call("survey.cogo.station-offset", moved);
+            assert_eq!(a["station"], b["station"], "{az}");
+            assert!((num(&a, "offset") - num(&b, "offset")).abs() < 1e-6, "{az}");
+            // Turning the line around flips the side and the along distance.
+            let mut back = p.clone();
+            back["direction"] = json!(((az + 180.0) % 360.0).to_string());
+            let c = call("survey.cogo.station-offset", back);
+            assert!((num(&a, "offset") + num(&c, "offset")).abs() < 1e-6, "{az}");
+            assert!((along + (feet(&c) - 1000.0)).abs() < 0.0051, "{az}");
+            // Setting out the reported station and offset returns the point.
+            let mut set = by_dir.clone();
+            set["station"] = a["station"].clone();
+            set["offset"] = json!(format!("{} ft", num(&a, "offset")));
+            let s = call("survey.cogo.station-offset", set);
+            // The station string is rounded to 0.01 ft, so the point is too.
+            assert!((num(&s, "northing") - pn).abs() < 0.0051, "{az}");
+            assert!((num(&s, "easting") - pe).abs() < 0.0051, "{az}");
+        }
+    }
+}
+
+#[test]
 fn station_offset_views_invariants() {
     for (az, by_dir, by_end) in lines() {
         let (d_e, d_n) = (az.to_radians().sin(), az.to_radians().cos());

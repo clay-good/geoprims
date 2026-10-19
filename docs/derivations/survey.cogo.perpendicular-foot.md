@@ -30,21 +30,21 @@ This is exact plane geometry subject to binary floating-point evaluation and dis
 
 ## Worked example
 
-- sourcePublisher: Pearson
-- sourceTitle: Elementary Surveying: An Introduction to Geomatics
-- sourceEdition: 16th edition (2021)
-- sourceLocator: Chapter 11, coordinate geometry and perpendicular distance
+- sourcePublisher: Autodesk
+- sourceTitle: Civil 3D User Guide, To Create a Point From a Survey Baseline Using a Station and Offset
+- sourceEdition: Civil 3D 2024 online help
+- sourceLocator: help.autodesk.com/cloudhelp/2024/ENG/Civil3D-UserGuide/files/GUID-5D79BE01-65E7-4A68-A807-D05B7D8CA155.htm (BL TP 3 220 15.24 and BL TP 4 270 -15.24)
 - independent: yes
-- inputs: line from N 0.00 ft, E 0.00 ft at station 0+00, direction 0°; point N 50.00 ft, E −20.00 ft
-- outputs: station 0+50.00, offset −20.00 ft (left), foot N 50.00 ft, E 0.00 ft
-- tolerance: 1e-9 ft in the golden vector
-- verifiedBy: golden vector v001 and the `named_direction_and_station_modes_match_their_general_tools` integration test
-- verifiedOn: 2026-10-13
+- inputs: baseline from N 1,000, E 1,000 at station 0+000, azimuth 100°; the page's printed points 3 (N 946.7889, E 1,214.0113) and 4 (N 968.1235, E 1,268.5445)
+- outputs: point 3 at station 0+220.000, offset +15.24 m (right); point 4 at station 0+270.000, offset −15.24 m (left), each within the page's printed 1e-4 m
+- tolerance: 1e-4 m against the page; 1e-9 relative against the Python evaluation in the golden vectors
+- verifiedBy: golden vectors v024 and v025
+- verifiedOn: 2026-10-19
 
 ## Differential tests
 
 - `tools/vectors/gen_survey.py` independently rotates point deltas into the line frame.
-- `core/vectors/survey.cogo.perpendicular-foot.jsonl` contains 20 successful projections and three refusal cases across all supported length units.
+- `core/vectors/survey.cogo.perpendicular-foot.jsonl` contains 20 successful projections and three refusal cases across all supported length units, plus the two Autodesk points (v024, v025).
 - Cases alternate between direction-defined and two-point lines and include negative stationing.
 - The integration suite requires exact parity with the projection mode of `survey.cogo.station-offset`.
 

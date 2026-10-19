@@ -103,6 +103,7 @@ const POINT_FROM_STATION_INPUTS: &[Field] = &[
 
 pub static STATION_OFFSET: ToolDef = ToolDef {
     id: "survey.cogo.station-offset",
+    stability: gp_base::tool::Stability::Stable,
     title: "Station and offset from a line",
     summary: "A point's station and offset from a straight alignment, with the foot of its perpendicular, or the point at a given station and offset. Offsets are positive to the right.",
     aliases: &["station offset", "station offset calculator"],
@@ -149,7 +150,7 @@ pub static STATION_OFFSET: ToolDef = ToolDef {
         len_out("easting", "Point easting", "The point itself"),
     ],
     errors: &[gp_base::ErrorCode::UnitMismatch],
-    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["LEGACY_UNIT", "UNIT_ASSUMED"],
     model: "With the line's unit direction t = (cos α, sin α) in (N, E): station = start + (P − S)·t, offset = (P − S) × t positive to the right; and back, P = S + along·t + offset·n with n the right-hand normal (Ghilani & Wolf 2021, ch. 11)",
     accuracy: "Exact",
     when_to_use: "Use this when you need to tie a point to a straight baseline or centerline by station and offset, or set out a point from a station and offset. Give the line's start point and station, plus a direction or an end point. Then enter a point to get its station, its offset right or left, and the foot of the perpendicular, or enter a station and offset to get coordinates. It suits as-built checks, utility locates, and staking off a tangent.",
@@ -175,6 +176,10 @@ pub static STATION_OFFSET: ToolDef = ToolDef {
             id: "survey.curves.curve-layout",
             reason: "next",
         },
+        Related {
+            id: "survey.cogo.point-from-station-offset",
+            reason: "alternative",
+        },
     ],
     sentence: "The point is at station {station}, {offset} from the line ({side}).",
     limits: &[("batchRows", 10_000)],
@@ -189,6 +194,7 @@ macro_rules! station_method {
      $sentence:literal, $related:expr) => {
         pub static $name: ToolDef = ToolDef {
             id: concat!("survey.cogo.", $id),
+            stability: STATION_OFFSET.stability,
             title: $title,
             summary: $summary,
             aliases: $aliases,

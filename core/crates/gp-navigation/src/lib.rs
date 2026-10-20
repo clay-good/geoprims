@@ -4,6 +4,7 @@
 
 pub mod intersect;
 pub mod los;
+pub mod piloting;
 pub mod rhumb;
 pub mod rings;
 pub mod route;
@@ -1107,6 +1108,12 @@ pub static TOOLS: &[&ToolDef] = &[
     &sailing::MID_LATITUDE,
     &sailing::MERCATOR,
     &sailing::GREAT_CIRCLE,
+    &piloting::SET_AND_DRIFT,
+    &piloting::DEAD_RECKONING,
+    &piloting::RUNNING_FIX,
+    &piloting::TWO_BEARING_FIX,
+    &piloting::VERTICAL_ANGLE,
+    &piloting::COMPASS_CONVERSION,
 ];
 
 pub static REGISTRY: Registry = Registry {

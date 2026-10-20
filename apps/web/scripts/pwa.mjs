@@ -3,7 +3,8 @@
 // Wasm module, the catalog, and calculation data assets for the service worker
 // to precache, stamps the release version into the pages, and writes dist/sw.js.
 // Optional packs stay out of the install and are cached after use.
-// Downloads (test vectors), share cards, and crawler files are left out. Fails the build if
+// Downloads (test vectors), share cards, crawler files, and docs pages (cached
+// when visited) are left out. Fails the build if
 // the precache exceeds 12 MB of Brotli-compressed transfer.
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
@@ -18,6 +19,9 @@ export const PROFILE = JSON.parse(readFileSync(join(web, '../../data/reference-p
 export const PRECACHE_BUDGET = PROFILE.budgets.precacheBytes.hard;
 export const VERSION_MARK = '__GP_APP_VERSION__';
 const SKIP_DIRS = new Set(['vectors', 'sitemaps', '.well-known', 'og']);
+// Docs pages are cached when visited, not installed (build-web-experience
+// design: the precache is the shell, catalog, search index, Wasm, and tools).
+export const DOCS_DIRS = ['learn', 'changelog', 'verification'];
 const SKIP_FILES = new Set(['robots.txt', 'llms.txt', 'AGENTS.md', 'sitemap-index.xml', 'sw.js', '_headers', '_redirects']);
 
 function files(dir, out = []) {
@@ -48,7 +52,8 @@ const packs = registry.assets
       sha256: file.sha256,
     })),
   }));
-const list = files(dist).filter((p) => !optionalPackFiles.has(urlOf(p))).sort();
+const isDocs = (u) => DOCS_DIRS.some((d) => u === `/${d}/` || u.startsWith(`/${d}/`));
+const list = files(dist).filter((p) => !optionalPackFiles.has(urlOf(p)) && !isDocs(urlOf(p))).sort();
 
 // The version names the release's content, computed before it is stamped in.
 const h = createHash('sha256');
@@ -70,5 +75,5 @@ if (compressed > PRECACHE_BUDGET) {
 
 const urls = list.map(urlOf);
 const source = readFileSync(join(web, 'sw/sw.js'), 'utf8');
-writeFileSync(join(dist, 'sw.js'), `const VERSION = '${version}';\nconst PRECACHE = ${JSON.stringify(urls)};\nconst PACKS = ${JSON.stringify(packs)};\n\n${source}`);
+writeFileSync(join(dist, 'sw.js'), `const VERSION = '${version}';\nconst PRECACHE = ${JSON.stringify(urls)};\nconst PACKS = ${JSON.stringify(packs)};\nconst DOCS = ${JSON.stringify(DOCS_DIRS.map((d) => `/${d}/`))};\n\n${source}`);
 console.log(`pwa: sw.js version ${version}, ${urls.length} files, ${(compressed / 1e6).toFixed(2)} MB compressed (budget ${PRECACHE_BUDGET / 1e6} MB)`);

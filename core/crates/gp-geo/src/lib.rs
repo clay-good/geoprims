@@ -2,6 +2,7 @@
 pub mod buffer;
 pub mod civil;
 pub mod codes;
+pub mod compass;
 pub mod crs;
 mod crs_registry;
 pub mod dms;

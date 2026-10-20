@@ -91,6 +91,7 @@ const DIAGRAMS = Object.fromEntries(
     'drone.photogrammetry.stereo-base',
     'survey.cogo.area-partition',
     'survey.reduction.level-network',
+    'navigation.piloting.set-and-drift',
   ].map((id) => [id, PARTS[id.split('.')[0]][id]]),
 );
 

@@ -231,7 +231,35 @@ function horizonDip(args, result) {
 
 // ---- drone mission planning (add-flight-and-drone-planning-tools) ----
 
+/**
+ * The current triangle (Bowditch §1008): the water vector, then the current
+ * from its end, reach the ground track. The side the problem asked for is
+ * the accent.
+ */
+function currentTriangle(args, result) {
+  const cts = val(result, 'course_to_steer');
+  const track = val(result, 'track');
+  const ktOf = (k) => (result.result[k] ? measure(`${val(result, k)} ${result.result[k].unit}`, SPEED, 'kt') : null);
+  const stw = ktOf('speed_to_use');
+  const smg = ktOf('speed_made_good');
+  if ([cts, track, stw, smg].some((x) => x === null || x === undefined || !Number.isFinite(x))) return null;
+  const up = (b, len) => [len * Math.sin(b * R), len * Math.cos(b * R)];
+  const S = fit([[0, 0], up(cts, stw), up(track, smg)]);
+  const [o, w, g] = [S([0, 0]), S(up(cts, stw)), S(up(track, smg))];
+  const ground = (args.problem ?? 'track') === 'track';
+  const body = [
+    `<text class="dg-muted-text" x="12" y="22">N ↑</text>`,
+    arrow(...o, ...w, ground ? 'dg-muted' : 'dg-accent', `Steer ${disp(result, 'course_to_steer')}`, 0.5, -1),
+    arrow(...w, ...g, 'dg-muted dg-dash', 'Current', 0.5, -1),
+    arrow(...o, ...g, ground ? 'dg-accent' : 'dg-muted', `Track ${disp(result, 'track')}`, 0.5, 1),
+    text('dg-label', 160, 226, result.result.answer ?? '', 'middle'),
+  ].join('');
+  const title = `Current triangle: steering ${disp(result, 'course_to_steer')} at ${disp(result, 'speed_to_use')} through the current makes good ${disp(result, 'track')} at ${disp(result, 'speed_made_good')}.`;
+  return { markup: svg(body, title), desc: title };
+}
+
 export const DIAGRAMS = {
+  'navigation.piloting.set-and-drift': currentTriangle,
   'navigation.route.cpa': cpa,
   'navigation.route.fly-by': flyBy,
   'navigation.vector.operations': vectorSum,

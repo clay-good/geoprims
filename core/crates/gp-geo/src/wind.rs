@@ -23,3 +23,33 @@ pub fn find_wind(heading: f64, tas: f64, track: f64, gs: f64) -> (f64, f64) {
     let toward = atan2(we, wn).to_degrees();
     (toward + 180.0, speed)
 }
+
+/// East and north components of a vector of `s` toward `az` degrees.
+fn en(az: f64, s: f64) -> (f64, f64) {
+    let a = az.to_radians();
+    (s * sin(a), s * cos(a))
+}
+
+/// Direction (deg, [0, 360)) and length of an east/north vector.
+fn polar(e: f64, n: f64) -> (f64, f64) {
+    (
+        gp_base::angle::wrap_azimuth(atan2(e, n).to_degrees()),
+        sqrt(e * e + n * n),
+    )
+}
+
+/// The track and speed over the ground from a heading and speed through the
+/// air (or water) and a wind (or current) FROM `wd` at `ws`: ground = air + wind.
+pub fn ground_vector(heading: f64, speed: f64, wd: f64, ws: f64) -> (f64, f64) {
+    let (ae, an) = en(heading, speed);
+    let (we, wn) = en(wd + 180.0, ws);
+    polar(ae + we, an + wn)
+}
+
+/// The heading and speed through the air (or water) that make good a track
+/// and ground speed in a wind (or current) FROM `wd` at `ws`: air = ground − wind.
+pub fn air_vector(track: f64, gs: f64, wd: f64, ws: f64) -> (f64, f64) {
+    let (ge, gn) = en(track, gs);
+    let (we, wn) = en(wd + 180.0, ws);
+    polar(ge - we, gn - wn)
+}

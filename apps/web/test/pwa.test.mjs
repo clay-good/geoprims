@@ -127,6 +127,7 @@ test('the precache holds every page, module, and calculation asset, within 12 MB
     }
   }
   assert.ok(!precache.some((u) => u.startsWith('/vectors/') || u === '/sw.js'), 'downloads and the worker itself are not precached');
+  assert.ok(!precache.some((u) => u.startsWith('/learn/') || u.startsWith('/changelog/')), 'docs pages are cached when visited, not installed');
   let bytes = 0;
   for (const u of precache) {
     const body = served(u);

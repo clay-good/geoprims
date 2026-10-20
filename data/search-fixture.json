@@ -1208,6 +1208,30 @@
     {
       "query": "composite sailing limiting latitude",
       "expect": "navigation.sailing.great-circle"
+    },
+    {
+      "query": "course to steer set and drift",
+      "expect": "navigation.piloting.set-and-drift"
+    },
+    {
+      "query": "dead reckoning position",
+      "expect": "navigation.piloting.dead-reckoning"
+    },
+    {
+      "query": "running fix one light",
+      "expect": "navigation.piloting.running-fix"
+    },
+    {
+      "query": "doubling the angle on the bow",
+      "expect": "navigation.piloting.two-bearing-fix"
+    },
+    {
+      "query": "distance by vertical sextant angle",
+      "expect": "navigation.piloting.distance-by-vertical-angle"
+    },
+    {
+      "query": "true magnetic compass deviation variation",
+      "expect": "navigation.piloting.compass-conversion"
     }
   ]
 }

@@ -190,30 +190,10 @@ pub static HEADING_CHAIN: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
-fn norm(a: f64) -> f64 {
-    let v = a.rem_euclid(360.0);
-    if v == 0.0 { 0.0 } else { v }
-}
+use gp_geo::compass::norm;
 
-/// The card's deviation at `hdg`, interpolated between its neighbors around the circle.
-pub fn card_deviation(card: &[(f64, f64)], hdg: f64) -> f64 {
-    match card.len() {
-        0 => 0.0,
-        1 => card[0].1,
-        n => {
-            let h = norm(hdg);
-            // The entry at or before h (around the circle), and the next one.
-            let k = card.iter().rposition(|&(c, _)| c <= h).unwrap_or(n - 1);
-            let (a, b) = (card[k], card[(k + 1) % n]);
-            let span = (b.0 - a.0).rem_euclid(360.0);
-            if span == 0.0 {
-                return a.1;
-            }
-            let t = (h - a.0).rem_euclid(360.0) / span;
-            a.1 + t * (b.1 - a.1)
-        }
-    }
-}
+/// The card's deviation at `hdg` (shared with the marine compass conversion).
+pub use gp_geo::compass::card_deviation;
 
 /// Reads a `deviation_card` input (magnetic heading and east-positive
 /// deviation per row), sorted by heading; empty when none is given. The nav
@@ -264,9 +244,7 @@ fn run_chain(ctx: &mut Ctx) -> Result<Json, ToolError> {
     }
     let card = read_card(ctx)?;
     let th = norm(tc + wca);
-    let mh = norm(th - var);
-    let dev = card_deviation(&card, mh);
-    let ch = norm(mh - dev);
+    let (mh, dev, ch) = gp_geo::compass::true_to_compass(th, var, &card);
     let q = |v: f64| Q { value: v, unit: dg };
     let step =
         |name: &str, h: f64| Json::obj([("step", Json::str(name)), ("heading", q(h).to_json())]);

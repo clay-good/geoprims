@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "37edc5364c4f2a1d",
+    "hash": "06542a3115e50154",
     "lastmod": "2026-10-20"
   },
   "/accuracy/": {
@@ -1504,11 +1504,11 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "60e53970c2680ce5",
+    "hash": "09debc29a6a873db",
     "lastmod": "2026-10-20"
   },
   "/navigation/": {
-    "hash": "407a96366f7ca531",
+    "hash": "c9fee17c82bb2bc2",
     "lastmod": "2026-10-20"
   },
   "/navigation/geodesic/": {
@@ -1582,6 +1582,34 @@
   "/navigation/los/visibility/": {
     "hash": "2f2be7e6b6d8a14e",
     "lastmod": "2026-10-19"
+  },
+  "/navigation/piloting/": {
+    "hash": "e80bb30211e85e26",
+    "lastmod": "2026-10-20"
+  },
+  "/navigation/piloting/compass-conversion/": {
+    "hash": "08e519246b067d3d",
+    "lastmod": "2026-10-20"
+  },
+  "/navigation/piloting/dead-reckoning/": {
+    "hash": "5330fe09ad3d6504",
+    "lastmod": "2026-10-20"
+  },
+  "/navigation/piloting/distance-by-vertical-angle/": {
+    "hash": "da558cc1e8969b1f",
+    "lastmod": "2026-10-20"
+  },
+  "/navigation/piloting/running-fix/": {
+    "hash": "a7531c4183b946d9",
+    "lastmod": "2026-10-20"
+  },
+  "/navigation/piloting/set-and-drift/": {
+    "hash": "53623036175f0580",
+    "lastmod": "2026-10-20"
+  },
+  "/navigation/piloting/two-bearing-fix/": {
+    "hash": "b3bdde54872d0c6d",
+    "lastmod": "2026-10-20"
   },
   "/navigation/rhumb/": {
     "hash": "526410bd52abbbd0",
@@ -1816,7 +1844,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "54e77d711699ba2f",
+    "hash": "8876c20131ba90d0",
     "lastmod": "2026-10-20"
   },
   "/survey/": {
@@ -2212,7 +2240,7 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "74b3e7bbcad7cc2e",
+    "hash": "787f2cff2f219eec",
     "lastmod": "2026-10-20"
   },
   "/units/": {
@@ -2476,7 +2504,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "76d6dc197321b68c",
+    "hash": "0470b15fa1f996bf",
     "lastmod": "2026-10-20"
   },
   "/workflows/": {

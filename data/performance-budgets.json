@@ -43,6 +43,7 @@
     "geometry.buffer.geodesic": { "kind": "data-proportional", "p95Ms": 75, "scalesWith": "vertices" },
     "geometry.distance.tracks": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "track_a and track_b" },
     "geometry.mesh.delaunay": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "points" },
+    "navigation.piloting.compass-conversion": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "deviation table rows" },
     "navigation.sailing.traverse": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "legs" },
     "geometry.sampling.random-points": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "polygon corners and points asked for" },
     "geometry.sampling.systematic-points": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "polygon corners and grid points" },

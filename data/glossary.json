@@ -1088,11 +1088,29 @@
       ]
     },
     {
+      "id": "dr",
+      "term": "DR",
+      "expansion": "dead reckoning",
+      "definition": "A position worked forward from a known one by course and speed alone, allowing nothing for current or leeway.",
+      "source": "bowditch",
+      "relatedTools": [
+        "navigation.piloting.dead-reckoning"
+      ]
+    },
+    {
       "id": "epa",
       "term": "EPA",
       "expansion": "US Environmental Protection Agency",
       "definition": "The US agency whose quality guidance, EPA QA/G-5S, describes the standard sampling designs: simple random, stratified, and systematic.",
       "source": "epa-qa-g5s",
+      "relatedTools": []
+    },
+    {
+      "id": "tvmdc",
+      "term": "TVMDC",
+      "expansion": "true, variation, magnetic, deviation, compass",
+      "definition": "The order of the compass conversion: true heading less variation gives magnetic, and magnetic less deviation gives compass, east counted positive.",
+      "source": "bowditch",
       "relatedTools": []
     },
     {

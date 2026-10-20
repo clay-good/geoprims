@@ -12,7 +12,7 @@ use gp_base::error::ToolError;
 use gp_base::json::Json;
 use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Related, ToolDef};
 use gp_base::units::Quantity as QT;
-use libm::{atan2, cos, sin, sqrt};
+use libm::{cos, sin};
 
 const fn angle(name: &'static str, title: &'static str, help: &'static str) -> Field {
     Field::new(
@@ -43,11 +43,6 @@ const fn speed(name: &'static str, title: &'static str, help: &'static str) -> F
 fn en(az: f64, s: f64) -> (f64, f64) {
     let a = az.to_radians();
     (s * sin(a), s * cos(a))
-}
-
-/// Direction (deg, [0, 360)) and length of an east/north vector.
-fn polar(e: f64, n: f64) -> (f64, f64) {
-    (wrap_azimuth(atan2(e, n).to_degrees()), sqrt(e * e + n * n))
 }
 
 /// The wind in `reference`, as (from direction, speed); variable winds refused.
@@ -181,7 +176,7 @@ fn run_tas_from_groundspeed(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let (wd, ws) = steady_wind(ctx, course_ref)?;
     let (ge, gn) = en(course, gs);
     let (we, wn) = en(wd + 180.0, ws);
-    let (heading, tas) = polar(ge - we, gn - wn);
+    let (heading, tas) = gp_geo::wind::air_vector(course, gs, wd, ws);
     let wca = wrap_lon(heading - course);
     if ctx.explaining() {
         let fmt = ctx.options.format;
@@ -328,7 +323,7 @@ fn run_course_from_heading(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let (wd, ws) = steady_wind(ctx, heading_ref)?;
     let (ae, an) = en(heading, tas);
     let (we, wn) = en(wd + 180.0, ws);
-    let (course, gs) = polar(ae + we, an + wn);
+    let (course, gs) = gp_geo::wind::ground_vector(heading, tas, wd, ws);
     if gs < 1e-9 {
         return Err(ToolError::new(
             ErrorCode::NoSolution,

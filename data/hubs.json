@@ -1810,6 +1810,48 @@
         }
       ]
     },
+    "navigation.piloting": {
+      "summary": "Chart-table arithmetic: current, dead reckoning, fixes, distance off, and compass conversion.",
+      "intro": "This group does the arithmetic of piloting as Bowditch teaches it: the current triangle, a dead-reckoning position, a running fix and distance off by two bearings, distance by vertical sextant angle, and the true-magnetic-compass chain. Mariners and navigation students use it beside the chart to check a plot. Start with compass conversion to turn a compass bearing into a true one you can lay down. The pitfall is forgetting the current: a dead-reckoning position and a running fix both assume it away.",
+      "tasks": [
+        {
+          "want": "find the course to steer through a current",
+          "tools": [
+            "set-and-drift"
+          ]
+        },
+        {
+          "want": "plot a dead-reckoning position",
+          "tools": [
+            "dead-reckoning"
+          ]
+        },
+        {
+          "want": "get a running fix from one light",
+          "tools": [
+            "running-fix"
+          ]
+        },
+        {
+          "want": "find distance off by doubling the angle on the bow",
+          "tools": [
+            "two-bearing-fix"
+          ]
+        },
+        {
+          "want": "find distance off by vertical sextant angle",
+          "tools": [
+            "distance-by-vertical-angle"
+          ]
+        },
+        {
+          "want": "convert true, magnetic, and compass headings",
+          "tools": [
+            "compass-conversion"
+          ]
+        }
+      ]
+    },
     "navigation.route": {
       "summary": "Routes, legs, and the geometry around them.",
       "intro": "These tools work with routes and moving objects: legs and totals for a route, cross-track error, the closest point on a route, range rings, fly-by turns, closest point of approach, intercepts, and time, speed, and distance. Pilots, drone operators, and mariners use them for planning. Start with route legs. A pitfall is mixing true and magnetic courses between legs; the legs tool lists both.",

@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { csvCell, exportText, fileName, FORMATS, pairsIn, pointsOf, toSheet } from '../src/lib/export.mjs';
+import { csvCell, exportText, fileName, FORMATS, pairsIn, pointsOf, provenance, toSheet } from '../src/lib/export.mjs';
 import { nodeHost } from '../../../packages/runtime/src/node.mjs';
 
 const web = new URL('..', import.meta.url).pathname;
@@ -134,4 +134,36 @@ test('each format has a file name and a media type', () => {
 test('the page offers the download', () => {
   const html = readFileSync(join(web, 'dist/navigation/geodesic/direct/index.html'), 'utf8');
   assert.match(html, /<button[^>]*>Download</);
+});
+
+test('a sampling layout exports with its seed, design, plane, and citation', async () => {
+  const ids = catalog.tools.filter((t) => t.id.startsWith('geometry.sampling.')).map((t) => t.id);
+  assert.ok(ids.length >= 7, `${ids.length} sampling tools`);
+  for (const id of ids) {
+    const [tool, args, result] = await ran(id);
+    const extra = provenance(result);
+    assert.ok(extra.crs?.startsWith('UTM zone'), `${id}: no plane`);
+    assert.ok(extra.citation, `${id}: no citation`);
+    const geo = JSON.parse(exportText('geojson', { tool, args, result }));
+    assert.ok(geo.features.length, `${id}: no features`);
+    for (const f of geo.features) for (const [k, v] of Object.entries(extra)) assert.equal(f.properties[k], v, `${id} ${k}`);
+    const kml = exportText('kml', { tool, args, result });
+    assert.ok(kml.includes(`<Data name="crs"><value>${extra.crs}</value></Data>`), `${id}: KML lacks the plane`);
+    const csv = exportText('csv', { tool, args, result }).split('\n');
+    assert.ok(csv[0].endsWith(Object.keys(extra).join(',')), `${id}: CSV header ${csv[0]}`);
+    // The same input gives the same file, byte for byte.
+    const again = JSON.parse(await host.invoke(id, JSON.stringify(args)));
+    for (const f of ['geojson', 'kml', 'csv']) assert.equal(exportText(f, { tool, args, result: again }), exportText(f, { tool, args, result }), `${id} ${f}`);
+    // Points round-trip in every geographic format.
+    const points = pointsOf(tool, result);
+    for (const format of FORMATS.filter((x) => x.geographic)) {
+      const back = readBack[format.id](exportText(format.id, { tool, args, result }));
+      assert.equal(back.length, points.length, `${id} ${format.id}`);
+    }
+  }
+});
+
+test('a result with no seed exports as before', async () => {
+  const [, , result] = await ran('navigation.geodesic.midpoint');
+  assert.deepEqual(provenance(result), {});
 });

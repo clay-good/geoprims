@@ -65,6 +65,22 @@ export function pointsOf(tool, result) {
   return out;
 }
 
+/**
+ * What makes a generated layout reproducible (add-sampling-and-grids, "Limits
+ * and export"): the seed, design, and plane a result names, with the method's
+ * first citation. Empty for a result that names none, so other exports are
+ * unchanged.
+ */
+export function provenance(result) {
+  const r = result?.result ?? {};
+  const out = {};
+  for (const k of ['seed', 'design', 'crs']) if (typeof r[k] === 'string') out[k] = r[k];
+  if (!Object.keys(out).length) return out;
+  const ref = result?.meta?.references?.[0];
+  if (ref) out.citation = [ref.issuer, ref.title, ref.edition, ref.locator].filter(Boolean).join(', ');
+  return out;
+}
+
 /** The full result, as the tool produced it. */
 export const toJson = (result) => `${JSON.stringify(result, null, 2)}\n`;
 
@@ -79,7 +95,9 @@ export function toCsv(tool, result) {
     // A quantity column carries its unit in the header, since its cells are bare numbers.
     const unitOf = (c) => rows.find((row) => row[c] && typeof row[c] === 'object' && 'unit' in row[c])?.[c].unit;
     const header = columns.map((c) => (unitOf(c) && unitOf(c) !== '1' ? csvCell(`${c} (${unitOf(c)})`) : c));
-    return [header.join(','), ...rows.map((row) => columns.map((c) => csvCell(row[c])).join(','))].join('\n') + '\n';
+    const extra = provenance(result);
+    const keys = Object.keys(extra);
+    return [[...header, ...keys].join(','), ...rows.map((row) => [...columns.map((c) => csvCell(row[c])), ...keys.map((k) => csvCell(extra[k]))].join(','))].join('\n') + '\n';
   }
   const names = scalars.map(([k]) => k);
   return `${names.join(',')}\n${names.map((k) => csvCell(r[k])).join(',')}\n`;
@@ -90,15 +108,17 @@ export function toGeoJson(tool, result) {
   const features = pointsOf(tool, result).map((p) => ({
     type: 'Feature',
     geometry: { type: 'Point', coordinates: [p.lon, p.lat] },
-    properties: { name: p.name, tool: tool.id, toolVersion: tool.version },
+    properties: { name: p.name, tool: tool.id, toolVersion: tool.version, ...provenance(result) },
   }));
   return `${JSON.stringify({ type: 'FeatureCollection', features }, null, 2)}\n`;
 }
 
 /** The points as KML, which is always WGS 84 and always lon,lat,alt. */
 export function toKml(tool, result) {
+  const extra = Object.entries(provenance(result));
+  const data = extra.length ? `<ExtendedData>${extra.map(([k, v]) => `<Data name="${k}"><value>${xml(v)}</value></Data>`).join('')}</ExtendedData>` : '';
   const marks = pointsOf(tool, result)
-    .map((p) => `    <Placemark><name>${xml(p.name)}</name><Point><coordinates>${p.lon},${p.lat},0</coordinates></Point></Placemark>`)
+    .map((p) => `    <Placemark><name>${xml(p.name)}</name>${data}<Point><coordinates>${p.lon},${p.lat},0</coordinates></Point></Placemark>`)
     .join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">

@@ -2,6 +2,15 @@
   "note": "User-facing changes, newest first. kind is result-change (a published result moved: every superseded golden vector must be listed here), added, fixed, or changed. A result change beyond tolerance also bumps the tool version. Rendered at /changelog/ and checked by tools/trust/changelog.test.mjs.",
   "entries": [
     {
+      "date": "2026-10-20",
+      "kind": "changed",
+      "tools": [
+        "aviation.loading.fuel-weight"
+      ],
+      "vectors": [],
+      "summary": "Fuel weight takes an optional fuel temperature with an entered density and names it in the result, so a density corrected by the new fuel density tool carries its temperature. Results are unchanged."
+    },
+    {
       "date": "2026-10-19",
       "kind": "result-change",
       "tools": [

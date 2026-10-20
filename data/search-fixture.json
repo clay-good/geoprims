@@ -1232,6 +1232,14 @@
     {
       "query": "true magnetic compass deviation variation",
       "expect": "navigation.piloting.compass-conversion"
+    },
+    {
+      "query": "jet fuel density at -20 C",
+      "expect": "aviation.loading.fuel-density-temperature"
+    },
+    {
+      "query": "fuel volume correction factor temperature",
+      "expect": "aviation.loading.fuel-density-temperature"
     }
   ]
 }

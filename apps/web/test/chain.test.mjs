@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cameFrom, chainHref, chainState, chainTargets, MAX_TARGETS, routeOf, windHandoff } from '../src/lib/chain.mjs';
+import { cameFrom, chainHref, chainState, chainTargets, MAX_TARGETS, routeOf, windHandoff, fuelHandoff } from '../src/lib/chain.mjs';
 import { nodeHost } from '../../../packages/runtime/src/node.mjs';
 
 const web = new URL('..', import.meta.url).pathname;
@@ -127,4 +127,31 @@ test('a METAR wind goes to the runway tool marked true, and the runway tool asks
   assert.deepEqual(w.state.i, { wind_direction: '230 deg', wind_speed: '119 kt', wind_reference: 'true' });
   const triangle = await invoke(w.id, { ...w.state.i, course: '090 deg', tas: '450 kt' });
   assert.ok(triangle.ok, JSON.stringify(triangle.error));
+});
+
+test('a fuel density at a temperature goes to fuel weight, and its sentence names the temperature', async () => {
+  // aviation/fuel-density "Feeds the fuel weight tool".
+  const invoke = async (id, input) => JSON.parse(await host.invoke(id, JSON.stringify(input)));
+  const input = { fuel: 'jet-a', density_15: '840 kg/m3', temperature: '-10 degC', volume: '50 gal' };
+  const corrected = await invoke('aviation.loading.fuel-density-temperature', input);
+  assert.ok(corrected.ok, JSON.stringify(corrected.error));
+  const h = fuelHandoff('aviation.loading.fuel-density-temperature', corrected, input);
+  assert.equal(h.id, 'aviation.loading.fuel-weight');
+  assert.equal(h.state.i.fuel_temperature, '-10 degC');
+  assert.equal(h.state.i.volume, '50 gal');
+  // The link carries it intact, and the fuel weight tool uses it.
+  const enc = await link(h.state);
+  assert.ok(enc.ok);
+  assert.deepEqual((await unlink(enc.result.fragment)).result.state.i, h.state.i);
+  const weighed = await invoke(h.id, h.state.i);
+  assert.ok(weighed.ok, JSON.stringify(weighed.error));
+  assert.equal(weighed.result.density_basis, 'entered');
+  assert.match(weighed.summary, /−?-?10 °C/);
+  const kg = 50 * 3.785411784e-3 * corrected.result.density.value;
+  assert.ok(Math.abs(weighed.result.weight.value - kg / 0.45359237) < 1e-9);
+  // The generic list offers the density to fuel weight too; other tools hand off nothing here.
+  const from = byId('aviation.loading.fuel-density-temperature');
+  assert.ok(chainTargets(catalog.tools, from, 'density').some((t) => t.id === 'aviation.loading.fuel-weight'));
+  assert.equal(fuelHandoff('aviation.loading.fuel-weight', corrected, input), null);
+  assert.equal(fuelHandoff('aviation.loading.fuel-density-temperature', corrected, {}), null);
 });

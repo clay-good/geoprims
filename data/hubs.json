@@ -305,6 +305,12 @@
           ]
         },
         {
+          "want": "correct fuel density for its temperature",
+          "tools": [
+            "fuel-density-temperature"
+          ]
+        },
+        {
           "want": "check weight and center of gravity",
           "tools": [
             "weight-balance"

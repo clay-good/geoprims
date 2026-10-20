@@ -98,6 +98,16 @@
       ]
     },
     {
+      "id": "api",
+      "term": "API",
+      "expansion": "American Petroleum Institute",
+      "definition": "The US oil industry body whose Manual of Petroleum Measurement Standards, Chapter 11.1, gives the tables used to correct fuel volume and density to 15 °C.",
+      "source": "measurement-canada-vcf",
+      "relatedTools": [
+        "aviation.loading.fuel-density-temperature"
+      ]
+    },
+    {
       "id": "arp",
       "term": "ARP",
       "expansion": "antenna reference point",

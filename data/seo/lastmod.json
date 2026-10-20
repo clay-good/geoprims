@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "06542a3115e50154",
+    "hash": "2784e8e4d87cb540",
     "lastmod": "2026-10-20"
   },
   "/accuracy/": {
@@ -12,7 +12,7 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/": {
-    "hash": "6d7545f4fb49a9fd",
+    "hash": "86185d3535def234",
     "lastmod": "2026-10-20"
   },
   "/aviation/airspace/": {
@@ -148,24 +148,28 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/loading/": {
-    "hash": "73a38039a967b4fe",
-    "lastmod": "2026-10-09"
+    "hash": "519132f7166b1fce",
+    "lastmod": "2026-10-20"
   },
   "/aviation/loading/ballast/": {
     "hash": "87ec73a64fde33d9",
     "lastmod": "2026-10-19"
   },
   "/aviation/loading/burn-rate/": {
-    "hash": "1dddec233ff132e3",
-    "lastmod": "2026-10-19"
+    "hash": "45c81648b7211c43",
+    "lastmod": "2026-10-20"
+  },
+  "/aviation/loading/fuel-density-temperature/": {
+    "hash": "08ced1fbc43bacfb",
+    "lastmod": "2026-10-20"
   },
   "/aviation/loading/fuel-plan/": {
-    "hash": "0fae290e5fe7695d",
-    "lastmod": "2026-10-19"
+    "hash": "f0de6faba843c6a9",
+    "lastmod": "2026-10-20"
   },
   "/aviation/loading/fuel-weight/": {
-    "hash": "7cf888f36af0d496",
-    "lastmod": "2026-10-19"
+    "hash": "c78491e54dec1432",
+    "lastmod": "2026-10-20"
   },
   "/aviation/loading/table-interpolate/": {
     "hash": "e96fdccc34edc872",
@@ -300,8 +304,8 @@
     "lastmod": "2026-10-19"
   },
   "/changelog/": {
-    "hash": "4e0d0448a81d2197",
-    "lastmod": "2026-10-19"
+    "hash": "6d3bcf0a80c5a17e",
+    "lastmod": "2026-10-20"
   },
   "/disclaimer/": {
     "hash": "e80b39ff27cd55c5",
@@ -1504,7 +1508,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "09debc29a6a873db",
+    "hash": "716272cf5da18aca",
     "lastmod": "2026-10-20"
   },
   "/navigation/": {
@@ -1844,7 +1848,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "8876c20131ba90d0",
+    "hash": "3c6a50f39cf0140a",
     "lastmod": "2026-10-20"
   },
   "/survey/": {
@@ -2240,7 +2244,7 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "787f2cff2f219eec",
+    "hash": "563035b898d3e5f2",
     "lastmod": "2026-10-20"
   },
   "/units/": {
@@ -2504,7 +2508,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "0470b15fa1f996bf",
+    "hash": "76ef4a4903647cb8",
     "lastmod": "2026-10-20"
   },
   "/workflows/": {

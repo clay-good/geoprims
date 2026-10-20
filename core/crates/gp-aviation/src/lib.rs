@@ -2607,6 +2607,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &practical::HYDROPLANING_SPEED,
     &performance::CLIMB_REQUIREMENT,
     &practical::CABIN_ALTITUDE,
+    &practical::FUEL_DENSITY_TEMPERATURE,
     &ifr::HOLD_ENTRY,
     &ifr::HOLD_WIND,
     &ifr::HOLD_SPEED,

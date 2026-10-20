@@ -4174,6 +4174,66 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": true
+    },
+    {
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-20",
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false,
+      "id": "chevron-ftr3",
+      "name": "Aviation Fuels Technical Review (FTR-3)",
+      "issuer": "Chevron Products Company (vendor)",
+      "currentEdition": "FTR-3, 2007",
+      "verificationNote": "Read at chevron.com on 2026-10-20 (the PDF Chevron hosts, © 2007): chapter 2, the Coefficient of Thermal Expansion sidebar, a typical 0.00099 per °C for kerosine-type jet fuel with 1.000 gal at 0 °C becoming 1.040 gal at 40 °C; Figure 2.1, typical densities at 15 °C of 0.715 g/mL for avgas, 0.762 for wide-cut, and 0.810 for kerosine; and the specification table's Jet A and Jet A-1 density of 775 to 840 kg/m³ at 15 °C (ASTM D1655). Vendor guidance, labeled typical.",
+      "freeAccessUrl": "https://www.chevron.com/-/media/chevron/operations/documents/aviation-tech-review.pdf",
+      "matchTerms": [
+        "Aviation Fuels Technical Review"
+      ]
+    },
+    {
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-20",
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false,
+      "id": "measurement-canada-vcf",
+      "name": "Volume correction factor tables and bulletin V-18",
+      "issuer": "Measurement Canada",
+      "currentEdition": "tables issued January 2016; V-18 modified 2017-02-01",
+      "verificationNote": "Read at ised-isde.canada.ca on 2026-10-20: bulletin V-18 Table 1 assigns API Chapter 11.1 Table 54B to Jet A, Jet A-1, and aviation gasoline (standard densities 800 and 710 kg/m³ at 15 °C) and Table 54A to Jet B (760 kg/m³); the three VCF tables (issued January 2016) print the factor to 15 °C every 0.1 °C from −40 to 40 °C. The fuel-density tool's formula reproduces every printed cell of all three within 0.00006 before rounding to the table's four decimals.",
+      "freeAccessUrl": "https://ised-isde.canada.ca/site/measurement-canada/en/node/93",
+      "matchTerms": [
+        "Measurement Canada"
+      ]
+    },
+    {
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-20",
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false,
+      "id": "abb-exlerate-api",
+      "name": "SpiritIT eXLerate function reference manual, API 11.1 constants",
+      "issuer": "ABB Measurement & Analytics (vendor)",
+      "currentEdition": "CM/eXL/FR-EN Rev. B, October 2017",
+      "verificationNote": "Read at library.e.abb.com on 2026-10-20: the metric API MPMS 11.1 constants for the 1980 and 2004 tables (54A crude oil K0 613.9723; 54B gasoline 346.4228 and 0.4388, transition area 2680.3206 with −0.00336312, jet fuels 594.5418, fuel oils 186.9696 and 0.4862). API MPMS 11.1 itself is sold, not open, so its constants are taken from this vendor manual and checked against Measurement Canada's printed tables.",
+      "freeAccessUrl": "https://library.e.abb.com/public/1cd9d80704364862a1ddcfb915280467/CM_eXL_FR-EN_B_102017.pdf",
+      "matchTerms": [
+        "SpiritIT eXLerate"
+      ]
     }
   ]
 }

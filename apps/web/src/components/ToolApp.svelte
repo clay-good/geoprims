@@ -19,7 +19,7 @@
   import { keyboardInset, trackKeyboard } from '../lib/keyboard.mjs';
   import { assetMessage } from '../lib/messages.js';
   import { publicInputs } from '../lib/private.mjs';
-  import { cameFrom, chainHref, chainState, chainTargets, routeOf, windHandoff } from '../lib/chain.mjs';
+  import { cameFrom, chainHref, chainState, chainTargets, routeOf, windHandoff, fuelHandoff } from '../lib/chain.mjs';
   import { degrees, pairOf } from '../lib/coordinate.mjs';
   import { checkSize } from '../lib/import.mjs';
   import { csvProjected, csvRows, importReport, rowsFor, rowsText } from '../lib/import-rows.mjs';
@@ -512,10 +512,11 @@
     }
     sendLinks = { ...sendLinks, [name]: links };
   }
-  // A decoded wind goes to the runway tool still marked true.
+  // A decoded wind goes to the runway tool still marked true; a corrected fuel
+  // density goes to the fuel weight tool with its temperature.
   let handoff = $state(null);
   $effect(() => {
-    const h = windHandoff(tool.id, result);
+    const h = windHandoff(tool.id, result) ?? fuelHandoff(tool.id, result, drawnArgs);
     if (!h || !compute) {
       handoff = null;
       return;
@@ -749,7 +750,7 @@
         </dl>
       </details>
     {/if}
-    {#if handoff}<p class="handoff"><a href={handoff.href}>{handoff.title} →</a> <span class="help">The wind stays true north; the runway tool asks for the magnetic variation.</span></p>{/if}
+    {#if handoff}<p class="handoff"><a href={handoff.href}>{handoff.title} →</a> <span class="help">{handoff.note}</span></p>{/if}
     <div class="actions">
       <button type="button" class="primary" onclick={() => copy('value')}>{copied === 'value' ? 'Copied ✓' : 'Copy'}</button>
       <button type="button" class="quiet" onclick={() => copy('reference')} title="The answer with its inputs, method, sources, versions, and the notice">{copied === 'reference' ? 'Copied ✓' : 'Copy with reference'}</button>

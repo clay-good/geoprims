@@ -1,13 +1,14 @@
 //! Practical performance additions (add-aviation-practical-additions,
 //! aviation/performance-and-cabin): maneuvering speed at a weight and tire
-//! hydroplaning speed.
+//! hydroplaning speed; and (aviation/fuel-density) fuel density at a
+//! temperature.
 
 use gp_base::ErrorCode;
 use gp_base::error::ToolError;
 use gp_base::json::Json;
 use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Reference, Related, ToolDef};
 use gp_base::units::Quantity as QT;
-use libm::sqrt;
+use libm::{exp, sqrt};
 
 use crate::{knots, obj, unit};
 
@@ -491,6 +492,395 @@ fn run_cabin_altitude(ctx: &mut Ctx) -> Result<Json, ToolError> {
     ];
     if let Some(w) = within {
         out.push(("within_max", Json::str(w)));
+    }
+    Ok(obj(out))
+}
+
+// ------------------------------------------------- fuel density by temperature
+
+const CHEVRON_FTR: Reference = Reference {
+    title: "Aviation Fuels Technical Review (FTR-3)",
+    issuer: "Chevron Products Company (vendor guidance)",
+    year: 2007,
+    edition: "FTR-3, 2007",
+    locator: "Chapter 2: Coefficient of Thermal Expansion (0.00099 per °C; 1.000 gal at 0 °C is 1.040 gal at 40 °C) and Figure 2.1, typical densities at 15 °C",
+    url: "https://www.chevron.com/-/media/chevron/operations/documents/aviation-tech-review.pdf",
+};
+
+const MC_VCF: Reference = Reference {
+    title: "Measurement Canada volume correction factor tables and bulletin V-18",
+    issuer: "Measurement Canada",
+    year: 2016,
+    edition: "tables issued January 2016; V-18 modified 2017-02-01",
+    locator: "V-18 Table 1 (Table 54B for Jet A and avgas, 54A for Jet B) and the Jet A, Jet B, and aviation gasoline VCF tables, −40 to 40 °C",
+    url: "https://ised-isde.canada.ca/site/measurement-canada/en/node/93",
+};
+
+const ABB_API: Reference = Reference {
+    title: "SpiritIT eXLerate function reference manual (API MPMS 11.1 metric constants)",
+    issuer: "ABB Measurement & Analytics (vendor)",
+    year: 2017,
+    edition: "CM/eXL/FR-EN Rev. B, October 2017",
+    locator: "API constants in metric units: K0 and K1 for tables 54A and 54B",
+    url: "https://library.e.abb.com/public/1cd9d80704364862a1ddcfb915280467/CM_eXL_FR-EN_B_102017.pdf",
+};
+
+/// Typical densities at 15 °C (kg/m³), Chevron FTR-3 Figure 2.1.
+const FUEL_DENSITIES: &[(&str, &str, f64)] = &[
+    ("jet-a", "Jet A (kerosine type)", 810.0),
+    ("wide-cut", "wide-cut (Jet B)", 762.0),
+    ("100ll", "100LL avgas", 715.0),
+];
+
+/// Chevron's typical coefficient of thermal expansion for kerosine-type jet fuel, per °C.
+const KEROSINE_BETA: f64 = 0.00099;
+
+/// The thermal expansion coefficient at 15 °C (per °C) of the API MPMS 11.1
+/// (1980) tables: Table 54A for crude oils, which Measurement Canada's V-18
+/// assigns to Jet B, and Table 54B for refined products, whose four density
+/// zones meet where α is continuous (770.5, 787.5, and 838.5 kg/m³).
+fn api_alpha(rho15: f64, crude: bool) -> f64 {
+    if crude {
+        613.9723 / (rho15 * rho15)
+    } else if rho15 < 770.5 {
+        346.4228 / (rho15 * rho15) + 0.4388 / rho15
+    } else if rho15 < 787.5 {
+        -0.003_363_12 + 2680.3206 / (rho15 * rho15)
+    } else if rho15 < 838.5 {
+        594.5418 / (rho15 * rho15)
+    } else {
+        186.9696 / (rho15 * rho15) + 0.4862 / rho15
+    }
+}
+
+/// The volume correction factor to 15 °C of the API tables: V15 = V(T) × VCF.
+fn api_vcf(rho15: f64, t: f64, crude: bool) -> f64 {
+    let a = api_alpha(rho15, crude);
+    let d = t - 15.0;
+    exp(-a * d * (1.0 + 0.8 * a * d))
+}
+
+/// The same factor for a constant coefficient: ρ(T) = ρ15 / (1 + β (T − 15)).
+fn linear_vcf(beta: f64, t: f64) -> f64 {
+    1.0 / (1.0 + beta * (t - 15.0))
+}
+
+pub static FUEL_DENSITY_TEMPERATURE: ToolDef = ToolDef {
+    id: "aviation.loading.fuel-density-temperature",
+    title: "Fuel density at a temperature",
+    summary: "The density of jet fuel or avgas at the temperature it is loaded, from its density at 15 °C, and the weight of a volume of it, so a hot or cold ramp does not throw off the weight and balance.",
+    aliases: &[
+        "fuel density temperature correction",
+        "jet fuel volume correction factor",
+        "hot fuel weight",
+    ],
+    keywords: &[
+        "fuel",
+        "density",
+        "temperature",
+        "Jet A",
+        "avgas",
+        "VCF",
+        "expansion",
+    ],
+    inputs: &[
+        Field::new(
+            "fuel",
+            "Fuel type",
+            "jet-a (810 kg/m³ typical), wide-cut (762), or 100ll (715), like jet-a",
+            Kind::Choice(&["jet-a", "wide-cut", "100ll"]),
+        )
+        .core(),
+        Field::new(
+            "density_15",
+            "Density at 15 °C",
+            "From the fuel slip, like 804 kg/m3; overrides the typical value",
+            Kind::Quantity {
+                q: QT::Density,
+                unit: "kg/m3",
+            },
+        )
+        .core(),
+        Field::new(
+            "temperature",
+            "Fuel temperature",
+            "Like -10 °C",
+            Kind::Quantity {
+                q: QT::Temperature,
+                unit: "degC",
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "volume",
+            "Fuel volume",
+            "Optional, like 100 gal, for its weight",
+            Kind::Quantity {
+                q: QT::Volume,
+                unit: "galUS",
+            },
+        )
+        .core(),
+        Field::new(
+            "method",
+            "Method",
+            "table (the API tables' formula, the default) or linear (one expansion coefficient), like table",
+            Kind::Choice(&["table", "linear"]),
+        ),
+        Field::new(
+            "expansion",
+            "Expansion coefficient",
+            "Per degree Celsius for the linear method, like 0.00099 (Chevron's typical value for kerosine-type fuel)",
+            Kind::Number {
+                min: 0.0,
+                max: 0.01,
+            },
+        ),
+    ],
+    outputs: &[
+        Field::new(
+            "density",
+            "Density at the temperature",
+            "Density at 15 °C × the volume correction factor",
+            Kind::Quantity {
+                q: QT::Density,
+                unit: "kg/m3",
+            },
+        )
+        .precision(Precision::Decimals(1)),
+        Field::new(
+            "vcf",
+            "Volume correction factor",
+            "Volume at 15 °C / volume at the temperature",
+            Kind::Number { min: 0.0, max: 2.0 },
+        )
+        .precision(Precision::Decimals(4)),
+        Field::new(
+            "density_15",
+            "Density at 15 °C used",
+            "Typical or entered",
+            Kind::Quantity {
+                q: QT::Density,
+                unit: "kg/m3",
+            },
+        )
+        .precision(Precision::Decimals(1)),
+        Field::new(
+            "weight",
+            "Weight of the volume",
+            "Volume × density at the temperature",
+            Kind::Quantity {
+                q: QT::Mass,
+                unit: "lb",
+            },
+        )
+        .precision(Precision::Decimals(1))
+        .optional(),
+        Field::new(
+            "volume_15",
+            "Volume at 15 °C",
+            "The same fuel's volume at 15 °C",
+            Kind::Quantity {
+                q: QT::Volume,
+                unit: "galUS",
+            },
+        )
+        .precision(Precision::Decimals(2))
+        .optional(),
+        Field::new(
+            "vcf_table",
+            "Factor by the API tables",
+            "Table 54B, or 54A for wide-cut",
+            Kind::Number { min: 0.0, max: 2.0 },
+        )
+        .precision(Precision::Decimals(4)),
+        Field::new(
+            "vcf_linear",
+            "Factor by one coefficient",
+            "1 / (1 + coefficient × (temperature − 15 °C))",
+            Kind::Number { min: 0.0, max: 2.0 },
+        )
+        .precision(Precision::Decimals(4))
+        .optional(),
+        Field::new(
+            "density_basis",
+            "Density basis",
+            "typical or entered",
+            Kind::Text { max_len: 40 },
+        ),
+    ],
+    errors: &[ErrorCode::OutOfDomain, ErrorCode::InvalidInput],
+    warnings: &[
+        "NOMINAL_VALUE_USED",
+        "MODEL_EXTRAPOLATED",
+        "UNIT_ASSUMED",
+        "EXPERIMENTAL_TOOL",
+    ],
+    model: "VCF = exp(−α ΔT (1 + 0.8 α ΔT)), ΔT = T − 15 °C, α = K0/ρ15² + K1/ρ15 (API MPMS 11.1 Table 54B by density zone, or 54A for wide-cut, as Measurement Canada's V-18 assigns); or VCF = 1 / (1 + β ΔT) with one coefficient; density = ρ15 × VCF",
+    accuracy: "The tables' formula matches every printed cell of Measurement Canada's Jet A, Jet B, and avgas tables (−40 to 40 °C) within 0.00006; the result is nominal, because a real batch's density at 15 °C is on its fuel slip",
+    when_to_use: "Use this when you load fuel on a hot or cold ramp and want its weight from the gallons or liters pumped. Enter the fuel's temperature and either pick the fuel type or type the density at 15 °C from the fuel slip. It returns the density at that temperature and, with a volume, its weight. Send the density on to the fuel weight tool and the weight and balance.",
+    limitations: "Typical densities are vendor values; Jet A batches range from 775 to 840 kg/m³ at 15 °C (ASTM D1655), so use the slip's density when you have it. The tables' formula is computed without the standard's intermediate rounding, so a factor can differ from a printed table in the fourth decimal. The single coefficient is Chevron's typical value for kerosine-type fuel; for other fuels enter your own. Temperatures from −50 to 60 °C only.",
+    references: &[CHEVRON_FTR, MC_VCF, ABB_API],
+    examples: &[Example {
+        id: "primary",
+        title: "Jet A at 800 kg/m³ on a −20 °C ramp",
+        input: r#"{"fuel":"jet-a","density_15":"800 kg/m3","temperature":"-20 degC"}"#,
+        source: "Measurement Canada Jet A table (Table 54B, 800 kg/m³): VCF 1.0322 at −20 °C",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "aviation.loading.fuel-weight",
+            reason: "next",
+        },
+        Related {
+            id: "aviation.loading.weight-balance",
+            reason: "next",
+        },
+        Related {
+            id: "aviation.loading.fuel-plan",
+            reason: "alternative",
+        },
+    ],
+    sentence: "At {temperature}, the fuel's nominal density is {density}.{if weight > 0} That volume weighs {weight}.{/if}",
+    limits: &[("batchRows", 10_000)],
+    run: run_fuel_density_temperature,
+    assumptions: &[
+        gp_base::tool::Assumption {
+            name: "Typical density of kerosine-type jet fuel at 15 °C",
+            value: "810",
+            unit: "kg/m3",
+            source: "chevron-ftr3",
+        },
+        gp_base::tool::Assumption {
+            name: "Typical density of wide-cut jet fuel at 15 °C",
+            value: "762",
+            unit: "kg/m3",
+            source: "chevron-ftr3",
+        },
+        gp_base::tool::Assumption {
+            name: "Typical density of avgas at 15 °C",
+            value: "715",
+            unit: "kg/m3",
+            source: "chevron-ftr3",
+        },
+        gp_base::tool::Assumption {
+            name: "Coefficient of thermal expansion of kerosine-type jet fuel",
+            value: "0.00099",
+            unit: "1/degC",
+            source: "chevron-ftr3",
+        },
+    ],
+    ..ToolDef::BLANK
+};
+
+fn run_fuel_density_temperature(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    use gp_base::error::Warning;
+    let kg_m3 = unit(QT::Density, "kg/m3");
+    let t = ctx
+        .req_quantity("temperature")?
+        .to(unit(QT::Temperature, "degC"));
+    if !(-50.0..=60.0).contains(&t) {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "The fuel temperature is from -50 to 60 °C.",
+        )
+        .at("/temperature"));
+    }
+    let fuel = ctx.choice("fuel")?;
+    let (rho15, basis) = match (ctx.quantity("density_15")?, fuel) {
+        (Some(d), _) => (d.to(kg_m3), "entered"),
+        (None, Some(f)) => {
+            let (_, name, rho) = FUEL_DENSITIES
+                .iter()
+                .find(|(id, _, _)| *id == f)
+                .expect("choice");
+            let batch = if f == "jet-a" {
+                " Jet A batches range from 775 to 840 kg/m³ (ASTM D1655);"
+            } else {
+                ""
+            };
+            ctx.warnings.push(Warning::new(
+                "NOMINAL_VALUE_USED",
+                format!(
+                    "Uses a typical {name} density of {rho} kg/m³ at 15 °C (Chevron).{batch} enter the density on your fuel slip for close loading."
+                ),
+            ));
+            (*rho, "typical")
+        }
+        (None, None) => {
+            return Err(ToolError::invalid(
+                "/fuel",
+                "Choose a fuel type or enter the density at 15 °C.",
+            )
+            .hint("Example: jet-a"));
+        }
+    };
+    if !(653.0..=1075.0).contains(&rho15) {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "The API tables cover densities at 15 °C from 653 to 1,075 kg/m³.",
+        )
+        .at("/density_15"));
+    }
+    if !(-40.0..=40.0).contains(&t) {
+        ctx.warnings.push(Warning::new(
+            "MODEL_EXTRAPOLATED",
+            "Measurement Canada's tables, which check this formula, stop at -40 and 40 °C.",
+        ));
+    }
+    let table = api_vcf(rho15, t, fuel == Some("wide-cut"));
+    // Chevron's coefficient is for kerosine-type fuel: a jet fuel by type, or
+    // an entered density in the jet fuel zone.
+    let kerosine = match fuel {
+        Some(f) => f == "jet-a",
+        None => (787.5..838.5).contains(&rho15),
+    };
+    let beta = ctx
+        .number("expansion")?
+        .or(kerosine.then_some(KEROSINE_BETA));
+    let linear = beta.map(|b| linear_vcf(b, t));
+    let vcf = if ctx.choice("method")? == Some("linear") {
+        linear.ok_or_else(|| {
+            ToolError::invalid(
+                "/expansion",
+                "Chevron's coefficient is for kerosine-type jet fuel; enter one for this fuel.",
+            )
+            .hint("Example: 0.00099")
+        })?
+    } else {
+        table
+    };
+    let rho = rho15 * vcf;
+    let q = |v: f64, u| gp_base::tool::Q { value: v, unit: u };
+    let mut out = vec![
+        ("density", ctx.out("density", q(rho, kg_m3))),
+        ("vcf", Json::Num(vcf)),
+        ("density_15", ctx.out("density_15", q(rho15, kg_m3))),
+        ("vcf_table", Json::Num(table)),
+        ("density_basis", Json::str(basis)),
+    ];
+    if let Some(l) = linear {
+        out.push(("vcf_linear", Json::Num(l)));
+    }
+    if let Some(v) = ctx.quantity("volume")? {
+        let m3 = v.base();
+        if m3 < 0.0 {
+            return Err(ToolError::invalid("/volume", "Fuel cannot be negative."));
+        }
+        out.push((
+            "weight",
+            ctx.out("weight", q(m3 * rho, unit(QT::Mass, "kg"))),
+        ));
+        out.push((
+            "volume_15",
+            ctx.out("volume_15", q(m3 * vcf, unit(QT::Volume, "m3"))),
+        ));
     }
     Ok(obj(out))
 }

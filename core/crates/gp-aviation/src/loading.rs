@@ -33,7 +33,7 @@ const PHAK_FUEL_WEIGHT: Reference = Reference {
 
 pub static FUEL_WEIGHT: ToolDef = ToolDef {
     id: "aviation.loading.fuel-weight",
-    version: "1.1.0",
+    version: "1.2.0",
     stability: gp_base::tool::Stability::Stable,
     title: "Fuel weight",
     summary: "Fuel weight from volume, or volume from weight, for avgas or jet fuel at a nominal density or one you enter.",
@@ -70,6 +70,13 @@ pub static FUEL_WEIGHT: ToolDef = ToolDef {
             "lb/galUS",
         )
         .core(),
+        qty(
+            "fuel_temperature",
+            "Fuel temperature",
+            "Optional, like -10 °C: the temperature your density is for, named in the result",
+            QT::Temperature,
+            "degC",
+        ),
     ],
     outputs: &[
         qty("weight", "Fuel weight", "Volume × density", QT::Mass, "lb")
@@ -129,7 +136,7 @@ pub static FUEL_WEIGHT: ToolDef = ToolDef {
             reason: "next",
         },
     ],
-    sentence: "{volume} of fuel weighs {weight}.{warn NOMINAL_VALUE_USED} This uses a nominal density.{/warn}",
+    sentence: "{volume} of fuel weighs {weight}.{warn NOMINAL_VALUE_USED} This uses a nominal density.{/warn}{if fuel_temperature > -300} The density is for fuel at {fuel_temperature}.{/if}",
     limits: &[("batchRows", 10_000)],
     run: run_fuel_weight,
     assumptions: &[
@@ -153,7 +160,17 @@ fn run_fuel_weight(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let vol = ctx.quantity("volume")?.map(|x| x.base());
     let wt = ctx.quantity("weight")?.map(|x| x.base());
     let fuel = ctx.choice("fuel")?;
-    let (rho, basis) = match (ctx.quantity("density")?, fuel) {
+    let density = ctx.quantity("density")?;
+    // A temperature names what an entered density is for; with a nominal
+    // density it would claim a correction that was not made.
+    if ctx.quantity("fuel_temperature")?.is_some() && density.is_none() {
+        return Err(ToolError::invalid(
+            "/fuel_temperature",
+            "A fuel temperature goes with an entered density; the nominal densities are not corrected for it.",
+        )
+        .hint("Find the density with the fuel density tool, like 822 kg/m3 at -10 degC"));
+    }
+    let (rho, basis) = match (density, fuel) {
         (Some(d), _) => (d.base(), "entered"),
         (None, Some(f)) => {
             let (_, name, lb_gal) = FUELS.iter().find(|(id, _, _)| *id == f).expect("choice");

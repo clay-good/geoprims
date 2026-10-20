@@ -22,7 +22,9 @@ Airport elevation from −2,000 to 15,000 ft, and the circling altitude from the
 
 ## Approximations
 
-Formula 2-7-1 is the order's own standard-atmosphere conversion, not an exact compressible-flow airspeed conversion, and the 25 kt is the order's fixed wind allowance; the tool uses both as written, because the point is the radius the procedure designer used. It reports the design radius only: restricted circling sectors, the chart's minimums, and the Terminal Procedures Publication legend's banded table are not modeled (task 7 of the change adds the legend table only after it is read at the source).
+Formula 2-7-1 is the order's own standard-atmosphere conversion, not an exact compressible-flow airspeed conversion, and the 25 kt is the order's fixed wind allowance; the tool uses both as written, because the point is the radius the procedure designer used. It reports the design radius; restricted circling sectors and the chart's minimums are not modeled.
+
+With a circling altitude, the tool also reports the radius the Terminal Procedures Publication legend prints for that MDA band (read in the d-TPP cycle 2611 front matter, effective October 29, 2026). The legend's numbers sit up to about 0.4 NM under the formula evaluated at the circling altitude, which looked like a different method until the assumption was found: every one of its 30 cells is Formula 2-7-2 at the band's lowest MDA (0, 1,001, 3,001, 5,001, 7,001, or 9,001 ft MSL, taken as elevation plus height), cut down (not rounded) to a tenth of a mile, and never under 1.3 NM. Rounding instead of cutting misses 12 cells, and taking each band's top misses 25. So the legend is a conservative chart aid for a band of MDAs, and the formula with your own MDA is the design value; the tool shows both.
 
 ## Worked example
 
@@ -39,8 +41,9 @@ Formula 2-7-1 is the order's own standard-atmosphere conversion, not an exact co
 
 ## Differential tests
 
-- `tools/vectors/gen_circling.py`: a separate Python evaluation of Formulas 2-7-1 and 2-7-2 for every category at airport elevations of 0, 2,000, and 5,000 ft (the change design's verification set), four cases with a circling altitude (one under 1,000 ft above the airport), and two refusals; with the handbook's example, 22 vectors in `core/vectors/aviation.ifr.circling-radius.jsonl`.
+- `tools/vectors/gen_circling.py`: a separate Python evaluation of Formulas 2-7-1 and 2-7-2 for every category at airport elevations of 0, 2,000, and 5,000 ft (the change design's verification set), four cases with a circling altitude (one under 1,000 ft above the airport), and two refusals; with the handbook's example, 22 vectors; then the legend's 30 printed cells, one per band and category; 52 vectors in `core/vectors/aviation.ifr.circling-radius.jsonl`.
 
 ## Invariants
 
+- `core/crates/gp-aviation/tests/approach.rs` `circling_legend_is_the_formula_at_each_band_floor`: for every band above the lowest and every category, the legend radius equals the formula at the band's floor cut down to a tenth, and is the same anywhere in the band; no legend radius without a circling altitude.
 - `core/crates/gp-aviation/tests/approach.rs` `circling_radius_invariants`: the handbook's 2.86 NM; the Category C scenario shows Table 2-7-1's inputs; Category A at sea level falls under 1.30 NM by the formula and reports the minimum, saying so; the height used is never under 1,000 ft; the radius grows with elevation and from Category A to E; the legacy radii; refusal of a circling altitude below the airport.

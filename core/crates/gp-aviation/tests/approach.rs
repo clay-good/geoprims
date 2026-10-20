@@ -144,3 +144,59 @@ fn circling_radius_invariants() {
     );
     assert_eq!(bad["error"]["code"], "OUT_OF_DOMAIN");
 }
+
+#[test]
+fn circling_legend_is_the_formula_at_each_band_floor() {
+    // The TPP legend (cycle 2611) prints the radius by circling MDA band.
+    // Each cell is Formula 2-7-2 at the band's lowest MDA, cut down to a
+    // tenth and never under 1.3 NM; the tool's legend output must be that.
+    let run = |cat: &str, elev: f64, mda: f64| {
+        let r: Value = serde_json::from_str(&REGISTRY.invoke(
+            "aviation.ifr.circling-radius",
+            &json!({"category": cat, "airport_elevation": format!("{elev} ft"), "circling_altitude": format!("{mda} ft")})
+                .to_string(),
+        ))
+        .unwrap();
+        assert_eq!(r["ok"], true, "{r}");
+        r["result"].clone()
+    };
+    for (floor, top) in [
+        (0.0, 1000.0),
+        (1001.0, 3000.0),
+        (3001.0, 5000.0),
+        (5001.0, 7000.0),
+        (7001.0, 9000.0),
+        (9001.0, 10_500.0),
+    ] {
+        for cat in ["A", "B", "C", "D", "E"] {
+            // The tool's height is elevation + k with k at least 1,000 ft, so it
+            // equals the band's floor from an airport 1,000 ft below it. The
+            // lowest band's floor, 0 ft MSL, cannot be reached that way; its
+            // cells are held by the golden vectors.
+            let elev = (floor - 1000.0_f64).max(-2000.0);
+            let at_floor = run(cat, elev, floor.max(elev + 1000.0));
+            let formula = at_floor["radius_formula"]["value"].as_f64().unwrap();
+            let expect = ((formula * 10.0).floor() / 10.0).max(1.3);
+            if floor > 0.0 {
+                assert!(
+                    (at_floor["legend_radius"]["value"].as_f64().unwrap() - expect).abs() < 1e-9,
+                    "{cat} {floor}: {at_floor}"
+                );
+            }
+            // Anywhere in the band, the legend's number is the same.
+            let top_elev = top - 1500.0;
+            let at_top = run(cat, top_elev, top);
+            assert_eq!(
+                at_top["legend_radius"], at_floor["legend_radius"],
+                "{cat} band {floor} to {top}"
+            );
+        }
+    }
+    // Without a circling altitude there is no band, and no legend radius.
+    let r: Value = serde_json::from_str(&REGISTRY.invoke(
+        "aviation.ifr.circling-radius",
+        &json!({"category": "C", "airport_elevation": "0 ft"}).to_string(),
+    ))
+    .unwrap();
+    assert!(r["result"].get("legend_radius").is_none());
+}

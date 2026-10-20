@@ -5,6 +5,15 @@
       "date": "2026-10-20",
       "kind": "changed",
       "tools": [
+        "aviation.ifr.circling-radius"
+      ],
+      "vectors": [],
+      "summary": "The circling approach radius also shows the radius the Terminal Procedures legend prints for the circling MDA band, beside the computed one. The legend's table is the formula at each band's lowest MDA, cut down to a tenth. Results are unchanged."
+    },
+    {
+      "date": "2026-10-20",
+      "kind": "changed",
+      "tools": [
         "aviation.loading.fuel-weight"
       ],
       "vectors": [],

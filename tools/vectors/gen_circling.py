@@ -54,5 +54,17 @@ for inp, field in (({"category": "C", "airport_elevation": "1000 ft", "circling_
     vectors.append({"id": f"v{len(vectors) + 1:03d}", "input": inp,
                     "expect": {"ok": False, "error.code": "OUT_OF_DOMAIN", "error.field": field},
                     "source": SRC, "sourceVersion": VER, "tolerance": {}})
+# The TPP legend's circling table (d-TPP cycle 2611, 29 OCT 2026 to 26 NOV
+# 2026), as printed, one vector per band and category, at an MDA inside the
+# band. Appended after the published vectors.
+LEGEND = [((0, 800), [1.3, 1.7, 2.7, 3.6, 4.5]), ((500, 2000), [1.3, 1.8, 2.8, 3.7, 4.6]),
+          ((2000, 4000), [1.3, 1.8, 2.9, 3.8, 4.8]), ((4500, 6000), [1.3, 1.9, 3.0, 4.0, 5.0]),
+          ((5500, 8000), [1.4, 2.0, 3.2, 4.2, 5.3]), ((7000, 10000), [1.4, 2.1, 3.3, 4.4, 5.5])]
+for (elev, mda), row in LEGEND:
+    for cat, printed in zip("ABCDE", row):
+        add({"category": cat, "airport_elevation": f"{elev} ft", "circling_altitude": f"{mda} ft"},
+            {"result.legend_radius.value": printed},
+            source="FAA Terminal Procedures Publication legend (d-TPP cycle 2611), printed cell",
+            tol={"result.legend_radius.value": {"abs": 1e-9}})
 for v in vectors:
     print(json.dumps(v, ensure_ascii=False, separators=(",", ":")))

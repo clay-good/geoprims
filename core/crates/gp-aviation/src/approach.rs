@@ -325,6 +325,28 @@ const CIRCLING: [(&str, f64, f64, f64, f64); 5] = [
 /// The minimum circling approach radius, NM (Order 8260.3G 2-7-1.a(2)).
 const MIN_CAR: f64 = 1.30;
 
+const TPP_LEGEND: Reference = Reference {
+    title: "Terminal Procedures Publication legend, Circling Approach Maneuvering Airspace Radius",
+    issuer: "FAA Aeronautical Information Services",
+    year: 2026,
+    edition: "d-TPP cycle 2611, 29 OCT 2026 to 26 NOV 2026",
+    locator: "Front matter (frntmatter.pdf), Terms/Landing Minima Data: the circling radius by approach category and circling MDA",
+    url: "https://www.faa.gov/air_traffic/flight_info/aeronav/digital_products/dtpp/",
+};
+
+/// The legend's table: the top of each circling MDA band (ft MSL; the last
+/// band has none) and the radius it prints for Categories A to E (NM). Each
+/// cell is Formula 2-7-2 at the band's lowest MDA (0, 1,001, 3,001, ... ft),
+/// cut down to a tenth, and never under 1.3 NM: all 30 cells reproduce.
+const TPP_CIRCLING: [(f64, [f64; 5]); 6] = [
+    (1_000.0, [1.3, 1.7, 2.7, 3.6, 4.5]),
+    (3_000.0, [1.3, 1.8, 2.8, 3.7, 4.6]),
+    (5_000.0, [1.3, 1.8, 2.9, 3.8, 4.8]),
+    (7_000.0, [1.3, 1.9, 3.0, 4.0, 5.0]),
+    (9_000.0, [1.4, 2.0, 3.2, 4.2, 5.3]),
+    (f64::INFINITY, [1.4, 2.1, 3.3, 4.4, 5.5]),
+];
+
 const fn ft(name: &'static str, title: &'static str, help: &'static str) -> Field {
     Field::new(
         name,
@@ -351,6 +373,7 @@ const fn nm(name: &'static str, title: &'static str, help: &'static str) -> Fiel
 
 pub static CIRCLING_RADIUS: ToolDef = ToolDef {
     id: "aviation.ifr.circling-radius",
+    version: "1.1.0",
     title: "Circling approach radius",
     summary: "The radius of the protected circling area for an approach category, by the FAA's TERPS formulas from the category's speed, bank, and the true airspeed at the airport's elevation, never less than 1.30 NM.",
     aliases: &[
@@ -420,14 +443,21 @@ pub static CIRCLING_RADIUS: ToolDef = ToolDef {
             "The fixed radius charted before Order 8260.3 Change 21",
         )
         .precision(Precision::Decimals(1)),
+        nm(
+            "legend_radius",
+            "Chart legend radius",
+            "The Terminal Procedures legend's radius for this circling MDA band",
+        )
+        .precision(Precision::Decimals(1))
+        .optional(),
     ],
     errors: &[gp_base::ErrorCode::OutOfDomain],
     warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
     model: "V_KTAS = V_KIAS × 171233 × √(303 − 0.00198 (elevation + k)) / (288 − 0.00198 (elevation + k))^2.628, k ≥ 1,000 ft (Formula 2-7-1); CAR = 2 (V_KTAS + 25)² / (tan(bank) × 68625.4) + S, at least 1.30 NM (Formula 2-7-2), with Table 2-7-1's speed, bank, and S for the category (Order 8260.3G)",
     accuracy: "Exact to the order's formulas; the 25 kt in the formula is the order's wind allowance",
     when_to_use: "Use this to see how far from the runway a circling approach is protected for your category at a given airport, so you can stay inside it when you circle. Enter the category and the airport elevation, and the circling altitude when it is more than 1,000 ft above the airport. It shows each number the formula used.",
-    limitations: "This is the design radius of the TERPS circling area, measured from each runway threshold; the chart's own circling minimums and any restricted sectors govern. Older procedures may still be built on the fixed radii charted before Order 8260.3 Change 21, which the tool shows for comparison. It does not read the chart legend's banded table.",
-    references: &[ORDER_8260_3G, IPH_CIRCLING],
+    limitations: "This is the design radius of the TERPS circling area, measured from each runway threshold; the chart's own circling minimums and any restricted sectors govern. Older procedures may still be built on the fixed radii charted before Order 8260.3 Change 21, which the tool shows for comparison. With a circling altitude it also shows the radius the chart legend prints for that MDA band, which is the formula at the band's lowest altitude, cut down to a tenth.",
+    references: &[ORDER_8260_3G, IPH_CIRCLING, TPP_LEGEND],
     examples: &[Example {
         id: "primary",
         title: "Category C at a sea-level airport",
@@ -471,9 +501,10 @@ fn run_circling_radius(ctx: &mut Ctx) -> Result<Json, ToolError> {
         )
         .at("/airport_elevation"));
     }
-    let k = match ctx.quantity("circling_altitude")? {
+    let mda = ctx.quantity("circling_altitude")?.map(|a| a.to(ft_u));
+    let k = match mda {
         Some(a) => {
-            let above = a.to(ft_u) - elev;
+            let above = a - elev;
             if !(0.0..=10_000.0).contains(&above) {
                 return Err(ToolError::new(
                     gp_base::ErrorCode::OutOfDomain,
@@ -485,12 +516,20 @@ fn run_circling_radius(ctx: &mut Ctx) -> Result<Json, ToolError> {
         }
         None => 1_000.0,
     };
-    let &(_, ias, bank, s, legacy) = CIRCLING.iter().find(|r| r.0 == cat).expect("choice");
+    let col = CIRCLING.iter().position(|r| r.0 == cat).expect("choice");
+    let (_, ias, bank, s, legacy) = CIRCLING[col];
     let h = 0.00198 * (elev + k);
     let tas = ias * 171_233.0 * libm::sqrt(303.0 - h) / libm::pow(288.0 - h, 2.628);
     let formula = 2.0 * (tas + 25.0) * (tas + 25.0) / (libm::tan(bank.to_radians()) * 68_625.4) + s;
     let q = |v: f64, u| gp_base::tool::Q { value: v, unit: u };
-    Ok(obj(vec![
+    let legend = mda.map(|a| {
+        let row = TPP_CIRCLING
+            .iter()
+            .find(|(top, _)| a <= *top)
+            .expect("the last band is open");
+        row.1[col]
+    });
+    let mut out = vec![
         ("radius", ctx.out("radius", q(formula.max(MIN_CAR), nm_u))),
         (
             "radius_formula",
@@ -502,5 +541,9 @@ fn run_circling_radius(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("straight_segment", ctx.out("straight_segment", q(s, nm_u))),
         ("height_used", ctx.out("height_used", q(k, ft_u))),
         ("legacy_radius", ctx.out("legacy_radius", q(legacy, nm_u))),
-    ]))
+    ];
+    if let Some(r) = legend {
+        out.push(("legend_radius", ctx.out("legend_radius", q(r, nm_u))));
+    }
+    Ok(obj(out))
 }

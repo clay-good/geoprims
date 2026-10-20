@@ -424,19 +424,19 @@
     "lastmod": "2026-10-19"
   },
   "/drone/photogrammetry/parallax-height/": {
-    "hash": "928089c377068d45",
+    "hash": "b74694c990d7daa9",
     "lastmod": "2026-10-20"
   },
   "/drone/photogrammetry/photo-scale/": {
-    "hash": "47380fa9ffa6a92f",
+    "hash": "2245020d027a49e6",
     "lastmod": "2026-10-20"
   },
   "/drone/photogrammetry/relief-displacement/": {
-    "hash": "e32149d727f6052d",
-    "lastmod": "2026-10-19"
+    "hash": "65786231330c9f69",
+    "lastmod": "2026-10-20"
   },
   "/drone/photogrammetry/stereo-base/": {
-    "hash": "8fd18593f025aa51",
+    "hash": "5a9a9c89931663b9",
     "lastmod": "2026-10-20"
   },
   "/drone/photogrammetry/terrain-overlap/": {
@@ -1420,7 +1420,7 @@
     "lastmod": "2026-10-09"
   },
   "/learn/why-overlap-changes-heights/": {
-    "hash": "b580f5a7936e1c14",
+    "hash": "b7065ecbbc208d9e",
     "lastmod": "2026-10-20"
   },
   "/learn/wind-triangle/": {
@@ -2372,8 +2372,8 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "b13a5eb0665a53bf",
-    "lastmod": "2026-10-19"
+    "hash": "0dab07b47999d4a7",
+    "lastmod": "2026-10-20"
   },
   "/workflows/": {
     "hash": "ae01dae8923fdd1d",

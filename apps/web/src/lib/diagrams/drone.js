@@ -213,7 +213,108 @@ function batteryReserveGauge(args, result) {
   return { markup: svg(body, title), desc: title };
 }
 
+/** Photo scale, side view: the lens, its height above the ground, and the scale it gives. */
+function photoScale(args, result) {
+  const h = qty(result, 'height_above_ground', LENGTH);
+  if (!(h > 0)) return null;
+  const w = h * 0.9;
+  const S = fit([[-w / 2, 0], [w / 2, 0], [0, h]], 220, 130);
+  const [cam, l, r] = [S([0, h]), S([-w / 2, 0]), S([w / 2, 0])];
+  const scale = result.result.scale;
+  const body = [
+    line('dg-grid', [12, l[1]], [308, l[1]]),
+    `<path class="dg-fill" d="${path([cam, l, r], true)}"/>`,
+    line('dg-casing', cam, [cam[0], l[1]]), line('dg-accent', cam, [cam[0], l[1]]),
+    dot(...cam, 'dg-dot-now'),
+    text('dg-label', cam[0] + 8, (cam[1] + l[1]) / 2, disp(result, 'height_above_ground')),
+    text('dg-label', 12, 22, `Scale ${scale}`),
+    result.result.gsd ? text('dg-muted-text', 160, l[1] + 18, `1 pixel = ${disp(result, 'gsd')} of ground`, 'middle') : '',
+    result.result.ground_distance ? text('dg-muted-text', 160, l[1] + 32, `Photo distance = ${disp(result, 'ground_distance')} on the ground`, 'middle') : '',
+  ].join('');
+  const title = `A lens ${disp(result, 'height_above_ground')} above the ground gives a photo scale of ${scale}.`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/** Relief displacement, side view: the tower, the rays to its base and top, and the top's outward shift. */
+function reliefDisplacement(args, result) {
+  const H = qty(result, 'height_above_base', LENGTH);
+  const ht = qty(result, 'object_height', LENGTH);
+  if (!(H > 0) || !(ht > 0) || ht >= H) return null;
+  const x = H * 0.5;
+  // The ray through the top meets the base's level farther out: the displacement, seen on the ground.
+  const xt = (x * H) / (H - ht);
+  const S = fit([[-H * 0.1, 0], [xt, 0], [0, H]], 250, 130);
+  const [cam, g0, base, top, shift] = [S([0, H]), S([0, 0]), S([x, 0]), S([x, ht]), S([xt, 0])];
+  const body = [
+    line('dg-grid', [12, g0[1]], [308, g0[1]]),
+    line('dg-muted dg-dash', cam, g0),
+    line('dg-muted', cam, base),
+    line('dg-muted dg-dash', top, shift), line('dg-muted', cam, top),
+    line('dg-casing', base, top), line('dg-accent', base, top),
+    line('dg-casing', base, shift), line('dg-accent', base, shift),
+    dot(...cam, 'dg-dot-now'),
+    text('dg-label', top[0] - 6, (base[1] + top[1]) / 2, `${disp(result, 'object_height')} tall`, 'end'),
+    text('dg-muted-text', cam[0] + 6, (cam[1] + g0[1]) / 2, disp(result, 'height_above_base')),
+    text('dg-label', 12, 22, `Top shifts ${disp(result, 'displacement')} on the photo`),
+    text('dg-muted-text', (base[0] + shift[0]) / 2, g0[1] + 18, 'outward from the center', 'middle'),
+  ].join('');
+  const title = `A ${disp(result, 'object_height')} object seen from ${disp(result, 'height_above_base')} above its base: its top's image sits ${disp(result, 'displacement')} farther from the photo center than its base's.`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/** Parallax, side view: two camera stations and the rays from each to the point. */
+function parallaxHeight(args, result) {
+  const H = measure(args.flying_height, LENGTH, 'm');
+  const z = qty(result, 'elevation', LENGTH);
+  const zc = args.control_elevation === undefined ? 0 : measure(args.control_elevation, LENGTH, 'm');
+  if (!(H > 0) || !Number.isFinite(z) || !Number.isFinite(zc) || z >= H) return null;
+  const ground = Math.min(z, zc);
+  const B = (H - ground) * 0.6;
+  const S = fit([[0, ground], [B, ground], [0, H], [B, H], [B / 2, z]], 230, 130);
+  const [c1, c2, pt, g] = [S([0, H]), S([B, H]), S([B / 2, z]), S([B / 2, zc])];
+  const body = [
+    line('dg-grid', [12, S([0, ground])[1]], [308, S([0, ground])[1]]),
+    line('dg-muted dg-dash', c1, c2),
+    line('dg-muted', c1, pt), line('dg-muted', c2, pt),
+    z > zc ? line('dg-casing', g, pt) + line('dg-accent', g, pt) : '',
+    dot(...c1, 'dg-dot-now'), dot(...c2, 'dg-dot-now'), dot(...pt),
+    text('dg-label', 12, 22, `Point at elevation ${disp(result, 'elevation')}`),
+    result.result.height_above_control ? text('dg-muted-text', pt[0] + 8, (pt[1] + g[1]) / 2, `${disp(result, 'height_above_control')} above control`) : '',
+    text('dg-muted-text', (c1[0] + c2[0]) / 2, c1[1] - 10, 'Two exposures', 'middle'),
+  ].join('');
+  const title = `Seen from two camera stations, the point's parallax puts it at elevation ${disp(result, 'elevation')}.`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/** Stereo base, side view: two stations an air base apart and the ground each photo covers. */
+function stereoBase(args, result) {
+  const H = measure(args.height, LENGTH, 'm');
+  const G = qty(result, 'coverage', LENGTH);
+  const B = qty(result, 'air_base', LENGTH);
+  if (!(H > 0) || !(G > 0) || !(B > 0)) return null;
+  const S = fit([[-G / 2, 0], [B + G / 2, 0], [0, H], [B, H]], 250, 120);
+  const [c1, c2] = [S([0, H]), S([B, H])];
+  const [a1, b1, a2, b2] = [S([-G / 2, 0]), S([G / 2, 0]), S([B - G / 2, 0]), S([B + G / 2, 0])];
+  const body = [
+    line('dg-grid', [12, a1[1]], [308, a1[1]]),
+    `<path class="dg-fill" d="${path([c1, a1, b1], true)}"/>`,
+    `<path class="dg-fill" d="${path([c2, a2, b2], true)}"/>`,
+    line('dg-casing', a2, b1), line('dg-accent', a2, b1),
+    line('dg-casing', c1, c2), line('dg-accent', c1, c2),
+    dot(...c1, 'dg-dot-now'), dot(...c2, 'dg-dot-now'),
+    text('dg-label', 12, 22, `Air base ${disp(result, 'air_base')}, B/H ${disp(result, 'base_height_ratio')}`),
+    text('dg-muted-text', (a2[0] + b1[0]) / 2, a1[1] + 18, 'seen by both photos', 'middle'),
+    result.result.vertical_precision ? text('dg-muted-text', 12, 228, `One parallax reading: ±${disp(result, 'vertical_precision')} in height`) : '',
+  ].join('');
+  const title = `Photos ${disp(result, 'air_base')} apart, each covering ${disp(result, 'coverage')}, give a base-to-height ratio of ${disp(result, 'base_height_ratio')}.`;
+  return { markup: svg(body, title), desc: title };
+}
+
 export const DIAGRAMS = {
+  'drone.photogrammetry.photo-scale': photoScale,
+  'drone.photogrammetry.relief-displacement': reliefDisplacement,
+  'drone.photogrammetry.parallax-height': parallaxHeight,
+  'drone.photogrammetry.stereo-base': stereoBase,
   'drone.photogrammetry.gsd': gsdFootprint,
   'drone.photogrammetry.altitude-for-gsd': gsdFootprint,
   'drone.photogrammetry.trigger': triggerOverlap,

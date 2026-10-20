@@ -85,6 +85,10 @@ const DIAGRAMS = Object.fromEntries(
     'aviation.airspeed.eas-to-mach',
     'aviation.airspeed.mach-to-eas',
     'aviation.airspeed.tas-to-eas',
+    'drone.photogrammetry.photo-scale',
+    'drone.photogrammetry.relief-displacement',
+    'drone.photogrammetry.parallax-height',
+    'drone.photogrammetry.stereo-base',
   ].map((id) => [id, PARTS[id.split('.')[0]][id]]),
 );
 

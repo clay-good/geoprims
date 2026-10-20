@@ -210,7 +210,7 @@ pub static PHOTO_SCALE: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
+        kind: "vector-diagram",
         map: &[],
     }],
     related: &[
@@ -405,7 +405,7 @@ pub static RELIEF_DISPLACEMENT: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
+        kind: "vector-diagram",
         map: &[],
     }],
     related: &[
@@ -630,7 +630,7 @@ pub static PARALLAX_HEIGHT: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
+        kind: "vector-diagram",
         map: &[],
     }],
     related: &[
@@ -782,7 +782,7 @@ pub static STEREO_BASE: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
+        kind: "vector-diagram",
         map: &[],
     }],
     related: &[

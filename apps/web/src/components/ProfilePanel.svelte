@@ -89,7 +89,7 @@
     <label>
       <span>Saved profiles</span>
       <select bind:value={chosen} onchange={() => (name = chosen)}>
-        {#each names as n (n)}<option value={n}>{n}</option>{/each}
+        {#each names as n (n)}<option value={n}>{n}{profiles[n].savedOn ? ` (saved ${profiles[n].savedOn})` : ''}</option>{/each}
       </select>
     </label>
     <div class="row">

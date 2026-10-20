@@ -29,6 +29,9 @@ The build checks that every listed field exists on the tool and is not marked `x
 
 - *Alternative: a profile holds free-form values by quantity (one "focal length" shared by every tool).* Rejected. Tools name the same quantity differently, and a profile that is "the tool's own JSON" is readable and importable without a mapping layer. Tool-field maps are what works today.
 
+### EP1a. Profiles live on the tools, not a settings page (decided 2026-10-19)
+`simplify-launch-chrome` removed `/settings/`, and the owner chose to keep it removed: each tool's panel lists, saves, loads, exports, imports, and deletes its kind's profiles, and the browser's own "clear site data" erases them. A field saved for one tool fills the same field on the kind's other tools (the tool's own value first), so a camera saved on the GSD tool fills the trigger tool; `geoprims_run` applies the same rule.
+
 ### EP2. One file format, one storage key
 Format `geoprims-profile`, version 1: `{format, version, kind, name, tools: {<toolId>: {<field>: value}}}`. The aircraft format (`geoprims-aircraft` v1) imports as `kind: "aircraft"`; export writes the new format. Storage is one key, `gp-profiles`, holding every profile by kind and name; the old `gp-aircraft` key migrates on first read and is then removed. Limits: 1 MB per file, 60-character names, 50 profiles per kind.
 
@@ -50,7 +53,7 @@ The site ships the example equipment the tools' worked examples already use (the
 
 - **[A stale profile silently feeds a plan]** → The chip names the profile on every result; a profile shows its saved date; the assumptions list on workflows names it.
 - **[Profile fields drift from manifests]** → The build gate checks every field in `data/profiles.json` against the catalog.
-- **[Private windows and full storage]** → As today: the profile lasts for the page, and the manager says so.
+- **[Private windows and full storage]** → As today: the profile lasts for the page, and the panel says so.
 
 ## Migration Plan
 

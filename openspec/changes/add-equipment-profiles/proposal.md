@@ -9,7 +9,7 @@ Depends on: `add-aviation-suite` (aircraft profiles), `add-drone-suite`, `add-pr
 ## What Changes
 
 - **Profile kinds as data.** `data/profiles.json` names each kind (aircraft, drone, camera, lidar sensor, GNSS receiver, radio link) and, per kind, the tool fields a profile keeps. The existing aircraft mapping moves into this file unchanged.
-- **One profile manager** at `/settings/#profiles` and on every tool that takes profile values: save this tool's equipment inputs under a name, load a profile, export, import, rename, delete. Existing `.aircraft.json` files keep importing.
+- **A profile panel on every tool that takes profile values:** save this tool's equipment inputs under a name, load a profile, export, import, delete. There is no separate manager page: `simplify-launch-chrome` removed `/settings/`, and the panels cover the job. Existing `.aircraft.json` files keep importing.
 - **Workflows take profiles.** A workflow declares which of its inputs come from which kind, so "Plan a mapping flight" offers "Use my drone" and "Use my camera", and the assumptions list names the profile.
 - **Agents pass profiles inline.** `geoprims_run` and `workflow.<slug>` accept a `profile` object in the same JSON as the exported file; its values fill any input not given explicitly. The server reads no files and keeps no state.
 - **Privacy unchanged.** Profile names and files never enter permalinks, reports, or requests. Permalinks carry the values a profile filled, so a link still reproduces the calculation on another device.
@@ -18,7 +18,7 @@ Depends on: `add-aviation-suite` (aircraft profiles), `add-drone-suite`, `add-pr
 
 ### New Capabilities
 
-- `web/equipment-profiles`: Profile kinds, the manager, storage, import and export, and how profiles fill tools.
+- `web/equipment-profiles`: Profile kinds, the per-tool panel, storage, import and export, and how profiles fill tools.
 
 ### Modified Capabilities
 

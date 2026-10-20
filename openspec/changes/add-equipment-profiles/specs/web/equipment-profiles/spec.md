@@ -23,7 +23,7 @@ A profile SHALL export as JSON with `format: "geoprims-profile"`, `version`, `ki
 - **THEN** the profile loads without it and the import report lists the dropped field
 
 ### Requirement: Local storage only
-Profiles SHALL be stored in the browser under one key, with at most 50 profiles per kind. Nothing about a profile SHALL be sent over the network. The profile name SHALL NOT appear in permalinks, report payloads, or "copy as agent call" output; the values it filled SHALL, as ordinary inputs. "Erase all local data" SHALL remove every profile.
+Profiles SHALL be stored in the browser under one key, with at most 50 profiles per kind. Nothing about a profile SHALL be sent over the network. The profile name SHALL NOT appear in permalinks, report payloads, or "copy as agent call" output; the values it filled SHALL, as ordinary inputs. The browser's own "clear site data" SHALL remove every profile; the site has no settings page of its own.
 
 #### Scenario: Permalink carries values, not the name
 - **WHEN** a reader fills the GSD tool from the profile "Zenmuse P1" and copies the permalink
@@ -33,8 +33,8 @@ Profiles SHALL be stored in the browser under one key, with at most 50 profiles 
 - **WHEN** the privacy egress test saves a profile named with a sentinel and runs every profile-taking tool
 - **THEN** no request contains the sentinel
 
-### Requirement: Profile manager
-A manager at `/settings/#profiles` SHALL list profiles by kind with name and saved date, and SHALL offer export, import, rename, and delete. Every tool that takes profile values SHALL offer, beside its inputs, the same save, load, export, and import actions for its kind, as the aircraft panel does today. Shipped example profiles SHALL be labeled "Example" and SHALL NOT be editable or counted.
+### Requirement: Profile panel
+Profiles SHALL be managed on the tools that take them; there SHALL be no separate manager page. Every tool that takes profile values SHALL offer, beside its inputs, one panel per kind it takes, listing that kind's saved profiles with name and saved date and offering save, load, export, import, and delete. Renaming is saving under the new name and deleting the old. A field saved for one tool SHALL fill the same field on the kind's other tools, the tool's own saved value first. Shipped example profiles SHALL be labeled "Example" and SHALL NOT be editable or counted.
 
 #### Scenario: Save from a tool
 - **WHEN** a reader enters a camera on the GSD tool and chooses "Save as profile" with the name "P1"
@@ -48,8 +48,8 @@ Loading a profile SHALL set the tool's kept input fields and recompute. The answ
 - **THEN** the serialized results are byte-identical
 
 ### Requirement: Storage failure is explained
-When the browser refuses storage (private window, quota), the manager SHALL say the profile lasts for this page only and offer export, as the aircraft panel does today.
+When the browser refuses storage (private window, quota), the panel SHALL say the profile lasts for this page only and offer export, as the aircraft panel does today.
 
 #### Scenario: Private window
 - **WHEN** a reader saves a profile in a private window where storage is blocked
-- **THEN** the profile fills tools for the session and the manager states it will not persist
+- **THEN** the profile fills tools for the session and the panel states it will not persist

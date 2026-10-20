@@ -195,6 +195,8 @@ const REGRESSIONS = [
   ['geodesy.parse.angle-arithmetic', { terms: [{ angle: '45-30-15' }, ...Array.from({ length: 12 }, () => ({ angle: -1e300, operation: 'subtract' }))] }, 'OUT_OF_DOMAIN'],
   ['survey.reduction.combined-factor', { ellipsoid_height: '90 ft', grid_scale: 0.99991, radius: -90 }, 'OUT_OF_DOMAIN'],
   ['survey.curves.circular-curve', { delta: '30 deg', tangent: '5e-324 ft' }, 'OUT_OF_DOMAIN'],
+  // A latitude far outside ±90° drew a glide ring of non-finite points.
+  ['aviation.performance.glide', { glide_ratio: 9, height: '5000 ft', tas: '70 kt', lon: 360, lat: -18121.399614028633 }, 'INVALID_INPUT'],
   ['geometry.overlay.boolean', { polygon_a: [{ lat: 40, lon: -105 }, { lat: 40, lon: -104.99 }, { lat: 40.008, lon: -104.99 }, { lat: 40.008, lon: -105 }], polygon_b: [{ lat: 40.004, lon: '-1000000000 deg' }, { lat: 40.004, lon: -104.985 }, { lat: 40.012, lon: -104.985 }, { lat: 40.012, lon: -104.995 }], edges: 'planar' }, 'OUT_OF_DOMAIN'],
 ];
 

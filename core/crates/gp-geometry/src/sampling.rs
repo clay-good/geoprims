@@ -731,6 +731,7 @@ pub static SYSTEMATIC_POINTS: ToolDef = ToolDef {
         ErrorCode::OutOfDomain,
         ErrorCode::DegenerateGeometry,
         ErrorCode::LimitExceeded,
+        ErrorCode::NoSolution,
     ],
     warnings: &["EXPERIMENTAL_TOOL"],
     model: "A lattice on the UTM plane from the lower-left corner of the polygon's bounding box (in the grid's turned frame): square, or triangular with rows d·√3/2 apart and every other row shifted d/2; spacing scaled by the zone's point scale at the polygon's center so neighbors are d apart on the ground; a random start moves the lattice by (r₁·d, r₂·row spacing) from two draws (EPA QA/G-5S ch. 7); points kept inside the outline and outside holes",

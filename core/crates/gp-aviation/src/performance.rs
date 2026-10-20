@@ -1380,6 +1380,12 @@ fn glide_ring(ctx: &mut Ctx, still: f64, v: f64, hw: f64) -> Result<Json, ToolEr
             ));
         }
     };
+    if !(-90.0..=90.0).contains(&lat) || !lon.is_finite() {
+        return Err(ToolError::invalid(
+            "/lat",
+            "The latitude is from -90 to 90 degrees.",
+        ));
+    }
     let from = ctx
         .quantity("wind_direction")?
         .map(|x| x.to(unit(QT::Angle, "deg")));

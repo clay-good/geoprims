@@ -66,6 +66,7 @@ fn catalog_lint() {
         "time.sun.position",
         "drone.links.link-budget",
         "aviation.wind.heading-groundspeed",
+        "survey.cogo.traverse-closure",
     ];
     let errs = manifest::lint(TOOLS, &taxonomy, &known);
     assert!(errs.is_empty(), "{}", errs.join("\n"));

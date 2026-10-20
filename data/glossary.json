@@ -1082,6 +1082,7 @@
       "source": "icao-annex5",
       "relatedTools": [
         "aviation.performance.specific-range",
+        "navigation.sailing.plane",
         "units.length.nm-to-km",
         "units.length.nm-to-mi"
       ]
@@ -1916,7 +1917,10 @@
         "geodesy.magnetic.magnetic-to-true",
         "geodesy.magnetic.model-compare",
         "geodesy.magnetic.true-to-magnetic",
-        "geodesy.magnetic.uncertainty-zone"
+        "geodesy.magnetic.uncertainty-zone",
+        "navigation.sailing.great-circle",
+        "navigation.sailing.mercator",
+        "navigation.sailing.mid-latitude"
       ]
     },
     {

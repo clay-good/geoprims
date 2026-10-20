@@ -1768,6 +1768,48 @@
         }
       ]
     },
+    "navigation.sailing": {
+      "summary": "The sailings as Bowditch works them, with the exact answer on WGS 84 beside each.",
+      "intro": "This group solves the sailings of The American Practical Navigator: plane, traverse, parallel, mid-latitude, Mercator, and great-circle with the composite track. Mariners, navigation students, and examiners use it to check a passage plan or an exam answer in the forms the book uses: difference of latitude, departure, DLo, and meridional parts. Start with Mercator sailing for a rhumb-line course or great-circle sailing for an ocean passage. The pitfall is trusting a short-form sailing on a long run; the exact ellipsoidal answer beside it shows how far off it is.",
+      "tasks": [
+        {
+          "want": "find difference of latitude and departure from a run",
+          "tools": [
+            "plane"
+          ]
+        },
+        {
+          "want": "find the course and distance made good over several legs",
+          "tools": [
+            "traverse"
+          ]
+        },
+        {
+          "want": "turn departure into difference of longitude",
+          "tools": [
+            "parallel"
+          ]
+        },
+        {
+          "want": "work a mid-latitude sailing",
+          "tools": [
+            "mid-latitude"
+          ]
+        },
+        {
+          "want": "work a Mercator sailing with meridional parts",
+          "tools": [
+            "mercator"
+          ]
+        },
+        {
+          "want": "plan a great-circle or composite passage",
+          "tools": [
+            "great-circle"
+          ]
+        }
+      ]
+    },
     "navigation.route": {
       "summary": "Routes, legs, and the geometry around them.",
       "intro": "These tools work with routes and moving objects: legs and totals for a route, cross-track error, the closest point on a route, range rings, fly-by turns, closest point of approach, intercepts, and time, speed, and distance. Pilots, drone operators, and mariners use them for planning. Start with route legs. A pitfall is mixing true and magnetic courses between legs; the legs tool lists both.",

@@ -7,6 +7,7 @@ pub mod los;
 pub mod rhumb;
 pub mod rings;
 pub mod route;
+pub mod sailing;
 pub mod sphere;
 pub mod vector;
 pub mod vincenty;
@@ -1100,6 +1101,12 @@ pub static TOOLS: &[&ToolDef] = &[
     &vector::LOOK_ANGLES,
     &vector::POLAR_CARTESIAN,
     &vector::OPERATIONS,
+    &sailing::PLANE,
+    &sailing::TRAVERSE,
+    &sailing::PARALLEL,
+    &sailing::MID_LATITUDE,
+    &sailing::MERCATOR,
+    &sailing::GREAT_CIRCLE,
 ];
 
 pub static REGISTRY: Registry = Registry {

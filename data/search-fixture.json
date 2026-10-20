@@ -1184,6 +1184,30 @@
     {
       "query": "hexagon grid over a polygon",
       "expect": "geometry.sampling.hex-grid"
+    },
+    {
+      "query": "plane sailing departure",
+      "expect": "navigation.sailing.plane"
+    },
+    {
+      "query": "traverse sailing course made good",
+      "expect": "navigation.sailing.traverse"
+    },
+    {
+      "query": "parallel sailing departure to dlo",
+      "expect": "navigation.sailing.parallel"
+    },
+    {
+      "query": "mid-latitude sailing",
+      "expect": "navigation.sailing.mid-latitude"
+    },
+    {
+      "query": "mercator sailing meridional parts",
+      "expect": "navigation.sailing.mercator"
+    },
+    {
+      "query": "composite sailing limiting latitude",
+      "expect": "navigation.sailing.great-circle"
     }
   ]
 }

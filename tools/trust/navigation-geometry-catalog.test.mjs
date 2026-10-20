@@ -29,7 +29,8 @@ test('navigation and geometry catalog progress is counted by the operation/endpo
       endpoints: tools.length,
     };
   };
-  assert.deepEqual(count('navigation'), { operations: 31, endpoints: 31 });
+  // 31 from add-navigation-and-geometry, plus the add-marine-navigation tools.
+  assert.deepEqual(count('navigation'), { operations: 37, endpoints: 37 });
   // 15 from add-navigation-and-geometry, plus the add-sampling-and-grids tools.
   assert.deepEqual(count('geometry'), { operations: 22, endpoints: 22 });
 });
@@ -45,9 +46,9 @@ test('every registered navigation and geometry operation has derivation document
 });
 
 test('every add-navigation-and-geometry operation is stable', () => {
-  // The expansion wave's sampling tools start experimental (add-sampling-and-grids).
+  // The expansion wave's tools start experimental (add-sampling-and-grids, add-marine-navigation).
   const operations = catalog.tools.filter(
-    (tool) => ['navigation', 'geometry'].includes(tool.domain) && tool.composedOf.length === 0 && tool.group !== 'sampling',
+    (tool) => ['navigation', 'geometry'].includes(tool.domain) && tool.composedOf.length === 0 && !['sampling', 'sailing'].includes(tool.group),
   );
   assert.ok(operations.length > 0);
   assert.deepEqual(

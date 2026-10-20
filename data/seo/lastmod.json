@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "2618f018077be45a",
+    "hash": "37edc5364c4f2a1d",
     "lastmod": "2026-10-20"
   },
   "/accuracy/": {
@@ -1504,12 +1504,12 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "f004e9443f137d9f",
+    "hash": "60e53970c2680ce5",
     "lastmod": "2026-10-20"
   },
   "/navigation/": {
-    "hash": "43588b842e94b597",
-    "lastmod": "2026-10-13"
+    "hash": "407a96366f7ca531",
+    "lastmod": "2026-10-20"
   },
   "/navigation/geodesic/": {
     "hash": "927429e8c69ee6c2",
@@ -1634,6 +1634,34 @@
   "/navigation/route/time-speed-distance/": {
     "hash": "de57bcbe21785c8c",
     "lastmod": "2026-10-19"
+  },
+  "/navigation/sailing/": {
+    "hash": "40ff580a852c088d",
+    "lastmod": "2026-10-20"
+  },
+  "/navigation/sailing/great-circle/": {
+    "hash": "a3fd608f2f5380a9",
+    "lastmod": "2026-10-20"
+  },
+  "/navigation/sailing/mercator/": {
+    "hash": "24ea489a23336364",
+    "lastmod": "2026-10-20"
+  },
+  "/navigation/sailing/mid-latitude/": {
+    "hash": "e548623ecd916d15",
+    "lastmod": "2026-10-20"
+  },
+  "/navigation/sailing/parallel/": {
+    "hash": "bec49216e32d3fce",
+    "lastmod": "2026-10-20"
+  },
+  "/navigation/sailing/plane/": {
+    "hash": "547507cf530f2c7c",
+    "lastmod": "2026-10-20"
+  },
+  "/navigation/sailing/traverse/": {
+    "hash": "e29eff60b58a4c5f",
+    "lastmod": "2026-10-20"
   },
   "/navigation/vector/": {
     "hash": "b4632ebf29994bf8",
@@ -1788,7 +1816,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "c5c3a4abb923a814",
+    "hash": "54e77d711699ba2f",
     "lastmod": "2026-10-20"
   },
   "/survey/": {
@@ -2184,7 +2212,7 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "5d4c242233af5a79",
+    "hash": "74b3e7bbcad7cc2e",
     "lastmod": "2026-10-20"
   },
   "/units/": {
@@ -2448,7 +2476,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "2aa1051f8209e658",
+    "hash": "79c3bb1ac4e01529",
     "lastmod": "2026-10-20"
   },
   "/workflows/": {

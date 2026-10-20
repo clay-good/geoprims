@@ -63,6 +63,13 @@ fn angle(ctx: &mut Ctx, name: &str, axis: Axis) -> Result<f64, ToolError> {
     }
 }
 
+/// Reads one latitude in degrees, from a number, a unit-tagged angle, or
+/// DMS/DDM with a hemisphere letter.
+pub fn lat_angle(ctx: &mut Ctx, name: &str) -> Result<f64, ToolError> {
+    let la = angle(ctx, name, Axis::Lat)?;
+    gp_base::angle::check_lat(la, &format!("/{name}"))
+}
+
 /// Reads a (lat, lon) pair in degrees.
 pub fn read(ctx: &mut Ctx, lat: &str, lon: &str) -> Result<(f64, f64), ToolError> {
     let la = angle(ctx, lat, Axis::Lat)?;

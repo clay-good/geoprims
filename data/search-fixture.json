@@ -1168,6 +1168,14 @@
     {
       "query": "stratified random sample by grid cell",
       "expect": "geometry.sampling.stratified-points"
+    },
+    {
+      "query": "parallel line transects zigzag",
+      "expect": "geometry.sampling.transects"
+    },
+    {
+      "query": "points every 30 m along a line",
+      "expect": "geometry.sampling.points-along-line"
     }
   ]
 }

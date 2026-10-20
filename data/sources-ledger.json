@@ -4114,6 +4114,46 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": true
+    },
+    {
+      "id": "buckland-distance-sampling-2015",
+      "name": "Distance Sampling: Methods and Applications (Buckland, Rexstad, Marques, Oedekoven)",
+      "issuer": "Springer",
+      "currentEdition": "1st edition",
+      "currentReleaseDate": "2015",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-20",
+      "verificationNote": "Title, authors, publisher, and year checked at Crossref on 2026-10-20. The survey-design chapter is not open, so the transect layout follows the change's design (S5) rather than a page read here.",
+      "freeAccessUrl": "https://doi.org/10.1007/978-3-319-19219-2",
+      "matchTerms": [
+        "Distance Sampling: Methods and Applications"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "qgis-points-along-geometry",
+      "name": "QGIS Processing algorithm: Points along geometry",
+      "issuer": "QGIS project (vendor documentation)",
+      "currentEdition": "QGIS 3.44 user manual",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-20",
+      "verificationNote": "Read at docs.qgis.org on 2026-10-20, where the latest manual is 3.44: points at regular intervals along a line, with a distance, a start offset, and an end offset.",
+      "freeAccessUrl": "https://docs.qgis.org/3.44/en/docs/user_manual/processing_algs/qgis/vectorgeometry.html#points-along-geometry",
+      "matchTerms": [
+        "Points along geometry"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
     }
   ]
 }

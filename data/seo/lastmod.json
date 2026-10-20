@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "8d56297fc7cc216a",
+    "hash": "46eb90d3853a4a11",
     "lastmod": "2026-10-20"
   },
   "/accuracy/": {
@@ -972,7 +972,7 @@
     "lastmod": "2026-10-19"
   },
   "/geometry/": {
-    "hash": "dfb5bb11b727e903",
+    "hash": "a7a417af97e97f84",
     "lastmod": "2026-10-20"
   },
   "/geometry/area/": {
@@ -1032,11 +1032,15 @@
     "lastmod": "2026-10-19"
   },
   "/geometry/sampling/": {
-    "hash": "4a1b09e004f69721",
+    "hash": "21ba8336307708f2",
+    "lastmod": "2026-10-20"
+  },
+  "/geometry/sampling/points-along-line/": {
+    "hash": "8c8f149a6e316c06",
     "lastmod": "2026-10-20"
   },
   "/geometry/sampling/random-points/": {
-    "hash": "0633bbb2bc83d68d",
+    "hash": "463e3bde7ea6d554",
     "lastmod": "2026-10-20"
   },
   "/geometry/sampling/stratified-points/": {
@@ -1044,7 +1048,11 @@
     "lastmod": "2026-10-20"
   },
   "/geometry/sampling/systematic-points/": {
-    "hash": "d828b3962706fb9e",
+    "hash": "601a6e9c671bfd56",
+    "lastmod": "2026-10-20"
+  },
+  "/geometry/sampling/transects/": {
+    "hash": "0393071d3545c3b7",
     "lastmod": "2026-10-20"
   },
   "/geometry/shape/": {
@@ -1488,7 +1496,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "539cc2462e6ac79e",
+    "hash": "48792a47cf40a7f8",
     "lastmod": "2026-10-20"
   },
   "/navigation/": {
@@ -1772,7 +1780,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "fca555052665ddb1",
+    "hash": "ea1c0877078ab7f3",
     "lastmod": "2026-10-20"
   },
   "/survey/": {
@@ -2168,7 +2176,7 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "65ef0782727f5e90",
+    "hash": "2cdf5008cc9652c3",
     "lastmod": "2026-10-20"
   },
   "/units/": {
@@ -2432,7 +2440,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "a678e7214964226f",
+    "hash": "aaf2afcdb4d9c811",
     "lastmod": "2026-10-20"
   },
   "/workflows/": {

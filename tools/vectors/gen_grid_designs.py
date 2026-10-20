@@ -7,6 +7,8 @@ lines; writes nothing.
 
     python3 tools/vectors/gen_grid_designs.py systematic > core/vectors/geometry.sampling.systematic-points.jsonl
     python3 tools/vectors/gen_grid_designs.py stratified > core/vectors/geometry.sampling.stratified-points.jsonl
+    python3 tools/vectors/gen_grid_designs.py transects > core/vectors/geometry.sampling.transects.jsonl
+    python3 tools/vectors/gen_grid_designs.py along > core/vectors/geometry.sampling.points-along-line.jsonl
 
 Needs pyproj (a venv is fine)."""
 import importlib.util
@@ -150,11 +152,108 @@ def stratified(rings_ll, s, k, seed):
     return pts, strata
 
 
+GEOD = pyproj.Geod(ellps="WGS84")
+
+
+def frame(points_ll):
+    """The grid-north bearing at the mean corner, from geodesic azimuths to
+    points 1 m up and down grid north."""
+    lat_c = sum(p[0] for p in points_ll) / len(points_ll)
+    lon_c = sum(p[1] for p in points_ll) / len(points_ll)
+    cm = 6 * rp.zone(lat_c, lon_c) - 183
+    crs = f"+proj=tmerc +lon_0={cm} +k=0.9996 +x_0=0 +y_0=0 +ellps=WGS84"
+    tm = pyproj.Transformer.from_crs("EPSG:4326", crs, always_xy=True)
+    x, y = tm.transform(lon_c, lat_c)
+    # Centered: the azimuth up 1 m and the reverse of the one down 1 m,
+    # averaged, so the grid line's curvature cancels to first order.
+    up = tm.transform(x, y + 1.0, direction="INVERSE")
+    dn = tm.transform(x, y - 1.0, direction="INVERSE")
+    a1 = GEOD.inv(lon_c, lat_c, *up)[0]
+    a2 = GEOD.inv(lon_c, lat_c, *dn)[0] + 180.0
+    numeric = a1 + ((a2 - a1 + 180.0) % 360.0 - 180.0) / 2
+    # PROJ's analytic value, checked against the geodesic estimate so its
+    # sign convention is confirmed independently of the core.
+    exact = pyproj.Proj(crs).get_factors(lon_c, lat_c).meridian_convergence
+    assert abs(exact - numeric) < 1e-6, (exact, numeric)
+    return exact
+
+
+def transects(shape, d, bearing, zigzag, seed):
+    rings, scale, back = plane(shape)
+    gamma = frame(shape[0])
+    dp = d * scale
+    az = math.radians(bearing - gamma)
+    dr = (math.sin(az), math.cos(az))
+    ac = (dr[1], -dr[0])
+    sf = lambda p: p[0] * ac[0] + p[1] * ac[1]
+    lo, hi = min(sf(p) for p in rings[0]), max(sf(p) for p in rings[0])
+    u = rp.Xoshiro(seed).f64() * dp
+    out, route, number, k = [], [], 0, 0
+    while True:
+        c = lo + u + k * dp
+        if c >= hi:
+            break
+        k += 1
+        hits = []
+        for r in rings:
+            for i in range(len(r)):
+                a, b = r[i], r[(i + 1) % len(r)]
+                sa, sb = sf(a) - c, sf(b) - c
+                if (sa < 0) != (sb < 0):
+                    f = sa / (sa - sb)
+                    q = (a[0] + f * (b[0] - a[0]), a[1] + f * (b[1] - a[1]))
+                    hits.append(q[0] * dr[0] + q[1] * dr[1])
+        hits.sort()
+        if len(hits) < 2:
+            continue
+        number += 1
+        at = lambda t: (dr[0] * t + ac[0] * c, dr[1] * t + ac[1] * c)
+        parts = [(at(hits[i]), at(hits[i + 1])) for i in range(0, len(hits) - 1, 2)]
+        if zigzag and number % 2 == 0:
+            parts = [(b, a) for a, b in reversed(parts)]
+        for a, b in parts:
+            la, lb = back(a), back(b)
+            out.append((la, lb, GEOD.inv(la[1], la[0], lb[1], lb[0])[2]))
+            route += [la, lb]
+    rlen = sum(GEOD.inv(route[i][1], route[i][0], route[i + 1][1], route[i + 1][0])[2] for i in range(len(route) - 1))
+    return number, out, rlen, u / scale
+
+
+def along(line, step, start):
+    rings, scale, back = plane([line])
+    pts = [tuple(p) for p in rings[0]]
+    # plane() orients ring 0 counterclockwise; a line keeps its order.
+    lat_c = sum(p[0] for p in line) / len(line)
+    lon_c = sum(p[1] for p in line) / len(line)
+    cm = 6 * rp.zone(lat_c, lon_c) - 183
+    tm = pyproj.Transformer.from_crs("EPSG:4326", f"+proj=tmerc +lon_0={cm} +k=0.9996 +x_0=0 +y_0=0 +ellps=WGS84", always_xy=True)
+    pts = [tm.transform(lon, lat) for lat, lon in line]
+    cum = [0.0]
+    for a, b in zip(pts, pts[1:]):
+        cum.append(cum[-1] + math.hypot(b[0] - a[0], b[1] - a[1]))
+    length = cum[-1]
+    count = 0 if start > length else math.floor((length - start) / step) + 1
+    out, seg = [], 0
+    for i in range(count):
+        t = start + i * step
+        while seg + 1 < len(pts) - 1 and cum[seg + 1] < t:
+            seg += 1
+        l = cum[seg + 1] - cum[seg]
+        f = min(max((t - cum[seg]) / l, 0.0), 1.0) if l > 0 else 0.0
+        a, b = pts[seg], pts[seg + 1]
+        lon, lat = tm.transform(a[0] + f * (b[0] - a[0]), a[1] + f * (b[1] - a[1]), direction="INVERSE")
+        out.append((t, lat, lon))
+    ground = sum(GEOD.inv(a[1], a[0], b[1], b[0])[2] for a, b in zip(line, line[1:]))
+    return out, length, ground
+
+
 def poly_json(shape):
     return [{"lat": lat, "lon": lon, **({"ring": k} if k else {})} for k, r in enumerate(shape) for lat, lon in r]
 
 
 def main(which):
+    if which in ("transects", "along"):
+        return main_lines(which)
     rng = random.Random(20261021 if which == "systematic" else 20261022)
     src = f"Python reimplementation of the derivation note with PROJ tmerc (tools/vectors/gen_grid_designs.py {which})"
     out = []
@@ -190,6 +289,59 @@ def main(which):
     big = [{"lat": 40.0, "lon": -105.0}, {"lat": 40.0, "lon": -104.8826}, {"lat": 40.09, "lon": -104.8826}, {"lat": 40.09, "lon": -105.0}]
     refusal = ({"polygon": big, "spacing": "5 m"}, "/spacing") if which == "systematic" else ({"polygon": big, "cell": "10 m", "per_stratum": 1}, "/cell")
     out.append({"id": f"v{len(out) + 1:03d}", "input": refusal[0], "expect": {"ok": False, "error.code": "LIMIT_EXCEEDED", "error.field": refusal[1]}, "source": src, "sourceVersion": VER, "tolerance": {}})
+    for v in out:
+        print(json.dumps(v, ensure_ascii=False, separators=(",", ":")))
+
+
+def main_lines(which):
+    rng = random.Random(20261023 if which == "transects" else 20261024)
+    src = f"Python reimplementation of the derivation note with PROJ tmerc and pyproj.Geod (tools/vectors/gen_grid_designs.py {which})"
+    out = []
+    for i in range(20):
+        shape = rp.SHAPES[i % len(rp.SHAPES)]
+        rings, _, _ = plane(shape)
+        span = max(max(p[0] for p in rings[0]) - min(p[0] for p in rings[0]), max(p[1] for p in rings[0]) - min(p[1] for p in rings[0]))
+        if which == "transects":
+            seed = rng.choice([1, 42, rng.randrange(1 << 64)])
+            d = round(span / rng.uniform(3, 8), 1)
+            bearing = rng.choice([0, 45, 90, 137.5, 200])
+            zig = rng.random() < 0.4
+            n, parts, rlen, off = transects(shape, d, bearing, zig, seed)
+            inp = {"polygon": poly_json(shape), "spacing": f"{d} m", "bearing": f"{bearing} deg", "seed": str(seed)}
+            if zig:
+                inp["route"] = "zigzag"
+            exp = {"ok": True, "result.count": n, "result.total_length.value": sum(p[2] for p in parts), "result.offset.value": off}
+            tol = {"result.count": {"abs": 0}, "result.total_length.value": {"abs": 1e-5}, "result.offset.value": {"abs": 1e-6}}
+            if zig:
+                exp["result.route_length.value"] = rlen
+                tol["result.route_length.value"] = {"abs": 1e-5}
+            for j, (a, b, l) in enumerate(parts[:8]):
+                for f, v in (("start_lat", a[0]), ("start_lon", a[1]), ("end_lat", b[0]), ("end_lon", b[1])):
+                    exp[f"result.transects.{j}.{f}.value"] = v
+                    tol[f"result.transects.{j}.{f}.value"] = {"abs": 1e-9}
+                exp[f"result.transects.{j}.length.value"] = l
+                tol[f"result.transects.{j}.length.value"] = {"abs": 1e-5}
+        else:
+            line = [p for p in shape[0]][: rng.randint(2, len(shape[0]))]
+            step = round(span / rng.uniform(4, 20), 2)
+            start = rng.choice([0, 0, round(step * rng.random(), 2)])
+            pts, length, ground = along(line, step, start)
+            inp = {"line": [{"lat": a, "lon": b} for a, b in line], "interval": f"{step} m"}
+            if start:
+                inp["start"] = f"{start} m"
+            exp = {"ok": True, "result.count": len(pts), "result.plane_length.value": length, "result.geodesic_length.value": ground}
+            tol = {"result.count": {"abs": 0}, "result.plane_length.value": {"abs": 1e-6}, "result.geodesic_length.value": {"abs": 1e-6}}
+            for j, (t, lat, lon) in enumerate(pts[:12]):
+                for f, v in (("distance", t), ("lat", lat), ("lon", lon)):
+                    exp[f"result.points.{j}.{f}.value"] = v
+                    tol[f"result.points.{j}.{f}.value"] = {"abs": 1e-9}
+        out.append({"id": f"v{i + 1:03d}", "input": inp, "expect": exp, "source": src, "sourceVersion": VER, "tolerance": tol})
+    big = [{"lat": 40.0, "lon": -105.0}, {"lat": 40.0, "lon": -104.8826}, {"lat": 40.09, "lon": -104.8826}, {"lat": 40.09, "lon": -105.0}]
+    if which == "transects":
+        refusal = ({"polygon": big, "spacing": "0.5 m"}, "LIMIT_EXCEEDED", "/spacing")
+    else:
+        refusal = ({"line": [{"lat": 40, "lon": -105}, {"lat": 40.1, "lon": -105}], "interval": "0.1 m"}, "LIMIT_EXCEEDED", "/interval")
+    out.append({"id": f"v{len(out) + 1:03d}", "input": refusal[0], "expect": {"ok": False, "error.code": refusal[1], "error.field": refusal[2]}, "source": src, "sourceVersion": VER, "tolerance": {}})
     for v in out:
         print(json.dumps(v, ensure_ascii=False, separators=(",", ":")))
 

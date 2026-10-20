@@ -291,3 +291,93 @@ fn stratified_points_scenarios() {
             .any(|p| p["stratum"].as_str().unwrap().ends_with("c3"))
     );
 }
+
+#[test]
+fn transects_scenarios() {
+    use gp_geo::utmups::{utm_forward, utm_inverse};
+    // A 1 km square on the ground, built on the zone 13 plane at its central
+    // meridian, where grid north is true north.
+    let g = geographiclib_rs::Geodesic::wgs84();
+    let k = utm_forward(g.a, g.f, 40.0, -105.0, 13).scale;
+    let n0 = utm_forward(g.a, g.f, 40.0, -105.0, 13).northing;
+    let h = 500.0 * k;
+    let sq: Vec<(f64, f64)> = [(-h, 0.0), (h, 0.0), (h, 2.0 * h), (-h, 2.0 * h)]
+        .iter()
+        .map(|&(x, y)| utm_inverse(g.a, g.f, 13, true, 500_000.0 + x, n0 + y))
+        .collect();
+    let r = call(
+        "geometry.sampling.transects",
+        &json!({"polygon": rows(&[&sq]), "spacing": "100 m", "bearing": "90 deg", "seed": 4}),
+    );
+    assert_eq!(r["result"]["count"], 10.0, "{}", r["result"]);
+    for t in r["result"]["transects"].as_array().unwrap() {
+        let len = t["length"]["value"].as_f64().unwrap();
+        assert!(
+            (len - 1000.0).abs() < 1e-3,
+            "transect {}: {len} m",
+            t["transect"]
+        );
+    }
+    let total = r["result"]["total_length"]["value"].as_f64().unwrap();
+    assert!((total - 10_000.0).abs() < 1e-2, "total {total}");
+    // The zigzag joins them into one route, the transects plus nine joins of 100 m.
+    let z = call(
+        "geometry.sampling.transects",
+        &json!({"polygon": rows(&[&sq]), "spacing": "100 m", "bearing": "90 deg", "seed": 4, "route": "zigzag"}),
+    );
+    let route = z["result"]["route_length"]["value"].as_f64().unwrap();
+    assert!((route - 10_900.0).abs() < 1e-2, "route {route}");
+    // Every other line runs back the other way.
+    let t = z["result"]["transects"].as_array().unwrap();
+    assert!(t[0]["end_lon"]["value"].as_f64() > t[0]["start_lon"]["value"].as_f64());
+    assert!(t[1]["end_lon"]["value"].as_f64() < t[1]["start_lon"]["value"].as_f64());
+    // A hole splits the lines through it into two parts.
+    let hole = [
+        (40.003, -105.001),
+        (40.006, -105.001),
+        (40.006, -104.999),
+        (40.003, -104.999),
+    ];
+    let r = call(
+        "geometry.sampling.transects",
+        &json!({"polygon": rows(&[&sq, &hole]), "spacing": "100 m", "bearing": "90 deg", "seed": 4}),
+    );
+    assert!(
+        r["result"]["transects"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|t| t["transect"].as_str().unwrap().ends_with('b'))
+    );
+}
+
+#[test]
+fn points_along_line_last_point_rule() {
+    // A line about 100 m long: points at 0, 30, 60, 90 m and none at 120 m.
+    let r = call(
+        "geometry.sampling.points-along-line",
+        &json!({"line": [{"lat": 40.0, "lon": -105.0}, {"lat": 40.0009, "lon": -105.0}], "interval": "30 m"}),
+    );
+    let d: Vec<f64> = r["result"]["points"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|p| p["distance"]["value"].as_f64().unwrap())
+        .collect();
+    assert_eq!(d, vec![0.0, 30.0, 60.0, 90.0]);
+    let plane = r["result"]["plane_length"]["value"].as_f64().unwrap();
+    let ground = r["result"]["geodesic_length"]["value"].as_f64().unwrap();
+    assert!(
+        plane < ground && (ground - plane) / ground < 5e-4,
+        "{plane} vs {ground}"
+    );
+    // A start offset shifts every point; the last falls on the end exactly.
+    let r = call(
+        "geometry.sampling.points-along-line",
+        &json!({"line": [{"lat": 40.0, "lon": -105.0}, {"lat": 40.0, "lon": -104.99}, {"lat": 40.01, "lon": -104.99}], "interval": "100 m", "start": "50 m"}),
+    );
+    let pts = r["result"]["points"].as_array().unwrap();
+    assert_eq!(pts[0]["distance"]["value"], 50.0);
+    let len = r["result"]["plane_length"]["value"].as_f64().unwrap();
+    assert_eq!(pts.len() as f64, ((len - 50.0) / 100.0).floor() + 1.0);
+}

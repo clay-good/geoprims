@@ -1316,6 +1316,18 @@
           "tools": [
             "stratified-points"
           ]
+        },
+        {
+          "want": "lay out parallel transects across a site",
+          "tools": [
+            "transects"
+          ]
+        },
+        {
+          "want": "place points every so many meters along a line",
+          "tools": [
+            "points-along-line"
+          ]
         }
       ]
     },

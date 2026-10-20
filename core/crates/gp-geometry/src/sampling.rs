@@ -75,6 +75,8 @@ pub(crate) struct Plane {
     pub geo: Vec<Vec<(f64, f64)>>,
     /// Point scale at the outline's mean corner: plane meters per ground meter.
     pub scale: f64,
+    /// Meridian convergence there: the bearing of grid north from true north, degrees.
+    pub convergence: f64,
 }
 
 impl Plane {
@@ -99,7 +101,25 @@ impl Plane {
             .at("/polygon")
             .hint("Repair it with geometry.validity.make-valid first."));
         }
-        // The zone of the outline's mean corner, longitudes unwrapped about the first.
+        let plane = Plane::build(geo, true);
+        let xs = plane.rings[0].iter().map(|p| p.0);
+        let ys = plane.rings[0].iter().map(|p| p.1);
+        let w = xs.clone().fold(f64::NEG_INFINITY, f64::max) - xs.fold(f64::INFINITY, f64::min);
+        let h = ys.clone().fold(f64::NEG_INFINITY, f64::max) - ys.fold(f64::INFINITY, f64::min);
+        if w.max(h) > MAX_EXTENT_M {
+            return Err(ToolError::new(
+                ErrorCode::LimitExceeded,
+                format!("The polygon spans {} km; one flat grid is good to 500 km, past which its distortion grows too large. Split the area.", gp_base::display::number(w.max(h) / 1000.0, Precision::Decimals(0), ctx.options.format)),
+            )
+            .at("/polygon"));
+        }
+        Ok(plane)
+    }
+
+    /// The plane of the first ring's mean corner (longitudes unwrapped about
+    /// its first corner), with every ring carried to it; `polygon` orients
+    /// ring 0 counterclockwise and the rest clockwise.
+    pub fn build(geo: Vec<Vec<(f64, f64)>>, polygon: bool) -> Plane {
         let lon0 = geo[0][0].1;
         let unwrap = |lon: f64| lon0 + (lon - lon0 + 180.0).rem_euclid(360.0) - 180.0;
         let n0 = geo[0].len() as f64;
@@ -121,26 +141,17 @@ impl Plane {
                     .collect()
             })
             .collect();
-        for (k, r) in rings.iter_mut().enumerate() {
-            let ccw = twice_area(r) > 0.0;
-            if (k == 0) != ccw {
-                r.reverse();
+        if polygon {
+            for (k, r) in rings.iter_mut().enumerate() {
+                let ccw = twice_area(r) > 0.0;
+                if (k == 0) != ccw {
+                    r.reverse();
+                }
             }
         }
-        let xs = rings[0].iter().map(|p| p.0);
-        let ys = rings[0].iter().map(|p| p.1);
-        let w = xs.clone().fold(f64::NEG_INFINITY, f64::max) - xs.fold(f64::INFINITY, f64::min);
-        let h = ys.clone().fold(f64::NEG_INFINITY, f64::max) - ys.fold(f64::INFINITY, f64::min);
-        if w.max(h) > MAX_EXTENT_M {
-            return Err(ToolError::new(
-                ErrorCode::LimitExceeded,
-                format!("The polygon spans {} km; one flat grid is good to 500 km, past which its distortion grows too large. Split the area.", gp_base::display::number(w.max(h) / 1000.0, Precision::Decimals(0), ctx.options.format)),
-            )
-            .at("/polygon"));
-        }
         let dlon_c = (lon_c - cm + 180.0).rem_euclid(360.0) - 180.0;
-        let scale = tm.forward(lat_c, dlon_c).3;
-        Ok(Plane {
+        let (_, _, convergence, scale) = tm.forward(lat_c, dlon_c);
+        Plane {
             zone,
             north: lat_c >= 0.0,
             cm,
@@ -148,7 +159,8 @@ impl Plane {
             rings,
             geo,
             scale,
-        })
+            convergence,
+        }
     }
 
     /// (lat, lon) of a plane point.
@@ -1270,5 +1282,774 @@ fn run_stratified(ctx: &mut Ctx) -> Result<Json, ToolError> {
                 gp_base::display::number(s, Precision::Significant(6), fmt)
             )),
         ),
+    ]))
+}
+
+const MAX_TRANSECTS: f64 = 10_000.0;
+
+pub(crate) const BUCKLAND: Reference = Reference {
+    title: "Distance Sampling: Methods and Applications",
+    issuer: "Buckland, S. T., Rexstad, E. A., Marques, T. A., and Oedekoven, C. S., Springer",
+    year: 2015,
+    edition: "1st edition",
+    locator: "Survey design: systematic parallel line transects with a random start",
+    url: "https://doi.org/10.1007/978-3-319-19219-2",
+};
+
+const OUT_TRANSECT: &[Field] = &[
+    Field::new(
+        "transect",
+        "Transect",
+        "Numbered from the start side; a line the polygon cuts in two has parts a, b, …",
+        Kind::Text { max_len: 12 },
+    ),
+    Field::new(
+        "length",
+        "Length",
+        "Geodesic, on the ground",
+        Kind::Quantity {
+            q: QT::Length,
+            unit: "m",
+        },
+    )
+    .precision(Precision::Decimals(3)),
+    Field::new(
+        "start_lat",
+        "Start latitude",
+        "",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(7)),
+    Field::new(
+        "start_lon",
+        "Start longitude",
+        "",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(7)),
+    Field::new(
+        "end_lat",
+        "End latitude",
+        "",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(7)),
+    Field::new(
+        "end_lon",
+        "End longitude",
+        "",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(7)),
+];
+
+const OUT_VERTEX: &[Field] = &[
+    Field::new("line", "Line", "", Kind::Number { min: 0.0, max: 1e6 })
+        .precision(Precision::Decimals(0)),
+    Field::new(
+        "lat",
+        "Latitude",
+        "",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(7)),
+    Field::new(
+        "lon",
+        "Longitude",
+        "",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(7)),
+];
+
+pub static TRANSECTS: ToolDef = ToolDef {
+    id: "geometry.sampling.transects",
+    title: "Parallel transects across a polygon",
+    summary: "Survey lines at a set spacing and bearing across a polygon, clipped to it, with a random start from a seed, each line's length and the total, and a zigzag route joining them if asked.",
+    aliases: &["line transects", "transect layout", "parallel survey lines"],
+    keywords: &[
+        "transect",
+        "transects",
+        "lines",
+        "parallel",
+        "survey",
+        "spacing",
+        "zigzag",
+    ],
+    inputs: &[
+        POLYGON,
+        Field::new(
+            "spacing",
+            "Spacing",
+            "Between neighboring lines on the ground, like 100 m",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "bearing",
+            "Bearing",
+            "Direction of the lines from true north, like 90° for east-west lines",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .core(),
+        Field::new(
+            "route",
+            "Route",
+            "Lines only, or a zigzag that joins each line's end to the next",
+            Kind::Choice(&["lines", "zigzag"]),
+        ),
+        SEED,
+    ],
+    outputs: &[
+        Field::new(
+            "count",
+            "Transects",
+            "Lines that cross the polygon",
+            Kind::Number {
+                min: 0.0,
+                max: MAX_TRANSECTS,
+            },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "total_length",
+            "Total length",
+            "Of every transect, on the ground",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(3)),
+        Field::new(
+            "transects",
+            "Transects",
+            "From the start side",
+            Kind::List {
+                items: OUT_TRANSECT,
+                min: 0,
+                max: 20_000,
+            },
+        ),
+        Field::new(
+            "route_length",
+            "Zigzag length",
+            "Transects plus the joins between them",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(3))
+        .optional(),
+        Field::new(
+            "vertices",
+            "Lines",
+            "Each transect as a line, or the zigzag as one",
+            Kind::List {
+                items: OUT_VERTEX,
+                min: 0,
+                max: 100_000,
+            },
+        ),
+        Field::new(
+            "offset",
+            "Start offset",
+            "Of the first line from the polygon's edge",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(3)),
+        Field::new("seed", "Seed", "", Kind::Text { max_len: 20 }),
+        Field::new(
+            "crs",
+            "Plane",
+            "Where the lines were laid out",
+            Kind::Text { max_len: 40 },
+        ),
+    ],
+    errors: &[
+        ErrorCode::InvalidInput,
+        ErrorCode::OutOfDomain,
+        ErrorCode::DegenerateGeometry,
+        ErrorCode::LimitExceeded,
+        ErrorCode::NoSolution,
+    ],
+    warnings: &["EXPERIMENTAL_TOOL"],
+    model: "On the UTM plane: lines at the grid bearing (true bearing less the meridian convergence at the polygon's center), spaced by the ground spacing times the zone's point scale there, the first at a random fraction of the spacing (one draw) from the polygon's edge on the left of the lines' direction; each line clipped to the polygon by its crossings with every ring; lengths are geodesic; a zigzag joins each part's end to the next part's start, reversing every other line (Buckland et al. 2015)",
+    accuracy: "Lines are the spacing apart on the ground at the polygon's center, to within the change in UTM scale across it; lengths are geodesic to a millimeter",
+    when_to_use: "Use this to plan line transects for a wildlife count, a vegetation survey, or a walk-over search: lines at an even spacing across the site with a random start, so the design is a probability sample. Choose the zigzag to get one continuous route.",
+    limitations: "Lines are straight on the UTM plane, which over a few kilometers differs from a geodesic by far less than a field crew can walk. A line the polygon cuts in two (around a hole or a bay) becomes two parts. At most 10,000 transects.",
+    references: &[BUCKLAND, VIGNA],
+    examples: &[Example {
+        id: "primary",
+        title: "East-west lines 50 m apart across a field, seed 42",
+        input: r#"{"polygon":[{"lat":40.0,"lon":-105.0},{"lat":40.0,"lon":-104.996},{"lat":40.003,"lon":-104.996},{"lat":40.003,"lon":-105.0}],"spacing":"50 m","bearing":"90 deg","seed":"42"}"#,
+        source: "A 340 m × 333 m field",
+    }],
+    primary_example: "primary",
+    visualization: &[
+        Layer {
+            kind: "polygon",
+            map: &[("area", "total_length")],
+        },
+        Layer {
+            kind: "polyline",
+            map: &[("lines", "vertices")],
+        },
+    ],
+    related: &[
+        Related {
+            id: "geometry.sampling.systematic-points",
+            reason: "alternative",
+        },
+        Related {
+            id: "geometry.sampling.points-along-line",
+            reason: "next",
+        },
+        Related {
+            id: "geometry.area.polygon",
+            reason: "parent",
+        },
+    ],
+    sentence: "{count} transects, {total_length} in all.",
+    limits: &[("batchRows", 1)],
+    run: run_transects,
+    ..ToolDef::BLANK
+};
+
+fn run_transects(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let plane = Plane::read(ctx)?;
+    let m = gp_base::units::by_symbol(QT::Length, "m").expect("m");
+    let deg = gp_base::units::by_symbol(QT::Angle, "deg").expect("deg");
+    let d = ctx.req_quantity("spacing")?.to(m);
+    if d.is_nan() || d <= 0.0 {
+        return Err(ToolError::invalid(
+            "/spacing",
+            "The spacing must be more than zero.",
+        ));
+    }
+    let bearing = ctx.quantity("bearing")?.map_or(0.0, |a| a.to(deg));
+    let zigzag = ctx.choice("route")? == Some("zigzag");
+    let seed = seed(ctx)?;
+    let fmt = ctx.options.format;
+    let dp = d * plane.scale;
+    let az = (bearing - plane.convergence).to_radians();
+    let dir = (libm::sin(az), libm::cos(az));
+    // Across the lines, pointing right of their direction; lines sweep from
+    // the polygon's left edge.
+    let across = (dir.1, -dir.0);
+    let s = |p: P| p.0 * across.0 + p.1 * across.1;
+    let lo = plane.rings[0]
+        .iter()
+        .map(|&p| s(p))
+        .fold(f64::INFINITY, f64::min);
+    let hi = plane.rings[0]
+        .iter()
+        .map(|&p| s(p))
+        .fold(f64::NEG_INFINITY, f64::max);
+    let lines = ((hi - lo) / dp).ceil();
+    if lines > MAX_TRANSECTS {
+        return Err(too_many("/spacing", "transects", lines, MAX_TRANSECTS, fmt));
+    }
+    let mut g = Xoshiro256::new(seed);
+    let u = g.next_f64() * dp;
+    let along = |p: P| p.0 * dir.0 + p.1 * dir.1;
+    let geod = Geodesic::wgs84();
+    let mut rows = vec![];
+    let mut verts = vec![];
+    let mut route: Vec<P> = vec![];
+    let (mut total, mut number) = (0.0, 0usize);
+    let mut k = 0usize;
+    loop {
+        let c = lo + u + k as f64 * dp;
+        if c >= hi {
+            break;
+        }
+        k += 1;
+        // Crossings of the line s = c with every ring, ordered along it.
+        let mut hits: Vec<f64> = vec![];
+        for r in &plane.rings {
+            for i in 0..r.len() {
+                let (a, b) = (r[i], r[(i + 1) % r.len()]);
+                let (sa, sb) = (s(a) - c, s(b) - c);
+                if (sa < 0.0) != (sb < 0.0) {
+                    let f = sa / (sa - sb);
+                    hits.push(along((a.0 + f * (b.0 - a.0), a.1 + f * (b.1 - a.1))));
+                }
+            }
+        }
+        hits.sort_by(f64::total_cmp);
+        if hits.len() < 2 {
+            continue;
+        }
+        number += 1;
+        let at = |t: f64| (dir.0 * t + across.0 * c, dir.1 * t + across.1 * c);
+        let mut parts: Vec<(P, P)> = hits
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .map(|h| (at(h[0]), at(h[1])))
+            .collect();
+        if zigzag && number % 2 == 0 {
+            parts.reverse();
+            for p in &mut parts {
+                *p = (p.1, p.0);
+            }
+        }
+        let many = parts.len() > 1;
+        for (j, &(a, b)) in parts.iter().enumerate() {
+            let (la, lb) = (plane.to_geo(a), plane.to_geo(b));
+            let len: f64 =
+                geographiclib_rs::InverseGeodesic::inverse(&geod, la.0, la.1, lb.0, lb.1);
+            total += len;
+            let name = if many {
+                format!("{number}{}", (b'a' + (j as u8 % 26)) as char)
+            } else {
+                number.to_string()
+            };
+            rows.push(Json::obj([
+                ("transect", Json::str(name)),
+                ("length", q(len, "m", QT::Length).to_json()),
+                ("start_lat", q(la.0, "deg", QT::Angle).to_json()),
+                ("start_lon", q(la.1, "deg", QT::Angle).to_json()),
+                ("end_lat", q(lb.0, "deg", QT::Angle).to_json()),
+                ("end_lon", q(lb.1, "deg", QT::Angle).to_json()),
+            ]));
+            if zigzag {
+                route.push(a);
+                route.push(b);
+            } else {
+                let line = rows.len() as f64;
+                for (lat, lon) in [la, lb] {
+                    verts.push(Json::obj([
+                        ("line", Json::Num(line)),
+                        ("lat", q(lat, "deg", QT::Angle).to_json()),
+                        ("lon", q(lon, "deg", QT::Angle).to_json()),
+                    ]));
+                }
+            }
+        }
+    }
+    if number == 0 {
+        return Err(ToolError::new(
+            ErrorCode::NoSolution,
+            "No line crosses the polygon at this spacing and start; use a smaller spacing.",
+        )
+        .at("/spacing"));
+    }
+    let mut route_len = None;
+    if zigzag {
+        let mut len = 0.0;
+        for w in route.windows(2) {
+            let (a, b) = (plane.to_geo(w[0]), plane.to_geo(w[1]));
+            let l: f64 = geographiclib_rs::InverseGeodesic::inverse(&geod, a.0, a.1, b.0, b.1);
+            len += l;
+        }
+        route_len = Some(len);
+        for p in &route {
+            let (lat, lon) = plane.to_geo(*p);
+            verts.push(Json::obj([
+                ("line", Json::Num(1.0)),
+                ("lat", q(lat, "deg", QT::Angle).to_json()),
+                ("lon", q(lon, "deg", QT::Angle).to_json()),
+            ]));
+        }
+    }
+    if ctx.explaining() {
+        ctx.step(
+            "Lines",
+            "parallel at the grid bearing, the spacing apart, from a random start",
+            format!(
+                "{} m apart at {}° true, start {} m in",
+                gp_base::display::number(d, Precision::Significant(6), fmt),
+                gp_base::display::number(bearing, Precision::Significant(6), fmt),
+                gp_base::display::number(u / plane.scale, Precision::Decimals(3), fmt)
+            ),
+            format!("{} parts on {number} lines", rows.len()),
+        );
+        ctx.step(
+            "Transects",
+            "lines that cross the polygon",
+            format!(
+                "{} m in all",
+                gp_base::display::number(total, Precision::Decimals(3), fmt)
+            ),
+            format!("{number}"),
+        );
+    }
+    let mut out = vec![
+        ("count", Json::Num(number as f64)),
+        (
+            "total_length",
+            ctx.out("total_length", q(total, "m", QT::Length)),
+        ),
+        ("transects", Json::Arr(rows)),
+    ];
+    if let Some(l) = route_len {
+        out.push((
+            "route_length",
+            ctx.out("route_length", q(l, "m", QT::Length)),
+        ));
+    }
+    out.push(("vertices", Json::Arr(verts)));
+    out.push((
+        "offset",
+        ctx.out("offset", q(u / plane.scale, "m", QT::Length)),
+    ));
+    out.push(("seed", Json::str(seed.to_string())));
+    out.push(("crs", Json::str(plane.crs())));
+    Ok(Json::obj(out))
+}
+
+const LINE_VERTEX: &[Field] = &[
+    Field::new(
+        "lat",
+        "Latitude",
+        "Decimal degrees, like 40.0",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .required(),
+    Field::new(
+        "lon",
+        "Longitude",
+        "Decimal degrees, like -105.0",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .required(),
+];
+
+const OUT_ALONG: &[Field] = &[
+    Field::new(
+        "distance",
+        "Distance along",
+        "On the plane, from the line's start",
+        Kind::Quantity {
+            q: QT::Length,
+            unit: "m",
+        },
+    )
+    .precision(Precision::Decimals(3)),
+    Field::new(
+        "lat",
+        "Latitude",
+        "",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(7)),
+    Field::new(
+        "lon",
+        "Longitude",
+        "",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(7)),
+];
+
+pub(crate) const QGIS_ALONG: Reference = Reference {
+    title: "QGIS Processing algorithm: Points along geometry",
+    issuer: "QGIS project (vendor documentation)",
+    year: 2025,
+    edition: "QGIS 3.44 user manual",
+    locator: "Vector geometry: Points along geometry (distance, start offset, end offset)",
+    url: "https://docs.qgis.org/3.44/en/docs/user_manual/processing_algs/qgis/vectorgeometry.html#points-along-geometry",
+};
+
+pub static POINTS_ALONG_LINE: ToolDef = ToolDef {
+    id: "geometry.sampling.points-along-line",
+    title: "Points every set distance along a line",
+    summary: "Points at a fixed interval along a line, from a start offset, measured on the UTM plane as GIS tools do, with the line's plane and geodesic lengths side by side.",
+    aliases: &[
+        "points along line",
+        "stations along a line",
+        "points along geometry",
+    ],
+    keywords: &[
+        "points", "along", "line", "interval", "stations", "sampling", "chainage",
+    ],
+    inputs: &[
+        Field::new(
+            "line",
+            "Line",
+            "Corners in order, at least 2",
+            Kind::List {
+                items: LINE_VERTEX,
+                min: 2,
+                max: 10_000,
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "interval",
+            "Interval",
+            "Between points, like 30 m",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "start",
+            "Start offset",
+            "Distance to the first point, like 0 m",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        ),
+    ],
+    outputs: &[
+        Field::new(
+            "count",
+            "Points",
+            "",
+            Kind::Number {
+                min: 0.0,
+                max: MAX_POINTS,
+            },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "points",
+            "Points",
+            "From the start",
+            Kind::List {
+                items: OUT_ALONG,
+                min: 0,
+                max: 100_000,
+            },
+        ),
+        Field::new(
+            "plane_length",
+            "Plane length",
+            "On the UTM plane, which the interval is measured on",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(3)),
+        Field::new(
+            "geodesic_length",
+            "Ground length",
+            "Geodesic, corner to corner",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(3)),
+        Field::new("crs", "Plane", "", Kind::Text { max_len: 40 }),
+    ],
+    errors: &[
+        ErrorCode::InvalidInput,
+        ErrorCode::OutOfDomain,
+        ErrorCode::LimitExceeded,
+    ],
+    warnings: &["EXPERIMENTAL_TOOL"],
+    model: "The line carried to its UTM zone's plane; points at start + i × interval of plane length, kept while within the line (QGIS Points along geometry); geodesic length from Karney's inverse on each segment",
+    accuracy: "Exact along the plane line; the plane and ground lengths differ by the zone's scale, shown side by side",
+    when_to_use: "Use this to set stations or sample points every so many meters along a route, a stream, a fence, or a transect, the way GIS tools do it. The last point is kept only if it falls on the line.",
+    limitations: "Distances are measured on the UTM plane, as GIS tools do, so they run short or long of the ground by the zone's scale (up to about 0.1%); the ground length is shown beside it. At most 100,000 points; the line may span 500 km.",
+    references: &[QGIS_ALONG, KARNEY_GEOD],
+    examples: &[Example {
+        id: "primary",
+        title: "Every 30 m along a 100 m line",
+        input: r#"{"line":[{"lat":40.0,"lon":-105.0},{"lat":40.0009,"lon":-105.0}],"interval":"30 m"}"#,
+        source: "Points at 0, 30, 60, and 90 m; none at 120 m",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "point",
+        map: &[("points", "points")],
+    }],
+    related: &[
+        Related {
+            id: "geometry.shape.densify",
+            reason: "alternative",
+        },
+        Related {
+            id: "geometry.sampling.transects",
+            reason: "parent",
+        },
+        Related {
+            id: "navigation.geodesic.waypoints",
+            reason: "alternative",
+        },
+    ],
+    sentence: "{count} points along a line of {plane_length} on the plane ({geodesic_length} on the ground).",
+    limits: &[("batchRows", 100)],
+    run: run_points_along,
+    ..ToolDef::BLANK
+};
+
+pub(crate) const KARNEY_GEOD: Reference = crate::KARNEY;
+
+fn run_points_along(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let deg = gp_base::units::by_symbol(QT::Angle, "deg").expect("deg");
+    let m = gp_base::units::by_symbol(QT::Length, "m").expect("m");
+    let mut line = vec![];
+    for (i, r) in ctx.rows("line")?.iter().enumerate() {
+        let lat = ctx
+            .row_quantity("line", i, r, "lat")?
+            .expect("required")
+            .to(deg);
+        let lon = ctx
+            .row_quantity("line", i, r, "lon")?
+            .expect("required")
+            .to(deg);
+        if !(-90.0..=90.0).contains(&lat) {
+            return Err(ToolError::new(
+                ErrorCode::OutOfDomain,
+                "Latitude must be between -90° and 90°.",
+            )
+            .at(&format!("/line/{i}/lat")));
+        }
+        line.push((lat, lon));
+    }
+    let step = ctx.req_quantity("interval")?.to(m);
+    if step.is_nan() || step <= 0.0 {
+        return Err(ToolError::invalid(
+            "/interval",
+            "The interval must be more than zero.",
+        ));
+    }
+    let start = ctx.quantity("start")?.map_or(0.0, |q| q.to(m));
+    if start.is_nan() || start < 0.0 {
+        return Err(ToolError::invalid(
+            "/start",
+            "The start offset cannot be negative.",
+        ));
+    }
+    let fmt = ctx.options.format;
+    let plane = Plane::build(vec![line.clone()], false);
+    let pts = &plane.rings[0];
+    let xs = pts.iter().map(|p| p.0);
+    let ys = pts.iter().map(|p| p.1);
+    let ext = (xs.clone().fold(f64::NEG_INFINITY, f64::max) - xs.fold(f64::INFINITY, f64::min))
+        .max(ys.clone().fold(f64::NEG_INFINITY, f64::max) - ys.fold(f64::INFINITY, f64::min));
+    if ext > MAX_EXTENT_M {
+        return Err(ToolError::new(ErrorCode::LimitExceeded, "The line spans more than 500 km, past which one flat plane distorts too much. Split it.").at("/line"));
+    }
+    let mut cum = vec![0.0];
+    for w in pts.windows(2) {
+        cum.push(cum.last().unwrap() + (w[1].0 - w[0].0).hypot(w[1].1 - w[0].1));
+    }
+    let length = *cum.last().unwrap();
+    let count = if start > length {
+        0.0
+    } else {
+        ((length - start) / step).floor() + 1.0
+    };
+    if count > MAX_POINTS {
+        return Err(too_many("/interval", "points", count, MAX_POINTS, fmt));
+    }
+    let geod = Geodesic::wgs84();
+    let ground: f64 = line
+        .windows(2)
+        .map(|w| -> f64 {
+            geographiclib_rs::InverseGeodesic::inverse(&geod, w[0].0, w[0].1, w[1].0, w[1].1)
+        })
+        .sum();
+    let mut out = Vec::with_capacity(count as usize);
+    let mut seg = 0;
+    for i in 0..count as usize {
+        let t = start + i as f64 * step;
+        while seg + 1 < pts.len() - 1 && cum[seg + 1] < t {
+            seg += 1;
+        }
+        let l = cum[seg + 1] - cum[seg];
+        let f = if l > 0.0 {
+            ((t - cum[seg]) / l).clamp(0.0, 1.0)
+        } else {
+            0.0
+        };
+        let (a, b) = (pts[seg], pts[seg + 1]);
+        let (lat, lon) = plane.to_geo((a.0 + f * (b.0 - a.0), a.1 + f * (b.1 - a.1)));
+        out.push(Json::obj([
+            ("distance", q(t, "m", QT::Length).to_json()),
+            ("lat", q(lat, "deg", QT::Angle).to_json()),
+            ("lon", q(lon, "deg", QT::Angle).to_json()),
+        ]));
+    }
+    if ctx.explaining() {
+        let n3 = |v: f64| gp_base::display::number(v, Precision::Decimals(3), fmt);
+        ctx.step(
+            "Line length",
+            "sum of segment lengths on the UTM plane",
+            format!(
+                "{} segments on {}; {} m on the ground",
+                pts.len() - 1,
+                plane.crs(),
+                n3(ground)
+            ),
+            format!("{} m", n3(length)),
+        );
+        ctx.step(
+            "Points",
+            "at start + i × interval while within the line",
+            format!(
+                "{} m line on the plane, every {} m from {} m",
+                n3(length),
+                n3(step),
+                n3(start)
+            ),
+            format!("{count}"),
+        );
+    }
+    Ok(Json::obj([
+        ("count", Json::Num(count)),
+        ("points", Json::Arr(out)),
+        (
+            "plane_length",
+            ctx.out("plane_length", q(length, "m", QT::Length)),
+        ),
+        (
+            "geodesic_length",
+            ctx.out("geodesic_length", q(ground, "m", QT::Length)),
+        ),
+        ("crs", Json::str(plane.crs())),
     ]))
 }

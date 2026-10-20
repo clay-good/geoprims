@@ -538,6 +538,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &sampling::RANDOM_POINTS,
     &sampling::SYSTEMATIC_POINTS,
     &sampling::STRATIFIED_POINTS,
+    &sampling::TRANSECTS,
+    &sampling::POINTS_ALONG_LINE,
 ];
 
 pub static REGISTRY: Registry = Registry {

@@ -1,7 +1,7 @@
 {
   "/": {
-    "hash": "f0c181cb5e2c6780",
-    "lastmod": "2026-10-19"
+    "hash": "e225199c41fd0bab",
+    "lastmod": "2026-10-20"
   },
   "/accuracy/": {
     "hash": "c114ed2bae28332d",
@@ -424,28 +424,28 @@
     "lastmod": "2026-10-19"
   },
   "/drone/photogrammetry/parallax-height/": {
-    "hash": "b7a5f189680f4508",
-    "lastmod": "2026-10-19"
+    "hash": "928089c377068d45",
+    "lastmod": "2026-10-20"
   },
   "/drone/photogrammetry/photo-scale/": {
-    "hash": "e608d217d90644a1",
-    "lastmod": "2026-10-19"
+    "hash": "47380fa9ffa6a92f",
+    "lastmod": "2026-10-20"
   },
   "/drone/photogrammetry/relief-displacement/": {
     "hash": "e32149d727f6052d",
     "lastmod": "2026-10-19"
   },
   "/drone/photogrammetry/stereo-base/": {
-    "hash": "1002288aeb79c7af",
-    "lastmod": "2026-10-19"
+    "hash": "8fd18593f025aa51",
+    "lastmod": "2026-10-20"
   },
   "/drone/photogrammetry/terrain-overlap/": {
     "hash": "f1800ab96267cf12",
     "lastmod": "2026-10-19"
   },
   "/drone/photogrammetry/trigger-distance/": {
-    "hash": "331510ec70fbc411",
-    "lastmod": "2026-10-19"
+    "hash": "e29485298855a749",
+    "lastmod": "2026-10-20"
   },
   "/drone/photogrammetry/trigger-interval/": {
     "hash": "7cd776e4a4755138",
@@ -1300,8 +1300,8 @@
     "lastmod": "2026-09-19"
   },
   "/learn/": {
-    "hash": "718245ed4f5eec45",
-    "lastmod": "2026-10-09"
+    "hash": "e8785d08f65d2a65",
+    "lastmod": "2026-10-20"
   },
   "/learn/crosswind-components/": {
     "hash": "754fb39b841311bb",
@@ -1418,6 +1418,10 @@
   "/learn/visual-line-of-sight/": {
     "hash": "fa78d5ed6a77410f",
     "lastmod": "2026-10-09"
+  },
+  "/learn/why-overlap-changes-heights/": {
+    "hash": "b580f5a7936e1c14",
+    "lastmod": "2026-10-20"
   },
   "/learn/wind-triangle/": {
     "hash": "c1a0dcc25dae2b85",

@@ -1100,6 +1100,22 @@
     {
       "query": "TOD",
       "expect": "aviation.performance.top-of-descent"
+    },
+    {
+      "query": "aerial photo scale",
+      "expect": "drone.photogrammetry.photo-scale"
+    },
+    {
+      "query": "tower height relief displacement",
+      "expect": "drone.photogrammetry.relief-displacement"
+    },
+    {
+      "query": "height from parallax difference",
+      "expect": "drone.photogrammetry.parallax-height"
+    },
+    {
+      "query": "base to height ratio endlap",
+      "expect": "drone.photogrammetry.stereo-base"
     }
   ]
 }

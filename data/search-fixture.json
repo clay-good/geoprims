@@ -1152,6 +1152,10 @@
     {
       "query": "least squares leveling network",
       "expect": "survey.reduction.level-network"
+    },
+    {
+      "query": "cut off 2 acres parallel to the road",
+      "expect": "survey.cogo.area-partition"
     }
   ]
 }

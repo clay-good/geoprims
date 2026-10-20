@@ -17,6 +17,7 @@ pub mod leveling;
 pub mod levelnet;
 pub mod localize;
 pub mod lsq;
+pub mod partition;
 pub mod profile;
 pub mod radial;
 pub mod reduction;
@@ -3579,6 +3580,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &stationing::STATION_OFFSET,
     &helmert::HELMERT_3D_FIT,
     &levelnet::LEVEL_NETWORK,
+    &partition::AREA_PARTITION,
     &stationing::PERPENDICULAR_FOOT,
     &stationing::POINT_FROM_STATION_OFFSET,
     &leveling::LEVEL_RUN,

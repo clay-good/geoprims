@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "d8b969faa47f922c",
+    "hash": "8cfc1f197eb5e1ea",
     "lastmod": "2026-10-20"
   },
   "/accuracy/": {
@@ -1472,7 +1472,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "575fb4e1024f7943",
+    "hash": "331fcf91aba75678",
     "lastmod": "2026-10-20"
   },
   "/navigation/": {
@@ -1756,15 +1756,15 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "afdee53d5f2e25ad",
+    "hash": "d584cbfb9e8dee4e",
     "lastmod": "2026-10-20"
   },
   "/survey/": {
-    "hash": "e9910c5e4715c9ac",
+    "hash": "d5659caf628c8d5f",
     "lastmod": "2026-10-20"
   },
   "/survey/cogo/": {
-    "hash": "6799dad543de24be",
+    "hash": "11f49be3ce0c3337",
     "lastmod": "2026-10-20"
   },
   "/survey/cogo/angular-closure/": {
@@ -1772,12 +1772,16 @@
     "lastmod": "2026-10-19"
   },
   "/survey/cogo/area-by-coordinates/": {
-    "hash": "b8127e2be936a1f1",
-    "lastmod": "2026-10-19"
+    "hash": "2754d6f5322767d9",
+    "lastmod": "2026-10-20"
+  },
+  "/survey/cogo/area-partition/": {
+    "hash": "1757b1bf984ca353",
+    "lastmod": "2026-10-20"
   },
   "/survey/cogo/azimuth-bearing/": {
-    "hash": "a83cb16a7c9c6a61",
-    "lastmod": "2026-10-19"
+    "hash": "b6bc7137640fdaa3",
+    "lastmod": "2026-10-20"
   },
   "/survey/cogo/bearing-bearing/": {
     "hash": "5012ccfb6b551721",
@@ -2148,7 +2152,7 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "d70788a189813211",
+    "hash": "646dcbeb5575a8e3",
     "lastmod": "2026-10-20"
   },
   "/units/": {
@@ -2412,7 +2416,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "7828869e835755cf",
+    "hash": "55551855b47134f8",
     "lastmod": "2026-10-20"
   },
   "/workflows/": {

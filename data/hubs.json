@@ -1987,6 +1987,12 @@
           ]
         },
         {
+          "want": "cut a required area off a parcel",
+          "tools": [
+            "area-partition"
+          ]
+        },
+        {
           "want": "fit a 7-parameter transformation to common points",
           "tools": [
             "helmert-3d-fit"

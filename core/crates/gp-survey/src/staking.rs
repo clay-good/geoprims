@@ -84,7 +84,7 @@ pub static SLOPE_STAKE: ToolDef = ToolDef {
 };
 
 /// Brent's method on [a, b] with f(a) and f(b) of opposite sign.
-fn brent(f: impl Fn(f64) -> f64, mut a: f64, mut b: f64, tol: f64) -> Option<f64> {
+pub(crate) fn brent(f: impl Fn(f64) -> f64, mut a: f64, mut b: f64, tol: f64) -> Option<f64> {
     let (mut fa, mut fb) = (f(a), f(b));
     if fa * fb > 0.0 {
         return None;

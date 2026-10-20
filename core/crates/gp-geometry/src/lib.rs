@@ -536,6 +536,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &mesh::DELAUNAY,
     &mesh::VORONOI,
     &sampling::RANDOM_POINTS,
+    &sampling::SYSTEMATIC_POINTS,
+    &sampling::STRATIFIED_POINTS,
 ];
 
 pub static REGISTRY: Registry = Registry {

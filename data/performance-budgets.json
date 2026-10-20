@@ -44,6 +44,8 @@
     "geometry.distance.tracks": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "track_a and track_b" },
     "geometry.mesh.delaunay": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "points" },
     "geometry.sampling.random-points": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "polygon corners and points asked for" },
+    "geometry.sampling.systematic-points": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "polygon corners and grid points" },
+    "geometry.sampling.stratified-points": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "polygon corners, cells, and points" },
     "geometry.mesh.voronoi": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "points" },
     "geometry.overlay.boolean": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "polygon_a and polygon_b" },
     "geometry.predicate.point-in-polygon": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "polygon and points" },

@@ -31,7 +31,7 @@ test('navigation and geometry catalog progress is counted by the operation/endpo
   };
   assert.deepEqual(count('navigation'), { operations: 31, endpoints: 31 });
   // 15 from add-navigation-and-geometry, plus the add-sampling-and-grids tools.
-  assert.deepEqual(count('geometry'), { operations: 16, endpoints: 16 });
+  assert.deepEqual(count('geometry'), { operations: 18, endpoints: 18 });
 });
 
 test('every registered navigation and geometry operation has derivation documentation', () => {

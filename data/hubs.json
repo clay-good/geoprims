@@ -1304,6 +1304,18 @@
           "tools": [
             "random-points"
           ]
+        },
+        {
+          "want": "lay sample points on an even grid",
+          "tools": [
+            "systematic-points"
+          ]
+        },
+        {
+          "want": "spread random samples across every part of a site",
+          "tools": [
+            "stratified-points"
+          ]
         }
       ]
     },

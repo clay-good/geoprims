@@ -73,6 +73,8 @@ pub(crate) struct Plane {
     pub rings: Vec<Vec<P>>,
     /// Geographic rings as read, (lat, lon).
     pub geo: Vec<Vec<(f64, f64)>>,
+    /// Point scale at the outline's mean corner: plane meters per ground meter.
+    pub scale: f64,
 }
 
 impl Plane {
@@ -136,6 +138,8 @@ impl Plane {
             )
             .at("/polygon"));
         }
+        let dlon_c = (lon_c - cm + 180.0).rem_euclid(360.0) - 180.0;
+        let scale = tm.forward(lat_c, dlon_c).3;
         Ok(Plane {
             zone,
             north: lat_c >= 0.0,
@@ -143,6 +147,7 @@ impl Plane {
             tm,
             rings,
             geo,
+            scale,
         })
     }
 
@@ -150,6 +155,26 @@ impl Plane {
     pub fn to_geo(&self, p: P) -> (f64, f64) {
         let (lat, dlon) = self.tm.inverse(p.0, p.1);
         (lat, gp_base::angle::wrap_lon(dlon + self.cm))
+    }
+
+    /// Inside the outline and outside every hole (even-odd over all rings).
+    pub fn inside(&self, p: P) -> bool {
+        let mut c = false;
+        for r in &self.rings {
+            for i in 0..r.len() {
+                let (a, b) = (r[i], r[(i + 1) % r.len()]);
+                if (a.1 > p.1) != (b.1 > p.1) && p.0 < a.0 + (p.1 - a.1) * (b.0 - a.0) / (b.1 - a.1)
+                {
+                    c = !c;
+                }
+            }
+        }
+        c
+    }
+
+    /// Plane area of the polygon, holes out, in plane m².
+    pub fn plane_area(&self) -> f64 {
+        self.rings.iter().map(|r| twice_area(r) / 2.0).sum()
     }
 
     pub fn crs(&self) -> String {
@@ -268,6 +293,48 @@ fn is_ear(v: &[P], a: P, b: P, c: P) -> bool {
         let reflex = orient(v[(j + n - 1) % n], p, v[(j + 1) % n]) <= 0.0;
         !(reflex && orient(a, b, p) >= 0.0 && orient(b, c, p) >= 0.0 && orient(c, a, p) >= 0.0)
     })
+}
+
+/// Triangles with their running areas, for choosing one by area.
+pub(crate) struct Pieces {
+    tris: Vec<[P; 3]>,
+    cum: Vec<f64>,
+}
+
+impl Pieces {
+    pub fn new(tris: Vec<[P; 3]>) -> Pieces {
+        let mut cum = Vec::with_capacity(tris.len());
+        let mut total = 0.0;
+        for t in &tris {
+            total += orient(t[0], t[1], t[2]) / 2.0;
+            cum.push(total);
+        }
+        Pieces { tris, cum }
+    }
+
+    pub fn area(&self) -> f64 {
+        self.cum.last().copied().unwrap_or(0.0)
+    }
+
+    /// One uniform point, from exactly two draws: the first picks the
+    /// triangle by area and, rescaled within its share, is r₁; the second is
+    /// r₂ (Osada et al. 2002 §4.2).
+    pub fn draw(&self, g: &mut Xoshiro256) -> P {
+        let u = g.next_f64() * self.area();
+        let k = self
+            .cum
+            .partition_point(|&c| c <= u)
+            .min(self.tris.len() - 1);
+        let lo = if k == 0 { 0.0 } else { self.cum[k - 1] };
+        let r1 = ((u - lo) / (self.cum[k] - lo)).clamp(0.0, 1.0);
+        let r2 = g.next_f64();
+        let s = libm::sqrt(r1);
+        let [a, b, c] = self.tris[k];
+        (
+            (1.0 - s) * a.0 + s * (1.0 - r2) * b.0 + s * r2 * c.0,
+            (1.0 - s) * a.1 + s * (1.0 - r2) * b.1 + s * r2 * c.1,
+        )
+    }
 }
 
 /// The seed: a whole number from 0 to 2⁶⁴ − 1, as a JSON integer or text.
@@ -460,27 +527,12 @@ fn run_random_points(ctx: &mut Ctx) -> Result<Json, ToolError> {
         )
         .at("/polygon")
     })?;
-    let mut cum = Vec::with_capacity(tris.len());
-    let mut total = 0.0;
-    for t in &tris {
-        total += orient(t[0], t[1], t[2]) / 2.0;
-        cum.push(total);
-    }
+    let n_tris = tris.len();
+    let pieces = Pieces::new(tris);
     let mut g = Xoshiro256::new(seed);
     let mut points = Vec::with_capacity(n);
     for _ in 0..n {
-        let u = g.next_f64() * total;
-        let k = cum.partition_point(|&c| c <= u).min(tris.len() - 1);
-        let lo = if k == 0 { 0.0 } else { cum[k - 1] };
-        let r1 = ((u - lo) / (cum[k] - lo)).clamp(0.0, 1.0);
-        let r2 = g.next_f64();
-        let s = libm::sqrt(r1);
-        let [a, b, c] = tris[k];
-        let p = (
-            (1.0 - s) * a.0 + s * (1.0 - r2) * b.0 + s * r2 * c.0,
-            (1.0 - s) * a.1 + s * (1.0 - r2) * b.1 + s * r2 * c.1,
-        );
-        let (lat, lon) = plane.to_geo(p);
+        let (lat, lon) = plane.to_geo(pieces.draw(&mut g));
         points.push(Json::obj([
             ("lat", q(lat, "deg", QT::Angle).to_json()),
             ("lon", q(lon, "deg", QT::Angle).to_json()),
@@ -496,7 +548,7 @@ fn run_random_points(ctx: &mut Ctx) -> Result<Json, ToolError> {
                 plane.rings.iter().map(Vec::len).sum::<usize>(),
                 plane.rings.len() - 1
             ),
-            format!("{} triangles", tris.len()),
+            format!("{n_tris} triangles"),
         );
         ctx.step(
             "Points",
@@ -526,6 +578,697 @@ fn run_random_points(ctx: &mut Ctx) -> Result<Json, ToolError> {
         (
             "design",
             Json::str("Simple random sampling (EPA QA/G-5S ch. 5)"),
+        ),
+    ]))
+}
+
+const MAX_CELLS: f64 = 50_000.0;
+
+fn too_many(
+    at: &str,
+    what: &str,
+    n: f64,
+    limit: f64,
+    fmt: gp_base::parse::NumberFormat,
+) -> ToolError {
+    let show = |v: f64| gp_base::display::number(v.round(), Precision::Decimals(0), fmt);
+    ToolError::new(
+        ErrorCode::LimitExceeded,
+        format!("These inputs make about {} {what}, over the limit of {}. Use a wider spacing or a smaller area.", show(n), show(limit)),
+    )
+    .at(at)
+}
+
+fn point_row(plane: &Plane, p: P) -> Json {
+    let (lat, lon) = plane.to_geo(p);
+    Json::obj([
+        ("lat", q(lat, "deg", QT::Angle).to_json()),
+        ("lon", q(lon, "deg", QT::Angle).to_json()),
+    ])
+}
+
+pub static SYSTEMATIC_POINTS: ToolDef = ToolDef {
+    id: "geometry.sampling.systematic-points",
+    title: "Systematic grid sample points in a polygon",
+    summary: "Sample points on a square or triangular grid of a set spacing across a polygon, with a random start from a seed or a start at the corner, and the area each point stands for.",
+    aliases: &[
+        "systematic sampling grid",
+        "grid sampling points",
+        "regular points in polygon",
+    ],
+    keywords: &[
+        "systematic",
+        "grid",
+        "sample",
+        "sampling",
+        "points",
+        "triangular",
+        "spacing",
+    ],
+    inputs: &[
+        POLYGON,
+        Field::new(
+            "spacing",
+            "Spacing",
+            "Ground distance between neighbors, like 50 m",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "pattern",
+            "Pattern",
+            "Square rows and columns, or triangular (offset rows, six neighbors each)",
+            Kind::Choice(&["square", "triangular"]),
+        )
+        .core(),
+        Field::new(
+            "start",
+            "Start",
+            "A random start from the seed, or the grid's first point at the corner",
+            Kind::Choice(&["random", "corner"]),
+        ),
+        Field::new(
+            "rotation",
+            "Rotation",
+            "Grid turned clockwise from north, like 30°",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        ),
+        SEED,
+    ],
+    outputs: &[
+        Field::new(
+            "points",
+            "Points",
+            "Row by row, south to north, west to east in the grid's frame",
+            Kind::List {
+                items: OUT_POINT,
+                min: 0,
+                max: 100_000,
+            },
+        ),
+        Field::new(
+            "count",
+            "Points placed",
+            "",
+            Kind::Number {
+                min: 0.0,
+                max: MAX_POINTS,
+            },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "area_per_point",
+            "Area per point",
+            "One grid cell: d² for square, d²·√3/2 for triangular",
+            Kind::Quantity {
+                q: QT::Area,
+                unit: "m2",
+            },
+        )
+        .precision(Precision::Significant(6)),
+        Field::new(
+            "offset",
+            "Start offset",
+            "Of the first grid point from the corner, east and north in the grid's frame",
+            Kind::Text { max_len: 60 },
+        ),
+        Field::new("seed", "Seed", "", Kind::Text { max_len: 20 }),
+        Field::new(
+            "crs",
+            "Plane",
+            "Where the grid was laid out",
+            Kind::Text { max_len: 40 },
+        ),
+        Field::new("design", "Design", "", Kind::Text { max_len: 120 }),
+    ],
+    errors: &[
+        ErrorCode::InvalidInput,
+        ErrorCode::OutOfDomain,
+        ErrorCode::DegenerateGeometry,
+        ErrorCode::LimitExceeded,
+    ],
+    warnings: &["EXPERIMENTAL_TOOL"],
+    model: "A lattice on the UTM plane from the lower-left corner of the polygon's bounding box (in the grid's turned frame): square, or triangular with rows d·√3/2 apart and every other row shifted d/2; spacing scaled by the zone's point scale at the polygon's center so neighbors are d apart on the ground; a random start moves the lattice by (r₁·d, r₂·row spacing) from two draws (EPA QA/G-5S ch. 7); points kept inside the outline and outside holes",
+    accuracy: "Neighbors are the spacing apart on the ground to within the change in UTM scale across the polygon (under 1 mm over 1 km near the center)",
+    when_to_use: "Use this to lay out sample points evenly over a site: soil cores, plots, or check points on a grid. A triangular grid covers ground most evenly; a random start keeps the design a probability sample. The same seed gives the same grid.",
+    limitations: "A grid can line up with patterns in the ground, such as crop rows or drains, and miss or over-sample them; rotate it or use a random design if that is a risk. At most 100,000 points; the polygon may span 500 km and 2,000 corners.",
+    references: &[EPA_G5S_SYSTEMATIC, VIGNA],
+    examples: &[Example {
+        id: "primary",
+        title: "A 50 m triangular grid with a random start, seed 42",
+        input: r#"{"polygon":[{"lat":40.0,"lon":-105.0},{"lat":40.0,"lon":-104.996},{"lat":40.003,"lon":-104.996},{"lat":40.003,"lon":-105.0}],"spacing":"50 m","pattern":"triangular","seed":"42"}"#,
+        source: "A 340 m × 333 m field",
+    }],
+    primary_example: "primary",
+    visualization: &[
+        Layer {
+            kind: "polygon",
+            map: &[("area", "area_per_point")],
+        },
+        Layer {
+            kind: "point",
+            map: &[("points", "points")],
+        },
+    ],
+    related: &[
+        Related {
+            id: "geometry.sampling.random-points",
+            reason: "alternative",
+        },
+        Related {
+            id: "geometry.sampling.stratified-points",
+            reason: "alternative",
+        },
+        Related {
+            id: "geometry.area.polygon",
+            reason: "parent",
+        },
+    ],
+    sentence: "{count} points on a grid, one for every {area_per_point}.",
+    limits: &[("batchRows", 1)],
+    run: run_systematic,
+    ..ToolDef::BLANK
+};
+
+pub(crate) const EPA_G5S_SYSTEMATIC: Reference = Reference {
+    locator: "Chapter 7, systematic/grid sampling (p. 63)",
+    ..EPA_G5S
+};
+pub(crate) const EPA_G5S_STRATIFIED: Reference = Reference {
+    locator: "Chapter 6, stratified sampling (p. 51)",
+    ..EPA_G5S
+};
+
+/// Rotation about `o` by `t` radians clockwise (a bearing turn) and back.
+fn turn(p: P, o: P, t: f64) -> P {
+    let (s, c) = (libm::sin(t), libm::cos(t));
+    let (x, y) = (p.0 - o.0, p.1 - o.1);
+    (o.0 + x * c + y * s, o.1 - x * s + y * c)
+}
+
+fn run_systematic(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let plane = Plane::read(ctx)?;
+    let m = gp_base::units::by_symbol(QT::Length, "m").expect("m");
+    let d = ctx.req_quantity("spacing")?.to(m);
+    if d.is_nan() || d <= 0.0 {
+        return Err(ToolError::invalid(
+            "/spacing",
+            "The spacing must be more than zero.",
+        ));
+    }
+    let tri = ctx.choice("pattern")? == Some("triangular");
+    let random = ctx.choice("start")? != Some("corner");
+    let deg = gp_base::units::by_symbol(QT::Angle, "deg").expect("deg");
+    let rot = ctx.quantity("rotation")?.map_or(0.0, |a| a.to(deg));
+    let seed = seed(ctx)?;
+    let fmt = ctx.options.format;
+    // Plane spacing: ground meters times the point scale at the center.
+    let dp = d * plane.scale;
+    let row = if tri { dp * libm::sqrt(3.0) / 2.0 } else { dp };
+    let cell = dp * row;
+    let expected = plane.plane_area() / cell;
+    if expected > MAX_POINTS {
+        return Err(too_many("/spacing", "points", expected, MAX_POINTS, fmt));
+    }
+    // The grid's frame: the polygon turned back by the rotation about the
+    // bounding box's lower-left corner.
+    let xs = plane.rings[0].iter().map(|p| p.0);
+    let ys = plane.rings[0].iter().map(|p| p.1);
+    let o = (
+        xs.fold(f64::INFINITY, f64::min),
+        ys.fold(f64::INFINITY, f64::min),
+    );
+    let t = rot.to_radians();
+    let framed: Vec<P> = plane.rings[0].iter().map(|&p| turn(p, o, -t)).collect();
+    let fx0 = framed.iter().map(|p| p.0).fold(f64::INFINITY, f64::min);
+    let fy0 = framed.iter().map(|p| p.1).fold(f64::INFINITY, f64::min);
+    let fx1 = framed.iter().map(|p| p.0).fold(f64::NEG_INFINITY, f64::max);
+    let fy1 = framed.iter().map(|p| p.1).fold(f64::NEG_INFINITY, f64::max);
+    let (ux, uy) = if random {
+        let mut g = Xoshiro256::new(seed);
+        (g.next_f64() * dp, g.next_f64() * row)
+    } else {
+        (0.0, 0.0)
+    };
+    let (cols, rows) = (
+        ((fx1 - fx0) / dp).ceil() + 2.0,
+        ((fy1 - fy0) / row).ceil() + 2.0,
+    );
+    if cols * rows > 100.0 * MAX_POINTS {
+        return Err(too_many(
+            "/spacing",
+            "grid positions over the polygon's bounding box",
+            cols * rows,
+            100.0 * MAX_POINTS,
+            fmt,
+        ));
+    }
+    let mut points = vec![];
+    for j in 0..rows as usize {
+        let y = fy0 + uy + j as f64 * row;
+        let shift = if tri && j % 2 == 1 { dp / 2.0 } else { 0.0 };
+        for i in 0..cols as usize {
+            let x = fx0 + ux + shift + i as f64 * dp
+                - if shift > 0.0 && ux + shift >= dp {
+                    dp
+                } else {
+                    0.0
+                };
+            let p = turn((x, y), o, t);
+            if plane.inside(p) {
+                points.push(point_row(&plane, p));
+            }
+        }
+    }
+    let n = points.len();
+    if n == 0 {
+        return Err(ToolError::new(
+            ErrorCode::NoSolution,
+            "No grid point falls inside the polygon at this spacing; use a smaller spacing.",
+        )
+        .at("/spacing"));
+    }
+    let ground_cell = d * d * if tri { libm::sqrt(3.0) / 2.0 } else { 1.0 };
+    let n2 = |v: f64| gp_base::display::number(v / plane.scale, Precision::Decimals(2), fmt);
+    if ctx.explaining() {
+        ctx.step(
+            "Area per point",
+            if tri { "a = d²·√3/2" } else { "a = d²" },
+            format!(
+                "d = {} m",
+                gp_base::display::number(d, Precision::Significant(6), fmt)
+            ),
+            gp_base::display::quantity(ground_cell, "m2", Precision::Significant(6), fmt),
+        );
+        ctx.step(
+            "Points inside",
+            if tri {
+                "rows d·√3/2 apart, every other row shifted d/2"
+            } else {
+                "rows and columns d apart"
+            },
+            format!(
+                "d = {} m on the ground, {} m on the plane",
+                gp_base::display::number(d, Precision::Significant(6), fmt),
+                gp_base::display::number(dp, Precision::Significant(9), fmt)
+            ),
+            format!("{n}"),
+        );
+    }
+    Ok(Json::obj([
+        ("points", Json::Arr(points)),
+        ("count", Json::Num(n as f64)),
+        (
+            "area_per_point",
+            ctx.out("area_per_point", q(ground_cell, "m2", QT::Area)),
+        ),
+        (
+            "offset",
+            Json::str(format!("{} m east, {} m north", n2(ux), n2(uy))),
+        ),
+        (
+            "seed",
+            Json::str(if random {
+                seed.to_string()
+            } else {
+                "none (corner start)".to_owned()
+            }),
+        ),
+        ("crs", Json::str(plane.crs())),
+        (
+            "design",
+            Json::str(format!(
+                "Systematic {} grid (EPA QA/G-5S ch. 7)",
+                if tri { "triangular" } else { "square" }
+            )),
+        ),
+    ]))
+}
+
+/// The part of convex polygon `poly` inside the axis-aligned box.
+fn clip_box(poly: &[P], x0: f64, y0: f64, x1: f64, y1: f64) -> Vec<P> {
+    let mut out = poly.to_vec();
+    type Side = fn(P, f64) -> f64;
+    let edges: [(Side, f64); 4] = [
+        (|p, v| p.0 - v, x0),
+        (|p, v| v - p.0, x1),
+        (|p, v| p.1 - v, y0),
+        (|p, v| v - p.1, y1),
+    ];
+    for (side, v) in edges {
+        let inp = out;
+        out = Vec::with_capacity(inp.len() + 2);
+        for i in 0..inp.len() {
+            let (a, b) = (inp[i], inp[(i + 1) % inp.len()]);
+            let (sa, sb) = (side(a, v), side(b, v));
+            if sa >= 0.0 {
+                out.push(a);
+            }
+            if (sa >= 0.0) != (sb >= 0.0) {
+                let f = sa / (sa - sb);
+                out.push((a.0 + f * (b.0 - a.0), a.1 + f * (b.1 - a.1)));
+            }
+        }
+        if out.len() < 3 {
+            return vec![];
+        }
+    }
+    out
+}
+
+const OUT_STRAT_POINT: &[Field] = &[
+    Field::new(
+        "lat",
+        "Latitude",
+        "",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(7)),
+    Field::new(
+        "lon",
+        "Longitude",
+        "",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(7)),
+    Field::new(
+        "stratum",
+        "Stratum",
+        "Row and column of its cell, from the south-west",
+        Kind::Text { max_len: 16 },
+    ),
+];
+
+pub static STRATIFIED_POINTS: ToolDef = ToolDef {
+    id: "geometry.sampling.stratified-points",
+    title: "Stratified random sample points in a polygon",
+    summary: "A stratified random sample: the polygon cut into square cells of a set size, and a set number of random points placed in each cell's part of the polygon, reproducible from a seed.",
+    aliases: &[
+        "stratified random sampling",
+        "random points per grid cell",
+        "stratified sample grid",
+    ],
+    keywords: &[
+        "stratified",
+        "strata",
+        "random",
+        "sample",
+        "sampling",
+        "points",
+        "cells",
+    ],
+    inputs: &[
+        POLYGON,
+        Field::new(
+            "cell",
+            "Cell size",
+            "Side of each square stratum on the ground, like 100 m",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "per_stratum",
+            "Points per stratum",
+            "Random points in each cell, like 2",
+            Kind::Number {
+                min: 1.0,
+                max: 1_000.0,
+            },
+        )
+        .core(),
+        SEED.core(),
+    ],
+    outputs: &[
+        Field::new(
+            "points",
+            "Points",
+            "Stratum by stratum, rows south to north, cells west to east",
+            Kind::List {
+                items: OUT_STRAT_POINT,
+                min: 0,
+                max: 100_000,
+            },
+        ),
+        Field::new(
+            "count",
+            "Points placed",
+            "",
+            Kind::Number {
+                min: 0.0,
+                max: MAX_POINTS,
+            },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "strata",
+            "Strata sampled",
+            "Cells with 1 m² or more of the polygon",
+            Kind::Number {
+                min: 0.0,
+                max: MAX_CELLS,
+            },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "skipped",
+            "Strata skipped",
+            "Cells holding less than 1 m² of the polygon",
+            Kind::Text { max_len: 2_000 },
+        ),
+        Field::new("seed", "Seed", "", Kind::Text { max_len: 20 }),
+        Field::new(
+            "crs",
+            "Plane",
+            "Where the cells were laid out",
+            Kind::Text { max_len: 40 },
+        ),
+        Field::new("design", "Design", "", Kind::Text { max_len: 120 }),
+    ],
+    errors: &[
+        ErrorCode::InvalidInput,
+        ErrorCode::OutOfDomain,
+        ErrorCode::DegenerateGeometry,
+        ErrorCode::LimitExceeded,
+    ],
+    warnings: &["EXPERIMENTAL_TOOL"],
+    model: "Square cells from the lower-left corner of the polygon's bounding box on the UTM plane, side scaled by the zone's point scale at the center; each cell's part of the polygon is the polygon's ear-clipped triangles clipped to the cell; strata taken row by row, south to north and west to east; in each, k points by the random-points method, two draws each, from one xoshiro256** stream (EPA QA/G-5S ch. 6)",
+    accuracy: "Every point is inside its cell and the polygon as drawn on the plane; uniform within each stratum by plane area",
+    when_to_use: "Use this when the sample must cover the whole site but stay random: each grid cell gets its own random points, so no part of the area is left out. Enter the boundary, the cell size, and how many points per cell.",
+    limitations: "Each cell gets the same number of points however much of the polygon it holds, so a sliver cell at the edge is sampled as heavily as a full one; weigh results by stratum area. Cells with less than 1 m² of the polygon are skipped and listed. At most 50,000 cells and 100,000 points.",
+    references: &[EPA_G5S_STRATIFIED, OSADA, VIGNA],
+    examples: &[Example {
+        id: "primary",
+        title: "Two points in each 100 m cell of a field, seed 42",
+        input: r#"{"polygon":[{"lat":40.0,"lon":-105.0},{"lat":40.0,"lon":-104.996},{"lat":40.003,"lon":-104.996},{"lat":40.003,"lon":-105.0}],"cell":"100 m","per_stratum":2,"seed":"42"}"#,
+        source: "A 340 m × 333 m field in 16 cells",
+    }],
+    primary_example: "primary",
+    visualization: &[
+        Layer {
+            kind: "polygon",
+            map: &[("area", "strata")],
+        },
+        Layer {
+            kind: "point",
+            map: &[("points", "points")],
+        },
+    ],
+    related: &[
+        Related {
+            id: "geometry.sampling.random-points",
+            reason: "alternative",
+        },
+        Related {
+            id: "geometry.sampling.systematic-points",
+            reason: "alternative",
+        },
+        Related {
+            id: "geometry.area.polygon",
+            reason: "parent",
+        },
+    ],
+    sentence: "{count} points in {strata} cells, from seed {seed}.",
+    limits: &[("batchRows", 1)],
+    run: run_stratified,
+    ..ToolDef::BLANK
+};
+
+fn run_stratified(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let plane = Plane::read(ctx)?;
+    let m = gp_base::units::by_symbol(QT::Length, "m").expect("m");
+    let s = ctx.req_quantity("cell")?.to(m);
+    if s.is_nan() || s <= 0.0 {
+        return Err(ToolError::invalid(
+            "/cell",
+            "The cell size must be more than zero.",
+        ));
+    }
+    let k = ctx.number("per_stratum")?.unwrap_or(1.0);
+    if k.fract() != 0.0 {
+        return Err(ToolError::invalid(
+            "/per_stratum",
+            "Points per stratum is a whole number.",
+        ));
+    }
+    let k = k as usize;
+    let seed = seed(ctx)?;
+    let fmt = ctx.options.format;
+    let sp = s * plane.scale;
+    let xs = plane.rings[0].iter().map(|p| p.0);
+    let ys = plane.rings[0].iter().map(|p| p.1);
+    let (x0, y0) = (
+        xs.clone().fold(f64::INFINITY, f64::min),
+        ys.clone().fold(f64::INFINITY, f64::min),
+    );
+    let (x1, y1) = (
+        xs.fold(f64::NEG_INFINITY, f64::max),
+        ys.fold(f64::NEG_INFINITY, f64::max),
+    );
+    let (cols, rows) = (
+        ((x1 - x0) / sp).ceil().max(1.0),
+        ((y1 - y0) / sp).ceil().max(1.0),
+    );
+    if cols * rows > MAX_CELLS {
+        return Err(too_many("/cell", "cells", cols * rows, MAX_CELLS, fmt));
+    }
+    let estimate = (plane.plane_area() / (sp * sp)).ceil().min(cols * rows) * k as f64;
+    if estimate > MAX_POINTS {
+        return Err(too_many(
+            "/per_stratum",
+            "points",
+            estimate,
+            MAX_POINTS,
+            fmt,
+        ));
+    }
+    let tris = triangulate(&plane.rings).ok_or_else(|| {
+        ToolError::new(ErrorCode::DegenerateGeometry, "The polygon could not be cut into triangles; check that the holes lie inside the outline and do not touch it.").at("/polygon")
+    })?;
+    let (cols, rows) = (cols as usize, rows as usize);
+    // Each triangle listed under every cell its bounding box reaches.
+    let mut bucket: Vec<Vec<usize>> = vec![vec![]; cols * rows];
+    for (ti, t) in tris.iter().enumerate() {
+        let span =
+            |v: f64, lo: f64, n: usize| (((v - lo) / sp).floor().max(0.0) as usize).min(n - 1);
+        let (ca, cb) = (
+            span(
+                t.iter().map(|p| p.0).fold(f64::INFINITY, f64::min),
+                x0,
+                cols,
+            ),
+            span(
+                t.iter().map(|p| p.0).fold(f64::NEG_INFINITY, f64::max),
+                x0,
+                cols,
+            ),
+        );
+        let (ra, rb) = (
+            span(
+                t.iter().map(|p| p.1).fold(f64::INFINITY, f64::min),
+                y0,
+                rows,
+            ),
+            span(
+                t.iter().map(|p| p.1).fold(f64::NEG_INFINITY, f64::max),
+                y0,
+                rows,
+            ),
+        );
+        for r in ra..=rb {
+            for c in ca..=cb {
+                bucket[r * cols + c].push(ti);
+            }
+        }
+    }
+    let one_m2 = plane.scale * plane.scale;
+    let mut g = Xoshiro256::new(seed);
+    let (mut points, mut skipped, mut strata) = (vec![], vec![], 0usize);
+    for r in 0..rows {
+        for c in 0..cols {
+            let (bx0, by0) = (x0 + c as f64 * sp, y0 + r as f64 * sp);
+            let mut parts: Vec<[P; 3]> = vec![];
+            for &ti in &bucket[r * cols + c] {
+                let piece = clip_box(&tris[ti], bx0, by0, bx0 + sp, by0 + sp);
+                for i in 1..piece.len().saturating_sub(1) {
+                    if orient(piece[0], piece[i], piece[i + 1]) > 0.0 {
+                        parts.push([piece[0], piece[i], piece[i + 1]]);
+                    }
+                }
+            }
+            let label = format!("r{}c{}", r + 1, c + 1);
+            let pieces = Pieces::new(parts);
+            if pieces.area() < one_m2 {
+                if pieces.area() > 0.0 {
+                    skipped.push(label);
+                }
+                continue;
+            }
+            strata += 1;
+            for _ in 0..k {
+                let (lat, lon) = plane.to_geo(pieces.draw(&mut g));
+                points.push(Json::obj([
+                    ("lat", q(lat, "deg", QT::Angle).to_json()),
+                    ("lon", q(lon, "deg", QT::Angle).to_json()),
+                    ("stratum", Json::str(label.clone())),
+                ]));
+            }
+        }
+    }
+    let n = points.len();
+    if ctx.explaining() {
+        ctx.step(
+            "Strata",
+            "square cells from the south-west corner, clipped to the polygon",
+            format!(
+                "{} m cells, {cols} × {rows}",
+                gp_base::display::number(s, Precision::Significant(6), fmt)
+            ),
+            format!("{strata} sampled, {} skipped", skipped.len()),
+        );
+        ctx.step(
+            "Points",
+            "k random points in each stratum, 2 draws each",
+            format!("k = {k}, seed {seed}"),
+            format!("{n}"),
+        );
+    }
+    Ok(Json::obj([
+        ("points", Json::Arr(points)),
+        ("count", Json::Num(n as f64)),
+        ("strata", Json::Num(strata as f64)),
+        (
+            "skipped",
+            Json::str(if skipped.is_empty() {
+                "none".to_owned()
+            } else {
+                skipped.join(", ")
+            }),
+        ),
+        ("seed", Json::str(seed.to_string())),
+        ("crs", Json::str(plane.crs())),
+        (
+            "design",
+            Json::str(format!(
+                "Stratified random, {k} per {} m cell (EPA QA/G-5S ch. 6)",
+                gp_base::display::number(s, Precision::Significant(6), fmt)
+            )),
         ),
     ]))
 }

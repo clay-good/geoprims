@@ -1160,6 +1160,14 @@
     {
       "query": "random sample points in a polygon",
       "expect": "geometry.sampling.random-points"
+    },
+    {
+      "query": "triangular grid sampling points",
+      "expect": "geometry.sampling.systematic-points"
+    },
+    {
+      "query": "stratified random sample by grid cell",
+      "expect": "geometry.sampling.stratified-points"
     }
   ]
 }

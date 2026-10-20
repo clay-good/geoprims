@@ -1797,6 +1797,16 @@
       ]
     },
     {
+      "id": "vref",
+      "term": "VREF",
+      "expansion": "reference landing speed",
+      "definition": "The speed an airplane flies on final approach in the landing configuration, set during certification. It decides the airplane's approach category.",
+      "source": "cfr-14-97",
+      "relatedTools": [
+        "aviation.ifr.approach-category"
+      ]
+    },
+    {
       "id": "vs0",
       "term": "VS0",
       "expansion": "stall speed in the landing configuration",
@@ -1804,7 +1814,8 @@
       "source": "faa-phak",
       "relatedTools": [
         "aviation.airspeed.cas-to-tas",
-        "aviation.airspeed.tas-to-cas"
+        "aviation.airspeed.tas-to-cas",
+        "aviation.ifr.approach-category"
       ]
     },
     {

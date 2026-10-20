@@ -255,6 +255,12 @@
           "tools": [
             "radial-intercept"
           ]
+        },
+        {
+          "want": "find my airplane's approach category",
+          "tools": [
+            "approach-category"
+          ]
         }
       ]
     },

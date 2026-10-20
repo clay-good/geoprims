@@ -1116,6 +1116,10 @@
     {
       "query": "base to height ratio endlap",
       "expect": "drone.photogrammetry.stereo-base"
+    },
+    {
+      "query": "approach category vref",
+      "expect": "aviation.ifr.approach-category"
     }
   ]
 }

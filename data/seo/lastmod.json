@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "e225199c41fd0bab",
+    "hash": "ff5dba58b5c974d2",
     "lastmod": "2026-10-20"
   },
   "/accuracy/": {
@@ -12,8 +12,8 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/": {
-    "hash": "429347ebf243360f",
-    "lastmod": "2026-10-09"
+    "hash": "e71cf68bfc309f40",
+    "lastmod": "2026-10-20"
   },
   "/aviation/airspace/": {
     "hash": "4ccf472fb1dd20c9",
@@ -100,12 +100,16 @@
     "lastmod": "2026-10-19"
   },
   "/aviation/ifr/": {
-    "hash": "cd0c7cde212a887c",
-    "lastmod": "2026-09-25"
+    "hash": "bbeae6adfa82840b",
+    "lastmod": "2026-10-20"
+  },
+  "/aviation/ifr/approach-category/": {
+    "hash": "a94d9182bc7f3aca",
+    "lastmod": "2026-10-20"
   },
   "/aviation/ifr/dme-arc-lead/": {
-    "hash": "ee3aa68d09a271df",
-    "lastmod": "2026-10-19"
+    "hash": "061cd3e8fb8c30cc",
+    "lastmod": "2026-10-20"
   },
   "/aviation/ifr/dme-slant-range/": {
     "hash": "4d6e535151496d3d",
@@ -1440,8 +1444,8 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "3fd5ca8caddc350c",
-    "lastmod": "2026-10-19"
+    "hash": "27fc1599e6756168",
+    "lastmod": "2026-10-20"
   },
   "/navigation/": {
     "hash": "43588b842e94b597",
@@ -1724,8 +1728,8 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "b116f916eff8fc50",
-    "lastmod": "2026-10-19"
+    "hash": "1b97dcd21c16c8bf",
+    "lastmod": "2026-10-20"
   },
   "/survey/": {
     "hash": "34db288babd6e4c1",
@@ -2108,8 +2112,8 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "ddb647722cf09689",
-    "lastmod": "2026-10-19"
+    "hash": "18c8e6f88455df9f",
+    "lastmod": "2026-10-20"
   },
   "/units/": {
     "hash": "227e11d074c56226",
@@ -2372,7 +2376,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "0dab07b47999d4a7",
+    "hash": "103a4fa2597d9749",
     "lastmod": "2026-10-20"
   },
   "/workflows/": {

@@ -3930,6 +3930,27 @@
         "EM 1110-1-1000",
         "Photogrammetric Mapping"
       ]
+    },
+    {
+      "id": "cfr-14-97",
+      "name": "14 CFR Part 97",
+      "issuer": "FAA (eCFR)",
+      "currentEdition": "eCFR",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-19",
+      "verificationNote": "§ 97.3 aircraft approach categories (A below 91 kt, B 91 to below 121, C 121 to below 141, D 141 to below 166, E 166 and above, on VREF or 1.3 VS0) read through the eCFR versioner API on 2026-10-19; the section's current text dates from 2016-12-30. Values in data/regulations.json.",
+      "freeAccessUrl": "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-F/part-97",
+      "matchTerms": [
+        "14 CFR Part 97",
+        "14 CFR 97"
+      ],
+      "editionStatus": "current",
+      "legalStatus": "in-force",
+      "editionCheck": false
     }
   ]
 }

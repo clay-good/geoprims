@@ -35,6 +35,8 @@ test('practitioner operation counts match the implemented catalog cut', () => {
   ).length;
   assert.deepEqual(
     Object.fromEntries(Object.keys(groups).map((domain) => [domain, count(domain)])),
-    { time: 14, aviation: 12, survey: 11, drone: 5 },
+    // aviation 13: the 12 practitioner tools plus aviation.ifr.approach-category
+    // (add-aviation-practical-additions), which shares the ifr group.
+    { time: 14, aviation: 13, survey: 11, drone: 5 },
   );
 });

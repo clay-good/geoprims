@@ -4,6 +4,7 @@
 
 pub mod airspeed;
 pub mod aloft;
+pub mod approach;
 pub mod atmosphere;
 pub mod coldtemp;
 pub mod dme;
@@ -2597,6 +2598,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &weather::METAR,
     &weather::FB_WINDS,
     &weather::TAF,
+    &approach::APPROACH_CATEGORY,
     &ifr::HOLD_ENTRY,
     &ifr::HOLD_WIND,
     &ifr::HOLD_SPEED,

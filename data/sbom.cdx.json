@@ -3033,15 +3033,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/%40oxc-project/types@0.150.0",
+      "bom-ref": "pkg:npm/%40oxc-project/types@0.152.0",
       "name": "@oxc-project/types",
-      "version": "0.150.0",
+      "version": "0.152.0",
       "licenses": [
         {
           "expression": "MIT"
         }
       ],
-      "purl": "pkg:npm/%40oxc-project/types@0.150.0",
+      "purl": "pkg:npm/%40oxc-project/types@0.152.0",
       "scope": "excluded",
       "properties": [
         {
@@ -3166,15 +3166,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/%40rolldown/binding-android-arm-eabi@1.2.9",
+      "bom-ref": "pkg:npm/%40rolldown/binding-android-arm-eabi@1.2.12",
       "name": "@rolldown/binding-android-arm-eabi",
-      "version": "1.2.9",
+      "version": "1.2.12",
       "licenses": [
         {
           "expression": "MIT"
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-android-arm-eabi@1.2.9",
+      "purl": "pkg:npm/%40rolldown/binding-android-arm-eabi@1.2.12",
       "scope": "optional",
       "properties": [
         {
@@ -3185,15 +3185,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/%40rolldown/binding-android-arm64@1.2.9",
+      "bom-ref": "pkg:npm/%40rolldown/binding-android-arm64@1.2.12",
       "name": "@rolldown/binding-android-arm64",
-      "version": "1.2.9",
+      "version": "1.2.12",
       "licenses": [
         {
           "expression": "MIT"
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-android-arm64@1.2.9",
+      "purl": "pkg:npm/%40rolldown/binding-android-arm64@1.2.12",
       "scope": "optional",
       "properties": [
         {
@@ -3204,15 +3204,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/%40rolldown/binding-darwin-arm64@1.2.9",
+      "bom-ref": "pkg:npm/%40rolldown/binding-darwin-arm64@1.2.12",
       "name": "@rolldown/binding-darwin-arm64",
-      "version": "1.2.9",
+      "version": "1.2.12",
       "licenses": [
         {
           "expression": "MIT"
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-darwin-arm64@1.2.9",
+      "purl": "pkg:npm/%40rolldown/binding-darwin-arm64@1.2.12",
       "scope": "optional",
       "properties": [
         {
@@ -3223,15 +3223,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/%40rolldown/binding-darwin-x64@1.2.9",
+      "bom-ref": "pkg:npm/%40rolldown/binding-darwin-x64@1.2.12",
       "name": "@rolldown/binding-darwin-x64",
-      "version": "1.2.9",
+      "version": "1.2.12",
       "licenses": [
         {
           "expression": "MIT"
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-darwin-x64@1.2.9",
+      "purl": "pkg:npm/%40rolldown/binding-darwin-x64@1.2.12",
       "scope": "optional",
       "properties": [
         {
@@ -3242,15 +3242,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/%40rolldown/binding-freebsd-x64@1.2.9",
+      "bom-ref": "pkg:npm/%40rolldown/binding-freebsd-x64@1.2.12",
       "name": "@rolldown/binding-freebsd-x64",
-      "version": "1.2.9",
+      "version": "1.2.12",
       "licenses": [
         {
           "expression": "MIT"
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-freebsd-x64@1.2.9",
+      "purl": "pkg:npm/%40rolldown/binding-freebsd-x64@1.2.12",
       "scope": "optional",
       "properties": [
         {
@@ -3261,15 +3261,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/%40rolldown/binding-linux-arm-gnueabihf@1.2.9",
+      "bom-ref": "pkg:npm/%40rolldown/binding-linux-arm-gnueabihf@1.2.12",
       "name": "@rolldown/binding-linux-arm-gnueabihf",
-      "version": "1.2.9",
+      "version": "1.2.12",
       "licenses": [
         {
           "expression": "MIT"
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-linux-arm-gnueabihf@1.2.9",
+      "purl": "pkg:npm/%40rolldown/binding-linux-arm-gnueabihf@1.2.12",
       "scope": "optional",
       "properties": [
         {
@@ -3280,15 +3280,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/%40rolldown/binding-linux-arm64-gnu@1.2.9",
+      "bom-ref": "pkg:npm/%40rolldown/binding-linux-arm64-gnu@1.2.12",
       "name": "@rolldown/binding-linux-arm64-gnu",
-      "version": "1.2.9",
+      "version": "1.2.12",
       "licenses": [
         {
           "expression": "MIT"
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-linux-arm64-gnu@1.2.9",
+      "purl": "pkg:npm/%40rolldown/binding-linux-arm64-gnu@1.2.12",
       "scope": "optional",
       "properties": [
         {
@@ -3299,15 +3299,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/%40rolldown/binding-linux-arm64-musl@1.2.9",
+      "bom-ref": "pkg:npm/%40rolldown/binding-linux-arm64-musl@1.2.12",
       "name": "@rolldown/binding-linux-arm64-musl",
-      "version": "1.2.9",
+      "version": "1.2.12",
       "licenses": [
         {
           "expression": "MIT"
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-linux-arm64-musl@1.2.9",
+      "purl": "pkg:npm/%40rolldown/binding-linux-arm64-musl@1.2.12",
       "scope": "optional",
       "properties": [
         {
@@ -3318,15 +3318,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/%40rolldown/binding-linux-ppc64-gnu@1.2.9",
+      "bom-ref": "pkg:npm/%40rolldown/binding-linux-ppc64-gnu@1.2.12",
       "name": "@rolldown/binding-linux-ppc64-gnu",
-      "version": "1.2.9",
+      "version": "1.2.12",
       "licenses": [
         {
           "expression": "MIT"
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-linux-ppc64-gnu@1.2.9",
+      "purl": "pkg:npm/%40rolldown/binding-linux-ppc64-gnu@1.2.12",
       "scope": "optional",
       "properties": [
         {
@@ -3337,15 +3337,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/%40rolldown/binding-linux-s390x-gnu@1.2.9",
+      "bom-ref": "pkg:npm/%40rolldown/binding-linux-s390x-gnu@1.2.12",
       "name": "@rolldown/binding-linux-s390x-gnu",
-      "version": "1.2.9",
+      "version": "1.2.12",
       "licenses": [
         {
           "expression": "MIT"
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-linux-s390x-gnu@1.2.9",
+      "purl": "pkg:npm/%40rolldown/binding-linux-s390x-gnu@1.2.12",
       "scope": "optional",
       "properties": [
         {
@@ -3356,15 +3356,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/%40rolldown/binding-linux-x64-gnu@1.2.9",
+      "bom-ref": "pkg:npm/%40rolldown/binding-linux-x64-gnu@1.2.12",
       "name": "@rolldown/binding-linux-x64-gnu",
-      "version": "1.2.9",
+      "version": "1.2.12",
       "licenses": [
         {
           "expression": "MIT"
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-linux-x64-gnu@1.2.9",
+      "purl": "pkg:npm/%40rolldown/binding-linux-x64-gnu@1.2.12",
       "scope": "optional",
       "properties": [
         {
@@ -3375,15 +3375,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/%40rolldown/binding-linux-x64-musl@1.2.9",
+      "bom-ref": "pkg:npm/%40rolldown/binding-linux-x64-musl@1.2.12",
       "name": "@rolldown/binding-linux-x64-musl",
-      "version": "1.2.9",
+      "version": "1.2.12",
       "licenses": [
         {
           "expression": "MIT"
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-linux-x64-musl@1.2.9",
+      "purl": "pkg:npm/%40rolldown/binding-linux-x64-musl@1.2.12",
       "scope": "optional",
       "properties": [
         {
@@ -3394,15 +3394,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/%40rolldown/binding-openharmony-arm64@1.2.9",
+      "bom-ref": "pkg:npm/%40rolldown/binding-openharmony-arm64@1.2.12",
       "name": "@rolldown/binding-openharmony-arm64",
-      "version": "1.2.9",
+      "version": "1.2.12",
       "licenses": [
         {
           "expression": "MIT"
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-openharmony-arm64@1.2.9",
+      "purl": "pkg:npm/%40rolldown/binding-openharmony-arm64@1.2.12",
       "scope": "optional",
       "properties": [
         {
@@ -3413,15 +3413,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/%40rolldown/binding-win32-arm64-msvc@1.2.9",
+      "bom-ref": "pkg:npm/%40rolldown/binding-win32-arm64-msvc@1.2.12",
       "name": "@rolldown/binding-win32-arm64-msvc",
-      "version": "1.2.9",
+      "version": "1.2.12",
       "licenses": [
         {
           "expression": "MIT"
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-win32-arm64-msvc@1.2.9",
+      "purl": "pkg:npm/%40rolldown/binding-win32-arm64-msvc@1.2.12",
       "scope": "optional",
       "properties": [
         {
@@ -3432,15 +3432,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/%40rolldown/binding-win32-x64-msvc@1.2.9",
+      "bom-ref": "pkg:npm/%40rolldown/binding-win32-x64-msvc@1.2.12",
       "name": "@rolldown/binding-win32-x64-msvc",
-      "version": "1.2.9",
+      "version": "1.2.12",
       "licenses": [
         {
           "expression": "MIT"
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-win32-x64-msvc@1.2.9",
+      "purl": "pkg:npm/%40rolldown/binding-win32-x64-msvc@1.2.12",
       "scope": "optional",
       "properties": [
         {
@@ -6529,15 +6529,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/rolldown@1.2.9",
+      "bom-ref": "pkg:npm/rolldown@1.2.12",
       "name": "rolldown",
-      "version": "1.2.9",
+      "version": "1.2.12",
       "licenses": [
         {
           "expression": "MIT"
         }
       ],
-      "purl": "pkg:npm/rolldown@1.2.9",
+      "purl": "pkg:npm/rolldown@1.2.12",
       "scope": "excluded",
       "properties": [
         {
@@ -7308,15 +7308,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/vite@8.3.0",
+      "bom-ref": "pkg:npm/vite@8.3.3",
       "name": "vite",
-      "version": "8.3.0",
+      "version": "8.3.3",
       "licenses": [
         {
           "expression": "MIT"
         }
       ],
-      "purl": "pkg:npm/vite@8.3.0",
+      "purl": "pkg:npm/vite@8.3.3",
       "scope": "excluded",
       "properties": [
         {

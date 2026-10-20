@@ -1128,6 +1128,14 @@
     {
       "query": "rvr 2400 to visibility",
       "expect": "aviation.ifr.rvr-visibility"
+    },
+    {
+      "query": "maneuvering speed at lighter weight",
+      "expect": "aviation.performance.va-for-weight"
+    },
+    {
+      "query": "hydroplaning speed 36 psi",
+      "expect": "aviation.performance.hydroplaning-speed"
     }
   ]
 }

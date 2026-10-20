@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "a2dfeaab3cb68a98",
+    "hash": "56d8978e1ee7c1af",
     "lastmod": "2026-10-20"
   },
   "/accuracy/": {
@@ -12,7 +12,7 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/": {
-    "hash": "cee5d238fbf1693a",
+    "hash": "d8cbfa66ccbcdbde",
     "lastmod": "2026-10-20"
   },
   "/aviation/airspace/": {
@@ -176,8 +176,8 @@
     "lastmod": "2026-10-19"
   },
   "/aviation/performance/": {
-    "hash": "877fdea27c5e8be2",
-    "lastmod": "2026-09-26"
+    "hash": "f1efea9fd826fc0e",
+    "lastmod": "2026-10-20"
   },
   "/aviation/performance/climb-gradient/": {
     "hash": "07bb073e282afd9c",
@@ -192,12 +192,16 @@
     "lastmod": "2026-10-19"
   },
   "/aviation/performance/glide/": {
-    "hash": "7e3c47473cea9fa3",
-    "lastmod": "2026-10-19"
+    "hash": "d31f3a721f4b83d4",
+    "lastmod": "2026-10-20"
+  },
+  "/aviation/performance/hydroplaning-speed/": {
+    "hash": "c833fa90dbd94a28",
+    "lastmod": "2026-10-20"
   },
   "/aviation/performance/pivotal-altitude/": {
-    "hash": "dede87b4b7d212d7",
-    "lastmod": "2026-10-19"
+    "hash": "6a923a34658fb31d",
+    "lastmod": "2026-10-20"
   },
   "/aviation/performance/specific-range/": {
     "hash": "2e64fc1f86ab3151",
@@ -208,12 +212,16 @@
     "lastmod": "2026-10-19"
   },
   "/aviation/performance/turn/": {
-    "hash": "f2b0d45b319398b5",
-    "lastmod": "2026-10-19"
+    "hash": "c28ff75500dd5828",
+    "lastmod": "2026-10-20"
+  },
+  "/aviation/performance/va-for-weight/": {
+    "hash": "94e98d6765d4633b",
+    "lastmod": "2026-10-20"
   },
   "/aviation/performance/vdp/": {
-    "hash": "4258a33e53657e48",
-    "lastmod": "2026-10-19"
+    "hash": "c17109116524c02d",
+    "lastmod": "2026-10-20"
   },
   "/aviation/physiology/": {
     "hash": "0e2211907da451a2",
@@ -1456,7 +1464,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "8ba39f013baf4a78",
+    "hash": "c0d48feb8e0ff37e",
     "lastmod": "2026-10-20"
   },
   "/navigation/": {
@@ -1740,7 +1748,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "170dc5c43d6394e1",
+    "hash": "af16fe2f41b2c3ef",
     "lastmod": "2026-10-20"
   },
   "/survey/": {
@@ -2124,7 +2132,7 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "cb0fd8752b2b8840",
+    "hash": "8e0d9a85449b04ca",
     "lastmod": "2026-10-20"
   },
   "/units/": {
@@ -2388,7 +2396,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "48160e1c8cd376a7",
+    "hash": "7080768b72afe330",
     "lastmod": "2026-10-20"
   },
   "/workflows/": {

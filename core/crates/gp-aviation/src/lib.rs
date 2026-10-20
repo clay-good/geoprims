@@ -18,6 +18,7 @@ pub mod offcourse;
 pub mod performance;
 pub mod physiology;
 pub mod planning;
+pub mod practical;
 pub mod qcodes;
 pub mod radial;
 pub mod range;
@@ -2602,6 +2603,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &approach::APPROACH_CATEGORY,
     &approach::RVR_VISIBILITY,
     &physiology::OXYGEN_REQUIREMENT,
+    &practical::VA_FOR_WEIGHT,
+    &practical::HYDROPLANING_SPEED,
     &ifr::HOLD_ENTRY,
     &ifr::HOLD_WIND,
     &ifr::HOLD_SPEED,

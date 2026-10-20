@@ -3993,6 +3993,47 @@
       "editionStatus": "current",
       "legalStatus": "in-force",
       "editionCheck": false
+    },
+    {
+      "id": "cfr-14-23-2016",
+      "name": "14 CFR 23.335 (before the 2017 Part 23 rewrite)",
+      "issuer": "FAA (eCFR)",
+      "currentEdition": "text in force until 2017-08-30",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-19",
+      "verificationNote": "§ 23.335(c) read through the eCFR versioner API at 2017-01-01 on 2026-10-19: V_A may not be less than V_S √n. The section was removed on 2017-08-30 by the Part 23 rewrite; it is cited for the design relation behind V_A scaling with √W, not as a current rule.",
+      "freeAccessUrl": "https://www.ecfr.gov/api/versioner/v1/full/2017-01-01/title-14.xml?section=23.335",
+      "matchTerms": [
+        "14 CFR 23.335"
+      ],
+      "editionStatus": "current",
+      "legalStatus": "withdrawn",
+      "editionCheck": false
+    },
+    {
+      "id": "nasa-tn-d-2056",
+      "name": "NASA TN D-2056, Phenomena of Pneumatic Tire Hydroplaning",
+      "issuer": "Horne, W. B., and Dreher, R. C., NASA Langley Research Center",
+      "currentEdition": "November 1963",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-19",
+      "verificationNote": "Read at NTRS (19640000612) on 2026-10-19: eq. 4, V_P = 9 √p knots, and eq. 5, 10.35 √p mph (page 5), with the 24 to 150 psi and 925 to 22,000 lb range of the correlation and the tread and water-depth conditions. US Government work, public use permitted.",
+      "freeAccessUrl": "https://ntrs.nasa.gov/citations/19640000612",
+      "matchTerms": [
+        "NASA TN D-2056",
+        "Phenomena of Pneumatic Tire Hydroplaning"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
     }
   ]
 }

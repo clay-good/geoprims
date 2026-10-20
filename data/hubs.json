@@ -377,6 +377,18 @@
             "turn",
             "pivotal-altitude"
           ]
+        },
+        {
+          "want": "find maneuvering speed at today's weight",
+          "tools": [
+            "va-for-weight"
+          ]
+        },
+        {
+          "want": "find the speed my tires can hydroplane",
+          "tools": [
+            "hydroplaning-speed"
+          ]
         }
       ]
     },

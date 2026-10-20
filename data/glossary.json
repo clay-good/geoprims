@@ -984,6 +984,16 @@
       ]
     },
     {
+      "id": "nasa",
+      "term": "NASA",
+      "expansion": "National Aeronautics and Space Administration",
+      "definition": "The US government agency for aeronautics and space research, whose Langley center measured how and when aircraft tires hydroplane.",
+      "source": "nasa-tn-d-2056",
+      "relatedTools": [
+        "aviation.performance.hydroplaning-speed"
+      ]
+    },
+    {
       "id": "nbr",
       "term": "NBR",
       "expansion": "normalized burn ratio",
@@ -1734,6 +1744,16 @@
       ]
     },
     {
+      "id": "va",
+      "term": "VA",
+      "expansion": "design maneuvering speed",
+      "definition": "The speed below which full, abrupt use of one control at a time should not overstress the airplane. It is lower when the airplane is lighter.",
+      "source": "faa-phak",
+      "relatedTools": [
+        "aviation.performance.va-for-weight"
+      ]
+    },
+    {
       "id": "vasi",
       "term": "VASI",
       "expansion": "visual approach slope indicator",
@@ -1814,6 +1834,16 @@
       "source": "cfr-14-97",
       "relatedTools": [
         "aviation.ifr.approach-category"
+      ]
+    },
+    {
+      "id": "vs",
+      "term": "VS",
+      "expansion": "stall speed",
+      "definition": "The slowest speed at which the airplane still flies in a stated configuration, usually clean with flaps up. It rises with weight.",
+      "source": "faa-phak",
+      "relatedTools": [
+        "aviation.performance.va-for-weight"
       ]
     },
     {

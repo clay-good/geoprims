@@ -1661,7 +1661,7 @@ pub static CLIMB_REQUIREMENT: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
+        kind: "vector-diagram",
         map: &[],
     }],
     related: &[

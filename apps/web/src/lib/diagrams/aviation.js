@@ -531,6 +531,78 @@ function holdTiming(args, result) {
   return { markup: svg(body, title), desc: title };
 }
 
+/**
+ * Climb requirement, side view over one nautical mile: the gradient the
+ * departure needs and, when a rate of climb was given, the gradient that rate
+ * makes at this groundspeed. A climb that falls short draws under the line it
+ * must clear. Not to scale vertically.
+ */
+function climbRequirement(args, result) {
+  const need = val(result, 'gradient');
+  const have = val(result, 'available_gradient');
+  if (!Number.isFinite(need) || need <= 0) return null;
+  const mine = Number.isFinite(have);
+  const top = Math.max(need, mine ? have : 0);
+  const [x0, x1, yBot, span] = [50, 270, 200, 90];
+  const Y = (g) => yBot - (g / top) * span;
+  // A key at the top names the two lines: rising lines leave no clear room
+  // for labels at their ends when the gradients are close.
+  const body = [
+    line('dg-grid', [x0, yBot], [x1, yBot]),
+    text('dg-label', (x0 + x1) / 2, yBot + 20, '1 NM', 'middle'),
+    `<line class="dg-muted dg-dash" x1="${x0}" y1="${yBot}" x2="${x1}" y2="${f1(Y(need))}"/>`,
+    `<line class="dg-muted dg-dash" x1="24" y1="28" x2="48" y2="28"/>`,
+    text('dg-muted-text', 56, 32, `Required ${disp(result, 'gradient')}`),
+    text('dg-muted-text', 56, 48, `${disp(result, 'required_rate')} at ${disp(result, 'groundspeed')}`),
+  ];
+  if (mine) {
+    body.push(line('dg-casing', [x0, yBot], [x1, Y(have)]), line('dg-accent', [x0, yBot], [x1, Y(have)]), dot(x1, Y(have)));
+    body.push(line('dg-accent', [24, 68], [48, 68]), text('dg-label', 56, 72, `Your climb ${disp(result, 'available_gradient')}`));
+  }
+  body.push(dot(x0, yBot));
+  const verdict = mine
+    ? have >= need
+      ? `, and your climb of ${disp(result, 'available_gradient')} clears it`
+      : `, and your climb of ${disp(result, 'available_gradient')} falls short`
+    : '';
+  const title = `Climb requirement: ${disp(result, 'gradient')} needs ${disp(result, 'required_rate')} at ${disp(result, 'groundspeed')}${verdict}. Not to scale vertically.`;
+  return { markup: svg(body.join(''), title), desc: title };
+}
+
+/**
+ * Cabin pressure stack: the outside pressure at the airplane's altitude plus
+ * the differential the cabin holds make the cabin pressure, drawn as one bar
+ * against sea-level pressure, with the cabin altitude that pressure means.
+ */
+function cabinPressure(args, result) {
+  const outside = val(result, 'outside_pressure');
+  const diff = val(result, 'differential');
+  const cabin = val(result, 'cabin_pressure');
+  const unit = result.result.cabin_pressure?.unit;
+  if (![outside, diff, cabin].every(Number.isFinite) || cabin <= 0) return null;
+  // Sea-level standard pressure in the result's unit, for the bar's full height.
+  const sea = { psi: 14.6959, inHg: 29.9213, hPa: 1013.25, kPa: 101.325, Pa: 101325, mbar: 1013.25 }[unit];
+  if (!sea) return null;
+  const [x, w, yBot, span] = [120, 60, 200, 160];
+  const H = (p) => (Math.min(p, sea) / sea) * span;
+  const yOut = yBot - H(outside);
+  const yCab = yBot - H(cabin);
+  const body = [
+    line('dg-grid', [60, yBot], [260, yBot]),
+    `<line class="dg-grid dg-dash" x1="60" y1="${f1(yBot - span)}" x2="260" y2="${f1(yBot - span)}"/>`,
+    text('dg-muted-text', 260, yBot - span - 6, 'Sea level', 'end'),
+    `<rect class="dg-hollow" x="${x}" y="${f1(yOut)}" width="${w}" height="${f1(yBot - yOut)}"/>`,
+    `<rect class="dg-fill" x="${x}" y="${f1(yCab)}" width="${w}" height="${f1(yOut - yCab)}"/>`,
+    text('dg-muted-text', x - 8, (yOut + yBot) / 2 + 4, `Outside ${disp(result, 'outside_pressure')}`, 'end'),
+    text('dg-label', x - 8, (yCab + yOut) / 2 + 4, `+ ${disp(result, 'differential')}`, 'end'),
+    line('dg-accent', [x + w, yCab], [x + w + 12, yCab]),
+    text('dg-label', x + w + 16, yCab + 4, `Cabin ${disp(result, 'cabin_pressure')}`),
+    text('dg-muted-text', x + w + 16, yCab + 20, `= ${disp(result, 'cabin_altitude')}`),
+  ].join('');
+  const title = `Cabin pressure: ${disp(result, 'outside_pressure')} outside plus ${disp(result, 'differential')} of differential is ${disp(result, 'cabin_pressure')}, a cabin altitude of ${disp(result, 'cabin_altitude')}.`;
+  return { markup: svg(body, title), desc: title };
+}
+
 export const DIAGRAMS = {
   'aviation.wind.heading-groundspeed': windTriangle,
   'aviation.wind.runway-components': runwayComponents,
@@ -550,4 +622,6 @@ export const DIAGRAMS = {
   'aviation.wind.course-from-heading': courseFromHeading,
   'aviation.wind.tas-from-groundspeed': tasFromGroundspeed,
   'aviation.ifr.hold-wind-timing': holdTiming,
+  'aviation.performance.climb-requirement': climbRequirement,
+  'aviation.altimetry.cabin-altitude': cabinPressure,
 };

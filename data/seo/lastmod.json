@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "abeea07eea11dc73",
+    "hash": "894ae6ee9b760c89",
     "lastmod": "2026-10-20"
   },
   "/accuracy/": {
@@ -44,7 +44,7 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/altimetry/cabin-altitude/": {
-    "hash": "3771e4e23c7074b4",
+    "hash": "99d26f928f416825",
     "lastmod": "2026-10-20"
   },
   "/aviation/altimetry/cold-temperature/": {
@@ -108,7 +108,7 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/ifr/approach-category/": {
-    "hash": "d2aeed081a6aefc9",
+    "hash": "15e09019095f368d",
     "lastmod": "2026-10-20"
   },
   "/aviation/ifr/circling-radius/": {
@@ -144,7 +144,7 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/ifr/rvr-visibility/": {
-    "hash": "f040307bcd107df0",
+    "hash": "e1936bb1a9a6c2ab",
     "lastmod": "2026-10-20"
   },
   "/aviation/ifr/time-to-station/": {
@@ -180,8 +180,8 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/loading/weight-balance/": {
-    "hash": "dc621add522c519f",
-    "lastmod": "2026-10-19"
+    "hash": "7970e1d1d05c1c89",
+    "lastmod": "2026-10-20"
   },
   "/aviation/loading/weight-shift/": {
     "hash": "b750d9cc3909ff2a",
@@ -200,7 +200,7 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/performance/climb-requirement/": {
-    "hash": "f27ed155fae138a5",
+    "hash": "eda166858c7cd6a6",
     "lastmod": "2026-10-20"
   },
   "/aviation/performance/etp-pnr/": {
@@ -228,11 +228,11 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/performance/turn/": {
-    "hash": "c28ff75500dd5828",
+    "hash": "1d4930e29c914f91",
     "lastmod": "2026-10-20"
   },
   "/aviation/performance/va-for-weight/": {
-    "hash": "94e98d6765d4633b",
+    "hash": "f3e8416d46fae89d",
     "lastmod": "2026-10-20"
   },
   "/aviation/performance/vdp/": {
@@ -244,11 +244,11 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/physiology/oxygen-requirement/": {
-    "hash": "17c6509304c4b715",
+    "hash": "003a5dc831e82e19",
     "lastmod": "2026-10-20"
   },
   "/aviation/physiology/time-of-useful-consciousness/": {
-    "hash": "5f474c10c371f557",
+    "hash": "9be9b82b2b29ac13",
     "lastmod": "2026-10-20"
   },
   "/aviation/weather/": {
@@ -260,8 +260,8 @@
     "lastmod": "2026-10-19"
   },
   "/aviation/weather/metar-decode/": {
-    "hash": "1fb860083788d08e",
-    "lastmod": "2026-10-19"
+    "hash": "b4b388ace38b5541",
+    "lastmod": "2026-10-20"
   },
   "/aviation/weather/taf-decode/": {
     "hash": "016a593e99cb1098",
@@ -1376,7 +1376,7 @@
     "lastmod": "2026-09-19"
   },
   "/learn/": {
-    "hash": "e8785d08f65d2a65",
+    "hash": "5cb9f8d3b8b74676",
     "lastmod": "2026-10-20"
   },
   "/learn/crosswind-components/": {
@@ -1431,6 +1431,14 @@
     "hash": "d7d7b1dd7e99a120",
     "lastmod": "2026-10-09"
   },
+  "/learn/hypoxia-and-the-oxygen-rules/": {
+    "hash": "72f2decd6f02d071",
+    "lastmod": "2026-10-20"
+  },
+  "/learn/maneuvering-speed-and-weight/": {
+    "hash": "8d7e57c60761f53c",
+    "lastmod": "2026-10-20"
+  },
   "/learn/map-tiles-and-quadkeys/": {
     "hash": "ced888bfd19ae21f",
     "lastmod": "2026-10-14"
@@ -1462,6 +1470,10 @@
   "/learn/pressure-altitude/": {
     "hash": "2eb0c252f0a7b63e",
     "lastmod": "2026-10-09"
+  },
+  "/learn/rvr-and-visibility/": {
+    "hash": "dd89fa54cd300af0",
+    "lastmod": "2026-10-20"
   },
   "/learn/state-plane-coordinates/": {
     "hash": "1ea1f7afb98f6287",
@@ -2516,7 +2528,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "04bda94344398d1c",
+    "hash": "7df042ca1c9b985c",
     "lastmod": "2026-10-20"
   },
   "/workflows/": {

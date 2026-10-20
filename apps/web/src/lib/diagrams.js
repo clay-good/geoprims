@@ -85,6 +85,8 @@ const DIAGRAMS = Object.fromEntries(
     'aviation.airspeed.eas-to-mach',
     'aviation.airspeed.mach-to-eas',
     'aviation.airspeed.tas-to-eas',
+    'aviation.performance.climb-requirement',
+    'aviation.altimetry.cabin-altitude',
     'drone.photogrammetry.photo-scale',
     'drone.photogrammetry.relief-displacement',
     'drone.photogrammetry.parallax-height',

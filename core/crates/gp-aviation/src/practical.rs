@@ -414,7 +414,7 @@ pub static CABIN_ALTITUDE: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
+        kind: "vector-diagram",
         map: &[],
     }],
     related: &[

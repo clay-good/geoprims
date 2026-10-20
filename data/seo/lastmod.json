@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "56d8978e1ee7c1af",
+    "hash": "cd748073cfdadac9",
     "lastmod": "2026-10-20"
   },
   "/accuracy/": {
@@ -12,7 +12,7 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/": {
-    "hash": "d8cbfa66ccbcdbde",
+    "hash": "90d95105d1babad7",
     "lastmod": "2026-10-20"
   },
   "/aviation/airspace/": {
@@ -176,7 +176,7 @@
     "lastmod": "2026-10-19"
   },
   "/aviation/performance/": {
-    "hash": "f1efea9fd826fc0e",
+    "hash": "d392cdbfbf27e317",
     "lastmod": "2026-10-20"
   },
   "/aviation/performance/climb-gradient/": {
@@ -184,12 +184,16 @@
     "lastmod": "2026-10-19"
   },
   "/aviation/performance/climb-plan/": {
-    "hash": "32290ddd25db73e3",
-    "lastmod": "2026-10-19"
+    "hash": "29d6fffb9f6dac1f",
+    "lastmod": "2026-10-20"
+  },
+  "/aviation/performance/climb-requirement/": {
+    "hash": "9aab1cef787aef77",
+    "lastmod": "2026-10-20"
   },
   "/aviation/performance/etp-pnr/": {
-    "hash": "a1166793f591a0fa",
-    "lastmod": "2026-10-19"
+    "hash": "aec1ca391344ce20",
+    "lastmod": "2026-10-20"
   },
   "/aviation/performance/glide/": {
     "hash": "d31f3a721f4b83d4",
@@ -1464,7 +1468,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "c0d48feb8e0ff37e",
+    "hash": "a67f6f43e333fc14",
     "lastmod": "2026-10-20"
   },
   "/navigation/": {
@@ -1748,7 +1752,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "af16fe2f41b2c3ef",
+    "hash": "116ad708c2220663",
     "lastmod": "2026-10-20"
   },
   "/survey/": {
@@ -2132,7 +2136,7 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "8e0d9a85449b04ca",
+    "hash": "58b89148704a766a",
     "lastmod": "2026-10-20"
   },
   "/units/": {
@@ -2396,7 +2400,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "7080768b72afe330",
+    "hash": "2d91954deb7948ab",
     "lastmod": "2026-10-20"
   },
   "/workflows/": {

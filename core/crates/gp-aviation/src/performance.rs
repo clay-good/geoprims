@@ -1516,3 +1516,256 @@ fn run_pivotal(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("rule_error", ctx.out("rule_error", m(rule - h))),
     ]))
 }
+
+pub static CLIMB_REQUIREMENT: ToolDef = ToolDef {
+    id: "aviation.performance.climb-requirement",
+    title: "Climb requirement check",
+    summary: "Whether your rate of climb meets a departure's required gradient at your groundspeed: the rate you need, the gradient you can make, and the margin, with the gradient worked from an altitude and distance when the chart gives those.",
+    aliases: &[
+        "can I make the climb gradient",
+        "departure climb check",
+        "required rate of climb",
+    ],
+    keywords: &[
+        "climb",
+        "gradient",
+        "departure",
+        "rate",
+        "fpm",
+        "obstacle",
+        "IFR",
+    ],
+    inputs: &[
+        qty(
+            "gradient",
+            "Required gradient",
+            "Like 297 ft/NM; or give the altitude and distance",
+            QT::Slope,
+            "ft/NM",
+        )
+        .core(),
+        qty(
+            "groundspeed",
+            "Groundspeed",
+            "In the climb, like 180 kt",
+            QT::Speed,
+            "kt",
+        )
+        .core(),
+        qty(
+            "rate_of_climb",
+            "Your rate of climb",
+            "From the flight manual at today's weight, like 700 fpm",
+            QT::VerticalSpeed,
+            "ft/min",
+        )
+        .core(),
+        qty(
+            "altitude",
+            "Altitude to reach",
+            "Instead of a gradient, like 3,000 ft",
+            QT::Length,
+            "ft",
+        ),
+        qty(
+            "start_altitude",
+            "Starting altitude",
+            "Usually the airport elevation, like 1,221 ft",
+            QT::Length,
+            "ft",
+        ),
+        qty(
+            "distance",
+            "Distance",
+            "To reach the altitude, like 5 NM",
+            QT::Length,
+            "NM",
+        ),
+        qty(
+            "airspeed",
+            "True airspeed",
+            "Instead of groundspeed, with the wind, like 120 kt",
+            QT::Speed,
+            "kt",
+        ),
+        qty(
+            "headwind",
+            "Headwind",
+            "Along the climb, negative for a tailwind, like -15 kt",
+            QT::Speed,
+            "kt",
+        ),
+    ],
+    outputs: &[
+        out(
+            "required_rate",
+            "Rate of climb needed",
+            "Gradient × groundspeed / 60",
+            QT::VerticalSpeed,
+            "ft/min",
+            0,
+        ),
+        out(
+            "gradient",
+            "Required gradient",
+            "Feet per nautical mile",
+            QT::Slope,
+            "ft/NM",
+            1,
+        ),
+        out(
+            "groundspeed",
+            "Groundspeed",
+            "Used in the check",
+            QT::Speed,
+            "kt",
+            0,
+        ),
+        out(
+            "available_gradient",
+            "Gradient you can make",
+            "Your rate × 60 / groundspeed",
+            QT::Slope,
+            "ft/NM",
+            0,
+        )
+        .optional(),
+        out(
+            "margin",
+            "Margin",
+            "Your rate less the rate needed",
+            QT::VerticalSpeed,
+            "ft/min",
+            0,
+        )
+        .optional(),
+    ],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["CLIMB_GRADIENT_SHORT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Rate needed = gradient (ft/NM) × groundspeed (kt) / 60; gradient made = rate × 60 / groundspeed; gradient = (altitude − start) / distance; groundspeed = true airspeed − headwind (IPH ch. 1)",
+    accuracy: "Exact for a steady climb at a constant groundspeed; your flight manual's climb rate at today's weight, altitude, and temperature decides the margin",
+    when_to_use: "Use this before accepting a departure procedure or obstacle departure with a climb gradient above the standard 200 ft per nautical mile: enter the gradient (or the altitude to reach and the distance), your climb groundspeed, and the rate of climb your flight manual gives for today. It shows the rate you need, the gradient you can make, and the margin.",
+    limitations: "It checks one steady climb at one groundspeed. Your real climb rate falls with altitude, heat, and weight, and a tailwind raises the rate you need, so use the flight manual's numbers for the conditions and a conservative wind. The standard 200 ft per nautical mile assumes crossing the departure end of the runway at 35 ft or more; the procedure as published governs.",
+    references: &[IPH_CLIMB_GRADIENT],
+    examples: &[Example {
+        id: "primary",
+        title: "297 ft/NM at 180 kt with a 1,000 fpm climb",
+        input: r#"{"gradient":"297 ft/NM","groundspeed":"180 kt","rate_of_climb":"1000 ft/min"}"#,
+        source: "add-aviation-practical-additions design A7: 297 ft/NM at 180 kt needs 891 fpm",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "aviation.performance.climb-gradient",
+            reason: "parent",
+        },
+        Related {
+            id: "aviation.performance.climb-plan",
+            reason: "next",
+        },
+        Related {
+            id: "aviation.altimetry.density-altitude",
+            reason: "alternative",
+        },
+    ],
+    sentence: "You need {required_rate} to climb {gradient} at {groundspeed}.{warn CLIMB_GRADIENT_SHORT} Your climb falls short.{/warn}",
+    limits: &[("batchRows", 10_000)],
+    run: run_climb_requirement,
+    ..ToolDef::BLANK
+};
+
+fn run_climb_requirement(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let ftnm = unit(QT::Slope, "ft/NM");
+    let kt = unit(QT::Speed, "kt");
+    let fpm = unit(QT::VerticalSpeed, "ft/min");
+    let ftu = unit(QT::Length, "ft");
+    let nm = unit(QT::Length, "NM");
+    let gradient = match (
+        ctx.quantity("gradient")?,
+        ctx.quantity("altitude")?,
+        ctx.quantity("distance")?,
+    ) {
+        (Some(g), _, _) => g.to(ftnm),
+        (None, Some(alt), Some(d)) => {
+            let start = ctx.quantity("start_altitude")?.map_or(0.0, |s| s.to(ftu));
+            let d = d.to(nm);
+            if d.is_nan() || d <= 0.0 {
+                return Err(ToolError::invalid(
+                    "/distance",
+                    "The distance must be more than zero.",
+                ));
+            }
+            (alt.to(ftu) - start) / d
+        }
+        _ => {
+            return Err(ToolError::invalid(
+                "/gradient",
+                "Give the required gradient, or the altitude to reach and the distance.",
+            )
+            .hint("Example: gradient 297 ft/NM"));
+        }
+    };
+    if gradient.is_nan() || gradient <= 0.0 {
+        return Err(ToolError::invalid(
+            "/gradient",
+            "The required gradient must be a climb, more than zero.",
+        ));
+    }
+    let gs = match (ctx.quantity("groundspeed")?, ctx.quantity("airspeed")?) {
+        (Some(g), _) => g.to(kt),
+        (None, Some(tas)) => tas.to(kt) - ctx.quantity("headwind")?.map_or(0.0, |w| w.to(kt)),
+        (None, None) => {
+            return Err(ToolError::invalid(
+                "/groundspeed",
+                "Give the groundspeed, or the true airspeed and wind.",
+            ));
+        }
+    };
+    if gs.is_nan() || gs <= 0.0 {
+        return Err(ToolError::invalid(
+            "/groundspeed",
+            "The groundspeed must be more than zero.",
+        ));
+    }
+    let need = gradient * gs / 60.0;
+    let mut out = vec![
+        (
+            "required_rate",
+            ctx.out("required_rate", q(need, QT::VerticalSpeed, "ft/min")),
+        ),
+        (
+            "gradient",
+            ctx.out("gradient", q(gradient, QT::Slope, "ft/NM")),
+        ),
+        (
+            "groundspeed",
+            ctx.out("groundspeed", q(gs, QT::Speed, "kt")),
+        ),
+    ];
+    if let Some(r) = ctx.quantity("rate_of_climb")? {
+        let r = r.to(fpm);
+        let margin = r - need;
+        out.push((
+            "available_gradient",
+            ctx.out("available_gradient", q(r * 60.0 / gs, QT::Slope, "ft/NM")),
+        ));
+        out.push((
+            "margin",
+            ctx.out("margin", q(margin, QT::VerticalSpeed, "ft/min")),
+        ));
+        if margin < 0.0 {
+            ctx.warnings.push(Warning::new(
+                "CLIMB_GRADIENT_SHORT",
+                format!(
+                    "Your climb is {} short of the rate the gradient needs at this groundspeed. Do not accept this departure as planned.",
+                    display::quantity(-margin, "ft/min", Precision::Decimals(0), ctx.options.format)
+                ),
+            ));
+        }
+    }
+    Ok(obj(out))
+}

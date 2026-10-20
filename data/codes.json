@@ -142,6 +142,10 @@
       "severity": "caution",
       "message": "The battery discharge rate is above its rated C-rate."
     },
+    "CLIMB_GRADIENT_SHORT": {
+      "severity": "caution",
+      "message": "Your rate of climb does not meet the required climb gradient at this groundspeed."
+    },
     "DECLINATION_POLE_CONVENTION": {
       "severity": "info",
       "message": "Declination at the pole follows a convention."

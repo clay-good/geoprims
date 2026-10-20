@@ -93,3 +93,34 @@ fn hydroplaning_invariants() {
         "OUT_OF_DOMAIN"
     );
 }
+
+#[test]
+fn climb_requirement_invariants() {
+    let run = |v: Value| invoke("aviation.performance.climb-requirement", v);
+    // The design examples: 297 ft/NM at 180 kt is 891 fpm; 1,779 ft in 5 NM is 355.8 ft/NM.
+    assert_eq!(
+        run(json!({"gradient": "297 ft/NM", "groundspeed": "180 kt"}))["result"]["required_rate"]["value"],
+        891.0
+    );
+    let g = run(
+        json!({"altitude": "3000 ft", "start_altitude": "1221 ft", "distance": "5 NM", "groundspeed": "120 kt"}),
+    );
+    assert!((g["result"]["gradient"]["value"].as_f64().unwrap() - 355.8).abs() < 1e-9);
+    // A tailwind raises the rate needed, and a shortfall carries the caution.
+    let r = run(
+        json!({"gradient": "250 ft/NM", "airspeed": "100 kt", "headwind": "-20 kt", "rate_of_climb": "450 ft/min"}),
+    );
+    let codes: Vec<&str> = r["meta"]["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|w| w["code"].as_str().unwrap())
+        .collect();
+    assert!(codes.contains(&"CLIMB_GRADIENT_SHORT"), "{codes:?}");
+    // The gradient you can make, back through the rate needed, is your rate.
+    let m = run(
+        json!({"gradient": "300 ft/NM", "groundspeed": "120 kt", "rate_of_climb": "700 ft/min"}),
+    );
+    let made = m["result"]["available_gradient"]["value"].as_f64().unwrap();
+    assert!((made * 120.0 / 60.0 - 700.0).abs() < 1e-9);
+}

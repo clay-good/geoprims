@@ -389,6 +389,12 @@
           "tools": [
             "hydroplaning-speed"
           ]
+        },
+        {
+          "want": "check that I can make a departure's climb gradient",
+          "tools": [
+            "climb-requirement"
+          ]
         }
       ]
     },

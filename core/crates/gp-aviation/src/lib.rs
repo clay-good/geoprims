@@ -2605,6 +2605,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &physiology::OXYGEN_REQUIREMENT,
     &practical::VA_FOR_WEIGHT,
     &practical::HYDROPLANING_SPEED,
+    &performance::CLIMB_REQUIREMENT,
     &ifr::HOLD_ENTRY,
     &ifr::HOLD_WIND,
     &ifr::HOLD_SPEED,

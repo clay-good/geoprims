@@ -18,9 +18,16 @@ pub struct Rule {
     pub url: String,
 }
 
+/// The parsed file, read once: a tool may look up several entries per call,
+/// and parsing the whole file each time cost more than the tool's own math.
+fn parsed() -> &'static Value {
+    static PARSED: std::sync::OnceLock<Value> = std::sync::OnceLock::new();
+    PARSED.get_or_init(|| serde_json::from_str(REGULATIONS).expect("regulations.json parses"))
+}
+
 /// Looks up a regulation entry by id. Panics on a missing id (a build error).
 pub fn rule(id: &str) -> Rule {
-    let v: Value = serde_json::from_str(REGULATIONS).expect("regulations.json parses");
+    let v = parsed();
     let e = v["entries"]
         .as_array()
         .and_then(|a| a.iter().find(|e| e["id"] == id))

@@ -1120,6 +1120,10 @@
     {
       "query": "approach category vref",
       "expect": "aviation.ifr.approach-category"
+    },
+    {
+      "query": "when do I need oxygen 13500 ft",
+      "expect": "aviation.physiology.oxygen-requirement"
     }
   ]
 }

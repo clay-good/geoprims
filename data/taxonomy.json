@@ -57,7 +57,8 @@
         "weather",
         "ifr",
         "airspace",
-        "flight-plan"
+        "flight-plan",
+        "physiology"
       ]
     },
     "drone": {

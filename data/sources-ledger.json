@@ -3951,6 +3951,48 @@
       "editionStatus": "current",
       "legalStatus": "in-force",
       "editionCheck": false
+    },
+    {
+      "id": "cfr-14-135",
+      "name": "14 CFR Part 135",
+      "issuer": "FAA (eCFR)",
+      "currentEdition": "eCFR",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-19",
+      "verificationNote": "§ 135.89 pilot use of oxygen read through the eCFR versioner API on 2026-10-19; the section's current text dates from 2017-01-01. Values in data/regulations.json.",
+      "freeAccessUrl": "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-G/part-135",
+      "matchTerms": [
+        "14 CFR Part 135",
+        "14 CFR 135"
+      ],
+      "editionStatus": "current",
+      "legalStatus": "in-force",
+      "editionCheck": false
+    },
+    {
+      "id": "cfr-14-121",
+      "name": "14 CFR Part 121",
+      "issuer": "FAA (eCFR)",
+      "currentEdition": "eCFR",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-19",
+      "verificationNote": "§ 121.329 supplemental oxygen for sustenance read through the eCFR versioner API on 2026-10-19; the section's current text dates from 2017-01-01. Values in data/regulations.json.",
+      "freeAccessUrl": "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-G/part-121",
+      "matchTerms": [
+        "14 CFR Part 121",
+        "14 CFR 121"
+      ],
+      "editionStatus": "current",
+      "legalStatus": "in-force",
+      "editionCheck": false
     }
   ]
 }

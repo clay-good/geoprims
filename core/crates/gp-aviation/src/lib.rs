@@ -16,6 +16,7 @@ pub mod loading;
 pub mod navlog;
 pub mod offcourse;
 pub mod performance;
+pub mod physiology;
 pub mod planning;
 pub mod qcodes;
 pub mod radial;
@@ -2599,6 +2600,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &weather::FB_WINDS,
     &weather::TAF,
     &approach::APPROACH_CATEGORY,
+    &physiology::OXYGEN_REQUIREMENT,
     &ifr::HOLD_ENTRY,
     &ifr::HOLD_WIND,
     &ifr::HOLD_SPEED,

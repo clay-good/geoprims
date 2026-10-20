@@ -204,6 +204,18 @@
         ]
       }
     },
+    "aviation.physiology": {
+      "summary": "Oxygen rules for flying at altitude, quoted from the regulations with their dates.",
+      "intro": "References for the human side of flying high: which supplemental-oxygen rule applies at a cabin altitude under Part 91, 135, or 121, and what it requires. Pilots planning a flight above 10,000 feet use it to check the rule rather than remember it. Start with the oxygen requirement tool and give it the cabin altitude, the time you will spend there, and your operating rules. These are dated references, not medical or legal advice: the regulation and your aeromedical training govern.",
+      "tasks": [
+        {
+          "want": "check when the regulations require oxygen",
+          "tools": [
+            "oxygen-requirement"
+          ]
+        }
+      ]
+    },
     "aviation.ifr": {
       "summary": "Holding, DME, and station geometry for instrument flying.",
       "intro": "Holding entries, holding speeds and wind correction, DME slant range and arcs, radial fixes and intercepts, and time to a station, for instrument pilots planning or reviewing a procedure. Start with the holding entry tool, which picks direct, teardrop, or parallel from your heading and the hold's inbound course, per AIM 5-3-8. Decide the entry from your heading as you reach the fix, not from where you are when the clearance comes. ATC instructions and the published procedure always govern.",

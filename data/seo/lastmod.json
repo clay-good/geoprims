@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "ff5dba58b5c974d2",
+    "hash": "ef289927207b3002",
     "lastmod": "2026-10-20"
   },
   "/accuracy/": {
@@ -12,7 +12,7 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/": {
-    "hash": "e71cf68bfc309f40",
+    "hash": "7bd204dffcfd4ade",
     "lastmod": "2026-10-20"
   },
   "/aviation/airspace/": {
@@ -210,6 +210,14 @@
   "/aviation/performance/vdp/": {
     "hash": "4258a33e53657e48",
     "lastmod": "2026-10-19"
+  },
+  "/aviation/physiology/": {
+    "hash": "0e2211907da451a2",
+    "lastmod": "2026-10-20"
+  },
+  "/aviation/physiology/oxygen-requirement/": {
+    "hash": "bd0f560339d4b6dc",
+    "lastmod": "2026-10-20"
   },
   "/aviation/weather/": {
     "hash": "71fc3736a9674207",
@@ -1444,7 +1452,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "27fc1599e6756168",
+    "hash": "8b3a639c1e6fc699",
     "lastmod": "2026-10-20"
   },
   "/navigation/": {
@@ -1728,7 +1736,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "1b97dcd21c16c8bf",
+    "hash": "732b9b8ce2af08ff",
     "lastmod": "2026-10-20"
   },
   "/survey/": {
@@ -2112,7 +2120,7 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "18c8e6f88455df9f",
+    "hash": "097e84b2e4eb58df",
     "lastmod": "2026-10-20"
   },
   "/units/": {
@@ -2376,7 +2384,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "103a4fa2597d9749",
+    "hash": "80b20c631e789f9a",
     "lastmod": "2026-10-20"
   },
   "/workflows/": {

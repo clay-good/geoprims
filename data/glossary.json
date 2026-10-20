@@ -1759,7 +1759,9 @@
         "geodesy.ups.forward",
         "geodesy.utm.forward",
         "geodesy.utm.inverse",
-        "geodesy.utm.zone"
+        "geodesy.utm.zone",
+        "geometry.sampling.fishnet",
+        "geometry.sampling.hex-grid"
       ]
     },
     {

@@ -169,6 +169,12 @@ impl Plane {
         (lat, gp_base::angle::wrap_lon(dlon + self.cm))
     }
 
+    /// The plane's point scale at a geographic point.
+    pub fn scale_at(&self, lat: f64, lon: f64) -> f64 {
+        let dlon = (lon - self.cm + 180.0).rem_euclid(360.0) - 180.0;
+        self.tm.forward(lat, dlon).3
+    }
+
     /// Inside the outline and outside every hole (even-odd over all rings).
     pub fn inside(&self, p: P) -> bool {
         let mut c = false;
@@ -2052,4 +2058,648 @@ fn run_points_along(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ),
         ("crs", Json::str(plane.crs())),
     ]))
+}
+
+pub(crate) const QGIS_GRID: Reference = Reference {
+    title: "QGIS Processing algorithm: Create grid",
+    issuer: "QGIS project (vendor documentation)",
+    year: 2025,
+    edition: "QGIS 3.44 user manual",
+    locator: "Vector creation: Create grid (rectangle and hexagon types; features from the extent's top-left corner, with row and column indices)",
+    url: "https://docs.qgis.org/3.44/en/docs/user_manual/processing_algs/qgis/vectorcreation.html#create-grid",
+};
+
+/// The part of convex polygon `poly` inside convex counterclockwise `win`.
+fn clip_convex(poly: &[P], win: &[P]) -> Vec<P> {
+    let mut out = poly.to_vec();
+    for i in 0..win.len() {
+        let (a, b) = (win[i], win[(i + 1) % win.len()]);
+        let inp = out;
+        out = Vec::with_capacity(inp.len() + 2);
+        for j in 0..inp.len() {
+            let (p, q) = (inp[j], inp[(j + 1) % inp.len()]);
+            let (sp, sq) = (orient(a, b, p), orient(a, b, q));
+            if sp >= 0.0 {
+                out.push(p);
+            }
+            if (sp >= 0.0) != (sq >= 0.0) {
+                let f = sp / (sp - sq);
+                out.push((p.0 + f * (q.0 - p.0), p.1 + f * (q.1 - p.1)));
+            }
+        }
+        if out.len() < 3 {
+            return vec![];
+        }
+    }
+    out
+}
+
+const OUT_CELL: &[Field] = &[
+    Field::new(
+        "row",
+        "Row",
+        "From 0 at the top, as QGIS numbers them; −1 for an edge hexagon above",
+        Kind::Number {
+            min: -1.0,
+            max: 1e6,
+        },
+    )
+    .precision(Precision::Decimals(0)),
+    Field::new(
+        "col",
+        "Column",
+        "From 0 at the left; −1 for an edge hexagon before it",
+        Kind::Number {
+            min: -1.0,
+            max: 1e6,
+        },
+    )
+    .precision(Precision::Decimals(0)),
+    Field::new(
+        "lat",
+        "Center latitude",
+        "",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(7)),
+    Field::new(
+        "lon",
+        "Center longitude",
+        "",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(7)),
+    Field::new(
+        "inside",
+        "Inside fraction",
+        "Share of the cell inside the polygon",
+        Kind::Number { min: 0.0, max: 1.0 },
+    )
+    .precision(Precision::Decimals(4)),
+];
+
+const OUT_OUTLINE: &[Field] = &[
+    Field::new(
+        "part",
+        "Cell",
+        "Index in the cell list",
+        Kind::Number { min: 0.0, max: 1e6 },
+    )
+    .precision(Precision::Decimals(0)),
+    Field::new(
+        "lat",
+        "Latitude",
+        "",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(7)),
+    Field::new(
+        "lon",
+        "Longitude",
+        "",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(7)),
+];
+
+const GRID_OUTPUTS: &[Field] = &[
+    Field::new(
+        "count",
+        "Cells",
+        "",
+        Kind::Number {
+            min: 0.0,
+            max: MAX_CELLS,
+        },
+    )
+    .precision(Precision::Decimals(0)),
+    Field::new(
+        "cells",
+        "Cells",
+        "Column by column from the left, top to bottom",
+        Kind::List {
+            items: OUT_CELL,
+            min: 0,
+            max: 50_000,
+        },
+    ),
+    Field::new(
+        "outlines",
+        "Outlines",
+        "Each cell's corners",
+        Kind::List {
+            items: OUT_OUTLINE,
+            min: 0,
+            max: 400_000,
+        },
+    ),
+    Field::new(
+        "origin",
+        "Origin",
+        "The grid's top-left corner, on the plane and as latitude and longitude",
+        Kind::Text { max_len: 120 },
+    ),
+    Field::new(
+        "rotation",
+        "Rotation",
+        "",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Significant(6)),
+    Field::new(
+        "scale_range",
+        "Scale distortion",
+        "The plane's scale over the area, in parts per million from true",
+        Kind::Text { max_len: 60 },
+    ),
+    Field::new(
+        "crs",
+        "Plane",
+        "The grid's coordinates; sizes are in its meters",
+        Kind::Text { max_len: 40 },
+    ),
+];
+
+/// Cells as plane rings in the grid's frame, with (row, col) as QGIS numbers
+/// them: rectangles of w × h, or QGIS's flat-top hexagons of height s from
+/// the extent's top-left corner. QGIS's hexagons leave the extent's ragged
+/// edges uncovered, so the lattice cells beside them that reach into the
+/// extent are kept too (row or column −1, or one past the last).
+fn grid_cells(
+    hex: bool,
+    w: f64,
+    h: f64,
+    ext: (f64, f64, f64, f64),
+    cols: usize,
+    rows: usize,
+) -> Vec<(isize, isize, Vec<P>)> {
+    let (x0, y0, x1, y1) = ext;
+    let mut cells = Vec::with_capacity(cols * rows);
+    if hex {
+        let v = w;
+        let (lo, hi) = (0.288675134594813 * v, 0.577350269189626 * v);
+        let hs = lo + hi;
+        let window = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)];
+        for c in -1..=cols as isize {
+            let xa = x0 + c as f64 * hs;
+            let xb = xa + (hi - lo);
+            let xc = x0 + c as f64 * hs + hs;
+            let xd = xc + (hi - lo);
+            let k = c.rem_euclid(2) as f64;
+            for r in -1..=rows as isize {
+                let ya = y1 - (2.0 * r as f64 + k) * v / 2.0;
+                let yb = y1 - (2.0 * r as f64 + k + 1.0) * v / 2.0;
+                let yc = y1 - (2.0 * r as f64 + k + 2.0) * v / 2.0;
+                // Counterclockwise from the left corner.
+                let ring = vec![(xa, yb), (xb, yc), (xc, yc), (xd, yb), (xc, ya), (xb, ya)];
+                let edge = r < 0 || c < 0 || r >= rows as isize || c >= cols as isize;
+                let reach = clip_convex(&ring, &window);
+                if !edge || (reach.len() >= 3 && twice_area(&reach) > 1e-9 * v * v) {
+                    cells.push((r, c, ring));
+                }
+            }
+        }
+    } else {
+        for c in 0..cols {
+            let xa = x0 + c as f64 * w;
+            for r in 0..rows {
+                let ya = y1 - r as f64 * h;
+                cells.push((
+                    r as isize,
+                    c as isize,
+                    vec![(xa, ya - h), (xa + w, ya - h), (xa + w, ya), (xa, ya)],
+                ));
+            }
+        }
+    }
+    cells
+}
+
+fn run_grid(ctx: &mut Ctx, hex: bool) -> Result<Json, ToolError> {
+    let plane = Plane::read(ctx)?;
+    let m = gp_base::units::by_symbol(QT::Length, "m").expect("m");
+    let deg = gp_base::units::by_symbol(QT::Angle, "deg").expect("deg");
+    let fmt = ctx.options.format;
+    let (w, h) = if hex {
+        let s = ctx.req_quantity("size")?.to(m);
+        (s, s)
+    } else {
+        let w = ctx.req_quantity("width")?.to(m);
+        (w, ctx.quantity("height")?.map_or(w, |q| q.to(m)))
+    };
+    if w.is_nan() || w <= 0.0 || h.is_nan() || h <= 0.0 {
+        return Err(ToolError::invalid(
+            if hex { "/size" } else { "/width" },
+            "Cell sizes must be more than zero.",
+        ));
+    }
+    let rot = ctx.quantity("rotation")?.map_or(0.0, |a| a.to(deg));
+    let clip = ctx.choice("cells")? == Some("clip");
+    // The origin: the outline's bounding box's top-left corner on the plane;
+    // the grid is laid in a frame turned clockwise by the rotation about it.
+    let o = (
+        plane.rings[0]
+            .iter()
+            .map(|p| p.0)
+            .fold(f64::INFINITY, f64::min),
+        plane.rings[0]
+            .iter()
+            .map(|p| p.1)
+            .fold(f64::NEG_INFINITY, f64::max),
+    );
+    let t = rot.to_radians();
+    let framed: Vec<Vec<P>> = plane
+        .rings
+        .iter()
+        .map(|r| r.iter().map(|&p| turn(p, o, -t)).collect())
+        .collect();
+    let fx0 = framed[0].iter().map(|p| p.0).fold(f64::INFINITY, f64::min);
+    let fx1 = framed[0]
+        .iter()
+        .map(|p| p.0)
+        .fold(f64::NEG_INFINITY, f64::max);
+    let fy0 = framed[0].iter().map(|p| p.1).fold(f64::INFINITY, f64::min);
+    let fy1 = framed[0]
+        .iter()
+        .map(|p| p.1)
+        .fold(f64::NEG_INFINITY, f64::max);
+    let step_x = if hex { 0.866025403784439 * w } else { w };
+    // An extent a whole number of cells wide stays that, though the round
+    // trip through latitude and longitude adds a few nanometers.
+    let fit = |len: f64, step: f64| (len / step - 1e-9).ceil().max(1.0);
+    let (cols, rows) = (fit(fx1 - fx0, step_x), fit(fy1 - fy0, h));
+    if cols * rows > MAX_CELLS {
+        return Err(too_many(
+            if hex { "/size" } else { "/width" },
+            "cells",
+            cols * rows,
+            MAX_CELLS,
+            fmt,
+        ));
+    }
+    let cells = grid_cells(
+        hex,
+        w,
+        h,
+        (fx0, fy0, fx1, fy1),
+        cols as usize,
+        rows as usize,
+    );
+    // Inside fractions: the polygon's triangles, in the grid's frame, clipped to each cell.
+    let tris = triangulate(&framed).ok_or_else(|| {
+        ToolError::new(ErrorCode::DegenerateGeometry, "The polygon could not be cut into triangles; check that the holes lie inside the outline and do not touch it.").at("/polygon")
+    })?;
+    let cell_area = if hex {
+        0.866025403784439 * w * w
+    } else {
+        w * h
+    };
+    let (cols, rows) = (cols as usize, rows as usize);
+    // Triangles binned on a coarse grid one cell wider than the extent all round.
+    let bin = step_x.max(h) * 1.5;
+    let (bx0, by0) = (fx0 - bin, fy0 - bin);
+    let (nbx, nby) = (
+        (((fx1 - fx0) / bin).ceil() as usize) + 3,
+        (((fy1 - fy0) / bin).ceil() as usize) + 3,
+    );
+    let at = |v: f64, lo: f64, n: usize| (((v - lo) / bin).floor().max(0.0) as usize).min(n - 1);
+    let mut bins: Vec<Vec<usize>> = vec![vec![]; nbx * nby];
+    let bbox = |r: &[P]| {
+        r.iter().fold(
+            (
+                f64::INFINITY,
+                f64::INFINITY,
+                f64::NEG_INFINITY,
+                f64::NEG_INFINITY,
+            ),
+            |b, p| (b.0.min(p.0), b.1.min(p.1), b.2.max(p.0), b.3.max(p.1)),
+        )
+    };
+    for (ti, tr) in tris.iter().enumerate() {
+        let b = bbox(tr);
+        for x in at(b.0, bx0, nbx)..=at(b.2, bx0, nbx) {
+            for y in at(b.1, by0, nby)..=at(b.3, by0, nby) {
+                bins[x * nby + y].push(ti);
+            }
+        }
+    }
+    let mut stamp = vec![usize::MAX; tris.len()];
+    let mut out_cells = vec![];
+    let mut outlines = vec![];
+    for (idx, (r, c, ring)) in cells.iter().enumerate() {
+        let b = bbox(ring);
+        let mut near = vec![];
+        for x in at(b.0, bx0, nbx)..=at(b.2, bx0, nbx) {
+            for y in at(b.1, by0, nby)..=at(b.3, by0, nby) {
+                for &ti in &bins[x * nby + y] {
+                    if stamp[ti] != idx {
+                        stamp[ti] = idx;
+                        near.push(ti);
+                    }
+                }
+            }
+        }
+        let inside: f64 = near
+            .iter()
+            .map(|&ti| {
+                let piece = clip_convex(&tris[ti], ring);
+                if piece.len() < 3 {
+                    0.0
+                } else {
+                    twice_area(&piece) / 2.0
+                }
+            })
+            .sum::<f64>()
+            / cell_area;
+        let inside = inside.clamp(0.0, 1.0);
+        if clip && inside <= 0.0 {
+            continue;
+        }
+        let part = out_cells.len() as f64;
+        let cx = ring.iter().map(|p| p.0).sum::<f64>() / ring.len() as f64;
+        let cy = ring.iter().map(|p| p.1).sum::<f64>() / ring.len() as f64;
+        let (lat, lon) = plane.to_geo(turn((cx, cy), o, t));
+        out_cells.push(Json::obj([
+            ("row", Json::Num(*r as f64)),
+            ("col", Json::Num(*c as f64)),
+            ("lat", q(lat, "deg", QT::Angle).to_json()),
+            ("lon", q(lon, "deg", QT::Angle).to_json()),
+            ("inside", Json::Num((inside * 1e12).round() / 1e12)),
+        ]));
+        for &p in ring {
+            let (la, lo) = plane.to_geo(turn(p, o, t));
+            outlines.push(Json::obj([
+                ("part", Json::Num(part)),
+                ("lat", q(la, "deg", QT::Angle).to_json()),
+                ("lon", q(lo, "deg", QT::Angle).to_json()),
+            ]));
+        }
+    }
+    // The plane's scale over the area: at every corner and the box's corners.
+    let mut ks: Vec<f64> = plane
+        .geo
+        .iter()
+        .flatten()
+        .map(|&(lat, lon)| plane.scale_at(lat, lon))
+        .collect();
+    for p in [(fx0, fy0), (fx1, fy0), (fx1, fy1), (fx0, fy1)] {
+        let (lat, lon) = plane.to_geo(turn(p, o, t));
+        ks.push(plane.scale_at(lat, lon));
+    }
+    let ppm = |k: f64| gp_base::display::number((k - 1.0) * 1e6, Precision::Decimals(0), fmt);
+    let (kmin, kmax) = (
+        ks.iter().copied().fold(f64::INFINITY, f64::min),
+        ks.iter().copied().fold(f64::NEG_INFINITY, f64::max),
+    );
+    let n = out_cells.len();
+    let (olat, olon) = plane.to_geo(o);
+    let east = o.0 + gp_geo::utmups::UTM_FE;
+    let north = if plane.north {
+        o.1
+    } else {
+        o.1 + gp_geo::utmups::UTM_FN_SOUTH
+    };
+    let n3 = |v: f64| gp_base::display::number(v, Precision::Decimals(3), fmt);
+    if ctx.explaining() {
+        ctx.step(
+            "Grid",
+            if hex {
+                "flat-top hexagons of height s, columns 0.866 s apart, odd columns down s/2"
+            } else {
+                "rectangles of width by height"
+            },
+            format!("from the top-left corner, E {} N {} m", n3(east), n3(north)),
+            format!("{cols} columns × {rows} rows"),
+        );
+        ctx.step(
+            "Cells",
+            if clip {
+                "cells with any part inside the polygon"
+            } else {
+                "every cell over the polygon's extent"
+            },
+            format!(
+                "cell area {} m² on the plane",
+                gp_base::display::number(cell_area, Precision::Significant(6), fmt)
+            ),
+            format!("{n}"),
+        );
+    }
+    Ok(Json::obj([
+        ("count", Json::Num(n as f64)),
+        ("cells", Json::Arr(out_cells)),
+        ("outlines", Json::Arr(outlines)),
+        (
+            "origin",
+            Json::str(format!(
+                "E {} m, N {} m ({}°, {}°)",
+                n3(east),
+                n3(north),
+                gp_base::display::number(olat, Precision::Decimals(7), fmt),
+                gp_base::display::number(olon, Precision::Decimals(7), fmt)
+            )),
+        ),
+        ("rotation", ctx.out("rotation", q(rot, "deg", QT::Angle))),
+        (
+            "scale_range",
+            Json::str(format!("{} to {} ppm", ppm(kmin), ppm(kmax))),
+        ),
+        ("crs", Json::str(plane.crs())),
+    ]))
+}
+
+const GRID_ROTATION: Field = Field::new(
+    "rotation",
+    "Rotation",
+    "Grid turned clockwise about its top-left corner, like 15°",
+    Kind::Quantity {
+        q: QT::Angle,
+        unit: "deg",
+    },
+);
+const GRID_CLIP: Field = Field::new(
+    "cells",
+    "Cells",
+    "Every cell over the extent, or only cells that reach into the polygon",
+    Kind::Choice(&["extent", "clip"]),
+);
+
+pub static FISHNET: ToolDef = ToolDef {
+    id: "geometry.sampling.fishnet",
+    title: "Fishnet grid of rectangular cells",
+    summary: "A grid of rectangular cells over a polygon in its UTM zone, laid out the way QGIS Create grid does, with each cell's center, its share inside the polygon, and the plane's scale over the area.",
+    aliases: &["fishnet", "create grid", "rectangular grid cells"],
+    keywords: &[
+        "fishnet",
+        "grid",
+        "cells",
+        "rectangle",
+        "tiles",
+        "quadrats",
+        "sampling",
+    ],
+    inputs: &[
+        POLYGON,
+        Field::new(
+            "width",
+            "Cell width",
+            "On the UTM plane, like 100 m",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "height",
+            "Cell height",
+            "On the UTM plane, like 100 m; the width if left out",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        ),
+        GRID_CLIP.core(),
+        GRID_ROTATION,
+    ],
+    outputs: GRID_OUTPUTS,
+    errors: &[
+        ErrorCode::InvalidInput,
+        ErrorCode::OutOfDomain,
+        ErrorCode::DegenerateGeometry,
+        ErrorCode::LimitExceeded,
+    ],
+    warnings: &["EXPERIMENTAL_TOOL"],
+    model: "Cells of width × height in UTM plane meters from the top-left corner of the polygon's bounding box, column by column and top to bottom, rows and columns from 0, as QGIS Create grid lays out a rectangle grid; an optional clockwise rotation about that corner; each cell's inside fraction from the polygon's ear-clipped triangles clipped to it",
+    accuracy: "Cell corners are exact on the UTM plane; on the ground a cell's size differs by the plane's scale, reported as a range",
+    when_to_use: "Use this to cut a study area into square or rectangular cells for quadrat sampling, a tally grid, or an index map, matching the grid QGIS would make in the same UTM zone. Ask for clip to keep only the cells that reach into the polygon, each with its share inside.",
+    limitations: "Sizes are in UTM plane meters, as in QGIS; a cell on the ground differs by the scale shown. Clipped cells keep their whole outline, with the inside fraction telling how much of each lies in the polygon. At most 50,000 cells over the extent.",
+    references: &[QGIS_GRID],
+    examples: &[Example {
+        id: "primary",
+        title: "100 m cells over a field",
+        input: r#"{"polygon":[{"lat":40.0,"lon":-105.0},{"lat":40.0,"lon":-104.996},{"lat":40.003,"lon":-104.996},{"lat":40.003,"lon":-105.0}],"width":"100 m"}"#,
+        source: "A 340 m × 333 m field in 16 cells",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "polygon",
+        map: &[("rings", "outlines")],
+    }],
+    related: &[
+        Related {
+            id: "geometry.sampling.hex-grid",
+            reason: "alternative",
+        },
+        Related {
+            id: "geometry.sampling.stratified-points",
+            reason: "next",
+        },
+        Related {
+            id: "geometry.shape.bbox",
+            reason: "parent",
+        },
+    ],
+    sentence: "{count} cells on {crs}; the plane's scale runs {scale_range}.",
+    limits: &[("batchRows", 1)],
+    run: run_fishnet,
+    ..ToolDef::BLANK
+};
+
+fn run_fishnet(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    run_grid(ctx, false)
+}
+
+pub static HEX_GRID: ToolDef = ToolDef {
+    id: "geometry.sampling.hex-grid",
+    title: "Hexagon grid of cells",
+    summary: "A grid of regular hexagons over a polygon in its UTM zone, laid out the way QGIS Create grid does, with each cell's center, its share inside the polygon, and the plane's scale over the area.",
+    aliases: &["hexagon grid", "hex bins", "hexagonal tessellation"],
+    keywords: &[
+        "hexagon",
+        "hex",
+        "grid",
+        "cells",
+        "tessellation",
+        "bins",
+        "sampling",
+    ],
+    inputs: &[
+        POLYGON,
+        Field::new(
+            "size",
+            "Hexagon height",
+            "Flat side to flat side on the UTM plane, like 50 m",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .required()
+        .core(),
+        GRID_CLIP.core(),
+        GRID_ROTATION,
+    ],
+    outputs: GRID_OUTPUTS,
+    errors: &[
+        ErrorCode::InvalidInput,
+        ErrorCode::OutOfDomain,
+        ErrorCode::DegenerateGeometry,
+        ErrorCode::LimitExceeded,
+    ],
+    warnings: &["EXPERIMENTAL_TOOL"],
+    model: "Regular flat-top hexagons of height s (flat to flat, width 1.1547 s) in UTM plane meters from the top-left corner of the polygon's bounding box: columns 0.866 s apart, odd columns shifted down s/2, column by column and top to bottom, as QGIS Create grid lays out a hexagon grid; an optional clockwise rotation; inside fractions from the polygon's triangles clipped to each cell",
+    accuracy: "Cell corners are exact on the UTM plane; on the ground a cell's size differs by the plane's scale, reported as a range",
+    when_to_use: "Use this to bin points or plan sampling on hexagons, which have equal neighbors on all six sides and less edge effect than squares. It matches the hexagon grid QGIS would make in the same UTM zone.",
+    limitations: "Sizes are in UTM plane meters, as in QGIS, so a hexagon on the ground differs by the scale shown. Where QGIS would leave the extent's ragged edges bare, edge cells numbered −1 or one past the last are added so the whole polygon is covered. Clipped cells keep their whole outline, with the inside fraction giving how much lies in the polygon. At most 50,000 cells over the extent.",
+    references: &[QGIS_GRID],
+    examples: &[Example {
+        id: "primary",
+        title: "50 m hexagons over a field",
+        input: r#"{"polygon":[{"lat":40.0,"lon":-105.0},{"lat":40.0,"lon":-104.996},{"lat":40.003,"lon":-104.996},{"lat":40.003,"lon":-105.0}],"size":"50 m","cells":"clip"}"#,
+        source: "A 340 m × 333 m field",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "polygon",
+        map: &[("rings", "outlines")],
+    }],
+    related: &[
+        Related {
+            id: "geometry.sampling.fishnet",
+            reason: "alternative",
+        },
+        Related {
+            id: "indexing.h3.polygon-to-cells",
+            reason: "alternative",
+        },
+        Related {
+            id: "geometry.shape.bbox",
+            reason: "parent",
+        },
+    ],
+    sentence: "{count} hexagons on {crs}; the plane's scale runs {scale_range}.",
+    limits: &[("batchRows", 1)],
+    run: run_hex,
+    ..ToolDef::BLANK
+};
+
+fn run_hex(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    run_grid(ctx, true)
 }

@@ -4154,6 +4154,26 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": true
+    },
+    {
+      "id": "qgis-create-grid",
+      "name": "QGIS Processing algorithm: Create grid",
+      "issuer": "QGIS project (vendor documentation)",
+      "currentEdition": "QGIS 3.44 user manual",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-20",
+      "verificationNote": "Read at docs.qgis.org on 2026-10-20 (latest manual 3.44): rectangle and hexagon grids over an extent, features from top to bottom and left to right with row and column indices. The hexagon layout (flat-top, height the vertical spacing, columns 0.866 of it apart, odd columns shifted down half a cell) was read in QGIS's qgsalgorithmgrid.cpp for behavior only; no code is copied.",
+      "freeAccessUrl": "https://docs.qgis.org/3.44/en/docs/user_manual/processing_algs/qgis/vectorcreation.html#create-grid",
+      "matchTerms": [
+        "Create grid"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
     }
   ]
 }

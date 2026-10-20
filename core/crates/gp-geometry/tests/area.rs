@@ -89,6 +89,7 @@ fn catalog_lint() {
         "survey.cogo.area-by-coordinates",
         "navigation.geodesic.inverse",
         "navigation.geodesic.waypoints",
+        "indexing.h3.polygon-to-cells",
     ];
     let errs = manifest::lint(TOOLS, &taxonomy, &external);
     assert!(errs.is_empty(), "{}", errs.join("\n"));

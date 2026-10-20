@@ -381,3 +381,124 @@ fn points_along_line_last_point_rule() {
     let len = r["result"]["plane_length"]["value"].as_f64().unwrap();
     assert_eq!(pts.len() as f64, ((len - 50.0) / 100.0).floor() + 1.0);
 }
+
+#[test]
+fn fishnet_and_hex_scenarios() {
+    use gp_geo::utmups::{utm_forward, utm_inverse};
+    let g = geographiclib_rs::Geodesic::wgs84();
+    let (e0, n0) = (512_300.0, 4_431_000.0);
+    // A 1 km square on the zone 13 plane.
+    let sq: Vec<(f64, f64)> = [(0.0, 0.0), (1000.0, 0.0), (1000.0, 1000.0), (0.0, 1000.0)]
+        .iter()
+        .map(|&(x, y)| utm_inverse(g.a, g.f, 13, true, e0 + x, n0 + y))
+        .collect();
+    let plane = |r: &Value| -> (f64, f64) {
+        let p = utm_forward(
+            g.a,
+            g.f,
+            r["lat"]["value"].as_f64().unwrap(),
+            r["lon"]["value"].as_f64().unwrap(),
+            13,
+        );
+        (p.easting - e0, p.northing - n0)
+    };
+    let r = call(
+        "geometry.sampling.fishnet",
+        &json!({"polygon": rows(&[&sq]), "width": "100 m"}),
+    );
+    assert_eq!(r["result"]["count"], 100.0);
+    for o in r["result"]["outlines"].as_array().unwrap() {
+        let (x, y) = plane(o);
+        for v in [x, y] {
+            assert!(
+                (v / 100.0 - (v / 100.0).round()).abs() * 100.0 < 1e-3,
+                "corner {x}, {y} is off the 100 m lines"
+            );
+        }
+    }
+    // The first cell is the top-left one, as QGIS numbers them.
+    let first = &r["result"]["cells"][0];
+    assert_eq!(
+        (first["row"].as_f64(), first["col"].as_f64()),
+        (Some(0.0), Some(0.0))
+    );
+    let (cx, cy) = plane(first);
+    assert!(
+        (cx - 50.0).abs() < 1e-3 && (cy - 950.0).abs() < 1e-3,
+        "first center {cx}, {cy}"
+    );
+
+    // Inside fractions add up to the polygon's area, for squares and hexagons,
+    // turned or not, with a hole.
+    let hole: Vec<(f64, f64)> = [
+        (300.0, 300.0),
+        (520.0, 300.0),
+        (520.0, 610.0),
+        (300.0, 610.0),
+    ]
+    .iter()
+    .map(|&(x, y)| utm_inverse(g.a, g.f, 13, true, e0 + x, n0 + y))
+    .collect();
+    let area = 1_000_000.0 - 220.0 * 310.0;
+    for (tool, size, cell) in [
+        (
+            "geometry.sampling.fishnet",
+            json!({"width": "70 m", "height": "45 m"}),
+            70.0 * 45.0,
+        ),
+        (
+            "geometry.sampling.hex-grid",
+            json!({"size": "60 m"}),
+            0.866025403784439 * 3600.0,
+        ),
+    ] {
+        for rot in [0.0, 17.0] {
+            let mut input =
+                json!({"polygon": rows(&[&sq, &hole]), "rotation": format!("{rot} deg")});
+            input
+                .as_object_mut()
+                .unwrap()
+                .extend(size.as_object().unwrap().clone());
+            let r = call(tool, &input);
+            let sum: f64 = r["result"]["cells"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|c| c["inside"].as_f64().unwrap())
+                .sum::<f64>()
+                * cell;
+            assert!(
+                (sum - area).abs() < 1e-3 * area,
+                "{tool} at {rot}°: {sum} vs {area}"
+            );
+            // Clip keeps exactly the cells with any part inside.
+            input["cells"] = json!("clip");
+            let c = call(tool, &input);
+            let reaching = r["result"]["cells"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .filter(|c| c["inside"].as_f64().unwrap() > 0.0)
+                .count();
+            assert_eq!(
+                c["result"]["count"].as_f64().unwrap() as usize,
+                reaching,
+                "{tool} at {rot}°"
+            );
+        }
+    }
+
+    // Hexagons are regular: six sides of s/√3 on the plane.
+    let r = call(
+        "geometry.sampling.hex-grid",
+        &json!({"polygon": rows(&[&sq]), "size": "50 m"}),
+    );
+    let outl = r["result"]["outlines"].as_array().unwrap();
+    for cell in outl.chunks(6).take(20) {
+        for i in 0..6 {
+            let (a, b) = (plane(&cell[i]), plane(&cell[(i + 1) % 6]));
+            let side = (a.0 - b.0).hypot(a.1 - b.1);
+            assert!((side - 50.0 / 3f64.sqrt()).abs() < 1e-3, "side {side}");
+        }
+    }
+}

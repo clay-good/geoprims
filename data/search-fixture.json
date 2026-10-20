@@ -1176,6 +1176,14 @@
     {
       "query": "points every 30 m along a line",
       "expect": "geometry.sampling.points-along-line"
+    },
+    {
+      "query": "fishnet grid of 100 m cells",
+      "expect": "geometry.sampling.fishnet"
+    },
+    {
+      "query": "hexagon grid over a polygon",
+      "expect": "geometry.sampling.hex-grid"
     }
   ]
 }

@@ -540,6 +540,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &sampling::STRATIFIED_POINTS,
     &sampling::TRANSECTS,
     &sampling::POINTS_ALONG_LINE,
+    &sampling::FISHNET,
+    &sampling::HEX_GRID,
 ];
 
 pub static REGISTRY: Registry = Registry {

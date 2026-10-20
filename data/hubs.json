@@ -1328,6 +1328,18 @@
           "tools": [
             "points-along-line"
           ]
+        },
+        {
+          "want": "cut a site into square grid cells",
+          "tools": [
+            "fishnet"
+          ]
+        },
+        {
+          "want": "cover a site with hexagon cells",
+          "tools": [
+            "hex-grid"
+          ]
         }
       ]
     },

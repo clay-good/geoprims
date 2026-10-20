@@ -9,8 +9,10 @@ lines; writes nothing.
     python3 tools/vectors/gen_grid_designs.py stratified > core/vectors/geometry.sampling.stratified-points.jsonl
     python3 tools/vectors/gen_grid_designs.py transects > core/vectors/geometry.sampling.transects.jsonl
     python3 tools/vectors/gen_grid_designs.py along > core/vectors/geometry.sampling.points-along-line.jsonl
+    python3 tools/vectors/gen_grid_designs.py fishnet > core/vectors/geometry.sampling.fishnet.jsonl
+    python3 tools/vectors/gen_grid_designs.py hex > core/vectors/geometry.sampling.hex-grid.jsonl
 
-Needs pyproj (a venv is fine)."""
+Needs pyproj, and shapely for the grids' inside fractions (a venv is fine)."""
 import importlib.util
 import json
 import math
@@ -254,6 +256,8 @@ def poly_json(shape):
 def main(which):
     if which in ("transects", "along"):
         return main_lines(which)
+    if which in ("fishnet", "hex"):
+        return main_grid(which)
     rng = random.Random(20261021 if which == "systematic" else 20261022)
     src = f"Python reimplementation of the derivation note with PROJ tmerc (tools/vectors/gen_grid_designs.py {which})"
     out = []
@@ -289,6 +293,105 @@ def main(which):
     big = [{"lat": 40.0, "lon": -105.0}, {"lat": 40.0, "lon": -104.8826}, {"lat": 40.09, "lon": -104.8826}, {"lat": 40.09, "lon": -105.0}]
     refusal = ({"polygon": big, "spacing": "5 m"}, "/spacing") if which == "systematic" else ({"polygon": big, "cell": "10 m", "per_stratum": 1}, "/cell")
     out.append({"id": f"v{len(out) + 1:03d}", "input": refusal[0], "expect": {"ok": False, "error.code": "LIMIT_EXCEEDED", "error.field": refusal[1]}, "source": src, "sourceVersion": VER, "tolerance": {}})
+    for v in out:
+        print(json.dumps(v, ensure_ascii=False, separators=(",", ":")))
+
+
+def grid(shape, hex_, w, h, rot, clip):
+    from shapely.geometry import Polygon as SP
+    rings, scale, back = plane(shape)
+    o = (min(p[0] for p in rings[0]), max(p[1] for p in rings[0]))
+    t = math.radians(rot)
+    framed = [[turn(p, o, -t) for p in r] for r in rings]
+    poly = SP(framed[0], framed[1:])
+    fx0, fx1 = min(p[0] for p in framed[0]), max(p[0] for p in framed[0])
+    fy0, fy1 = min(p[1] for p in framed[0]), max(p[1] for p in framed[0])
+    step_x = 0.866025403784439 * w if hex_ else w
+    fit = lambda length, step: max(math.ceil(length / step - 1e-9), 1)
+    cols, rows = fit(fx1 - fx0, step_x), fit(fy1 - fy0, h)
+    cells = []
+    if hex_:
+        v = w
+        lo, hi = 0.288675134594813 * v, 0.577350269189626 * v
+        hs = lo + hi
+        window = SP([(fx0, fy0), (fx1, fy0), (fx1, fy1), (fx0, fy1)])
+        for c in range(-1, cols + 1):
+            xa = fx0 + c * hs
+            xb = xa + (hi - lo)
+            xc = fx0 + c * hs + hs
+            xd = xc + (hi - lo)
+            k = c % 2
+            for r in range(-1, rows + 1):
+                ya = fy1 - (2 * r + k) * v / 2
+                yb = fy1 - (2 * r + k + 1) * v / 2
+                yc = fy1 - (2 * r + k + 2) * v / 2
+                ring = [(xa, yb), (xb, yc), (xc, yc), (xd, yb), (xc, ya), (xb, ya)]
+                edge = r < 0 or c < 0 or r >= rows or c >= cols
+                if not edge or SP(ring).intersection(window).area > 0.5e-9 * v * v:
+                    cells.append((r, c, ring))
+    else:
+        for c in range(cols):
+            xa = fx0 + c * w
+            for r in range(rows):
+                ya = fy1 - r * h
+                cells.append((r, c, [(xa, ya - h), (xa + w, ya - h), (xa + w, ya), (xa, ya)]))
+    area = 0.866025403784439 * w * w if hex_ else w * h
+    out = []
+    for r, c, ring in cells:
+        inside = min(max(SP(ring).intersection(poly).area / area, 0.0), 1.0)
+        if clip and inside <= 0:
+            continue
+        cx, cy = sum(p[0] for p in ring) / len(ring), sum(p[1] for p in ring) / len(ring)
+        out.append((r, c, back(turn((cx, cy), o, t)), inside, [back(turn(p, o, t)) for p in ring]))
+    return out
+
+
+def main_grid(which):
+    rng = random.Random(20261025 if which == "fishnet" else 20261026)
+    tool = "fishnet" if which == "fishnet" else "hex-grid"
+    src = f"Python reimplementation of the derivation note with PROJ tmerc and Shapely (GEOS) intersection areas (tools/vectors/gen_grid_designs.py {which})"
+    out = []
+    for i in range(20):
+        shape = rp.SHAPES[i % len(rp.SHAPES)]
+        rings, _, _ = plane(shape)
+        span = max(max(p[0] for p in rings[0]) - min(p[0] for p in rings[0]), max(p[1] for p in rings[0]) - min(p[1] for p in rings[0]))
+        w = round(span / rng.uniform(3, 9), 1)
+        h = round(span / rng.uniform(3, 9), 1) if which == "fishnet" and rng.random() < 0.5 else w
+        rot = rng.choice([0, 0, 0, 12, 45])
+        clip = rng.random() < 0.5
+        cells = grid(shape, which == "hex", w, h, rot, clip)
+        inp = {"polygon": poly_json(shape)}
+        if which == "fishnet":
+            inp["width"] = f"{w} m"
+            if h != w:
+                inp["height"] = f"{h} m"
+        else:
+            inp["size"] = f"{w} m"
+        if rot:
+            inp["rotation"] = f"{rot} deg"
+        if clip:
+            inp["cells"] = "clip"
+        exp = {"ok": True, "result.count": len(cells)}
+        tol = {"result.count": {"abs": 0}}
+        for j, (r, c, (lat, lon), inside, ring) in enumerate(cells[:10]):
+            exp[f"result.cells.{j}.row"] = r
+            exp[f"result.cells.{j}.col"] = c
+            tol[f"result.cells.{j}.row"] = {"abs": 0}
+            tol[f"result.cells.{j}.col"] = {"abs": 0}
+            for f, v in (("lat", lat), ("lon", lon)):
+                exp[f"result.cells.{j}.{f}.value"] = v
+                tol[f"result.cells.{j}.{f}.value"] = {"abs": 1e-9}
+            exp[f"result.cells.{j}.inside"] = inside
+            tol[f"result.cells.{j}.inside"] = {"abs": 1e-7}
+        for k, (lat, lon) in enumerate(cells[0][4] if cells else []):
+            exp[f"result.outlines.{k}.lat.value"] = lat
+            exp[f"result.outlines.{k}.lon.value"] = lon
+            tol[f"result.outlines.{k}.lat.value"] = {"abs": 1e-9}
+            tol[f"result.outlines.{k}.lon.value"] = {"abs": 1e-9}
+        out.append({"id": f"v{i + 1:03d}", "input": inp, "expect": exp, "source": src, "sourceVersion": VER + ", shapely", "tolerance": tol})
+    big = [{"lat": 40.0, "lon": -105.0}, {"lat": 40.0, "lon": -104.8826}, {"lat": 40.09, "lon": -104.8826}, {"lat": 40.09, "lon": -105.0}]
+    field = "/width" if which == "fishnet" else "/size"
+    out.append({"id": f"v{len(out) + 1:03d}", "input": {"polygon": big, field[1:]: "10 m"}, "expect": {"ok": False, "error.code": "LIMIT_EXCEEDED", "error.field": field}, "source": src, "sourceVersion": VER, "tolerance": {}})
     for v in out:
         print(json.dumps(v, ensure_ascii=False, separators=(",", ":")))
 

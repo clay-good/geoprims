@@ -3909,6 +3909,27 @@
       "editionStatus": "current",
       "legalStatus": "in-force",
       "editionCheck": true
+    },
+    {
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "editionStatus": "disclosed-lag",
+      "legalStatus": null,
+      "editionCheck": true,
+      "id": "usace-em-1110-1-1000",
+      "name": "EM 1110-1-1000, Photogrammetric Mapping",
+      "issuer": "U.S. Army Corps of Engineers",
+      "currentEdition": "30 April 2015",
+      "lastVerified": "2026-10-19",
+      "verificationNote": "Chapter 10 of the 31 March 1993 edition, Principles of Photogrammetry, read on 2026-10-19 in the copy the University of Arizona Lunar and Planetary Laboratory hosts (usace.army.mil refuses scripted downloads): equations 10-1 to 10-15 for scale, relief displacement, the parallax equations, and the air base. The 30 April 2015 edition, Photogrammetric and LiDAR Mapping, supersedes the manual; the 1993 chapter is cited for these numbered textbook relations, which do not change. Its eq. 10-15 prints the parallax difference as P_c − P_a; the derivation from eq. 10-14 needs P_a − P_c, which the classic tools use.",
+      "freeAccessUrl": "https://www.lpl.arizona.edu/hamilton/sites/lpl.arizona.edu.hamilton/files/courses/ptys551/Principles_of_Photogrammetry.pdf",
+      "matchTerms": [
+        "EM 1110-1-1000",
+        "Photogrammetric Mapping"
+      ]
     }
   ]
 }

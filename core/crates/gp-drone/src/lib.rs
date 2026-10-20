@@ -3,6 +3,7 @@
 //! timing and motion blur; the ASPRS Edition 2 accuracy calculator is in `asprs`.
 
 pub mod asprs;
+pub mod classic;
 pub mod export;
 pub mod facade;
 pub mod gcp;
@@ -1846,6 +1847,10 @@ fn motion_blur(ctx: &mut Ctx, limit_only: bool) -> Result<Json, ToolError> {
 pub static TOOLS: &[&ToolDef] = &[
     &GSD,
     &oblique::OBLIQUE_GSD,
+    &classic::PHOTO_SCALE,
+    &classic::RELIEF_DISPLACEMENT,
+    &classic::PARALLAX_HEIGHT,
+    &classic::STEREO_BASE,
     &terrain::TERRAIN_OVERLAP,
     &facade::FACADE,
     &geofence::GEOFENCE,

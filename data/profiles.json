@@ -48,7 +48,10 @@
         "drone.photogrammetry.trigger-interval": ["sensor_width", "sensor_height", "focal_length", "focal_length_type", "crop_factor", "min_interval"],
         "drone.photogrammetry.oblique-gsd": ["sensor_width", "sensor_height", "image_width", "image_height", "focal_length"],
         "drone.photogrammetry.terrain-overlap": ["sensor_width", "image_width", "focal_length"],
-        "drone.sensors.thermal-footprint": ["ifov", "pixel_pitch", "focal_length"]
+        "drone.sensors.thermal-footprint": ["ifov", "pixel_pitch", "focal_length"],
+        "drone.photogrammetry.photo-scale": ["focal_length", "pixel_pitch", "sensor_width", "image_width"],
+        "drone.photogrammetry.parallax-height": ["focal_length"],
+        "drone.photogrammetry.stereo-base": ["focal_length", "frame_length"]
       }
     },
     "lidar": {

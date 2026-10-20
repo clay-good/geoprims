@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "43e470ca73a4760b",
+    "hash": "f0c181cb5e2c6780",
     "lastmod": "2026-10-19"
   },
   "/accuracy/": {
@@ -276,8 +276,8 @@
     "lastmod": "2026-09-19"
   },
   "/drone/": {
-    "hash": "34a9fb6677010bc9",
-    "lastmod": "2026-10-14"
+    "hash": "be27b46cb7aae46f",
+    "lastmod": "2026-10-19"
   },
   "/drone/links/": {
     "hash": "ae23d27627500d3e",
@@ -372,8 +372,8 @@
     "lastmod": "2026-10-19"
   },
   "/drone/photogrammetry/": {
-    "hash": "f504ad7ac73e2e92",
-    "lastmod": "2026-10-14"
+    "hash": "62be86667f45a08a",
+    "lastmod": "2026-10-19"
   },
   "/drone/photogrammetry/altitude-for-gsd/": {
     "hash": "31934a27a08b310a",
@@ -420,11 +420,27 @@
     "lastmod": "2026-10-19"
   },
   "/drone/photogrammetry/oblique-gsd/": {
-    "hash": "861c1d0f124fd73e",
+    "hash": "a72abd0f4def10e1",
+    "lastmod": "2026-10-19"
+  },
+  "/drone/photogrammetry/parallax-height/": {
+    "hash": "b7a5f189680f4508",
+    "lastmod": "2026-10-19"
+  },
+  "/drone/photogrammetry/photo-scale/": {
+    "hash": "e608d217d90644a1",
+    "lastmod": "2026-10-19"
+  },
+  "/drone/photogrammetry/relief-displacement/": {
+    "hash": "e32149d727f6052d",
+    "lastmod": "2026-10-19"
+  },
+  "/drone/photogrammetry/stereo-base/": {
+    "hash": "1002288aeb79c7af",
     "lastmod": "2026-10-19"
   },
   "/drone/photogrammetry/terrain-overlap/": {
-    "hash": "c1eb96f5555f7db0",
+    "hash": "f1800ab96267cf12",
     "lastmod": "2026-10-19"
   },
   "/drone/photogrammetry/trigger-distance/": {
@@ -1420,7 +1436,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "d04b100a61cd5513",
+    "hash": "3fd5ca8caddc350c",
     "lastmod": "2026-10-19"
   },
   "/navigation/": {
@@ -1704,7 +1720,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "5b8f47d03dcf87fb",
+    "hash": "b116f916eff8fc50",
     "lastmod": "2026-10-19"
   },
   "/survey/": {
@@ -2088,7 +2104,7 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "b820fd06c47d5ee1",
+    "hash": "ddb647722cf09689",
     "lastmod": "2026-10-19"
   },
   "/units/": {
@@ -2352,7 +2368,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "6ce0a9b22d8ffc38",
+    "hash": "b13a5eb0665a53bf",
     "lastmod": "2026-10-19"
   },
   "/workflows/": {

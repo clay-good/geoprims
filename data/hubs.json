@@ -644,6 +644,30 @@
           "tools": [
             "asprs-accuracy"
           ]
+        },
+        {
+          "want": "find the scale of an aerial photo or the height for a scale",
+          "tools": [
+            "photo-scale"
+          ]
+        },
+        {
+          "want": "measure a tower or building height from one photo",
+          "tools": [
+            "relief-displacement"
+          ]
+        },
+        {
+          "want": "find a height from stereo parallax",
+          "tools": [
+            "parallax-height"
+          ]
+        },
+        {
+          "want": "see how end lap sets the air base and height precision",
+          "tools": [
+            "stereo-base"
+          ]
         }
       ],
       "guide": {

@@ -602,6 +602,7 @@
         "drone.photogrammetry.max-shutter",
         "drone.photogrammetry.motion-blur",
         "drone.photogrammetry.oblique-gsd",
+        "drone.photogrammetry.photo-scale",
         "drone.photogrammetry.terrain-overlap"
       ]
     },

@@ -1240,6 +1240,18 @@
     {
       "query": "fuel volume correction factor temperature",
       "expect": "aviation.loading.fuel-density-temperature"
+    },
+    {
+      "query": "time of useful consciousness at 25000 ft",
+      "expect": "aviation.physiology.time-of-useful-consciousness"
+    },
+    {
+      "query": "how long until hypoxia after decompression",
+      "expect": "aviation.physiology.time-of-useful-consciousness"
+    },
+    {
+      "query": "circling approach radius category C",
+      "expect": "aviation.ifr.circling-radius"
     }
   ]
 }

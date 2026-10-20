@@ -23,7 +23,7 @@ The tool SHALL assign the aircraft approach category from V_REF, or 1.3 V_S0 at 
 - **THEN** the category is C, and 120.9 kt is B
 
 ### Requirement: Circling radius
-The tool SHALL compute the circling approach radius by FAA Order 8260.3F §2-7-1: true airspeed by formula 2-7-1 from the category's indicated speed (Table 2-7-1: A 90, B 120, C 140, D 165, E 200 KIAS) at the circling altitude and airport elevation (height above airport at least 1,000 ft), radius by formula 2-7-2 with the category's bank (25°, 25°, 20°, 20°, 22°) and S term (0.4, 0.4, 0.5, 0.6, 0.7 NM), minimum 1.30 NM. It SHALL show the pre-2013 fixed radii (1.3, 1.5, 1.7, 2.3, 4.5 NM) as dated legacy values and SHALL NOT present the banded legend table until it is read from the Terminal Procedures Publication legend and its assumptions recorded.
+The tool SHALL compute the circling approach radius by FAA Order 8260.3G §2-7-1 (superseding 8260.3F, with the same section): true airspeed by formula 2-7-1 from the category's indicated speed (Table 2-7-1: A 90, B 120, C 140, D 165, E 200 KIAS) at the circling altitude and airport elevation (height above airport at least 1,000 ft), radius by formula 2-7-2 with the category's bank (25°, 25°, 20°, 20°, 22°) and S term (0.4, 0.4, 0.5, 0.6, 0.7 NM), minimum 1.30 NM. It SHALL show the fixed radii charted before Order 8260.3 Change 21 (1.3, 1.5, 1.7, 2.3, 4.5 NM, Instrument Procedures Handbook Figure 4-2) as dated legacy values and SHALL NOT present the banded legend table until it is read from the Terminal Procedures Publication legend and its assumptions recorded.
 
 #### Scenario: Category C
 - **WHEN** category C is circled at 1,000 ft MSL at a sea-level airport

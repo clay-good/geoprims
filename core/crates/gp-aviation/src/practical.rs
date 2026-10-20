@@ -174,9 +174,13 @@ fn run_va_for_weight(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("ratio", Json::Num(ratio)),
     ];
     if let Some(vs) = ctx.quantity("vs")? {
+        let vs = vs.to(kt);
+        if vs.is_nan() || vs <= 0.0 {
+            return Err(ToolError::invalid("/vs", "VS must be more than zero."));
+        }
         out.push((
             "va_rule_of_thumb",
-            ctx.out("va_rule_of_thumb", knots(1.7 * vs.to(kt))),
+            ctx.out("va_rule_of_thumb", knots(1.7 * vs)),
         ));
     }
     Ok(obj(out))

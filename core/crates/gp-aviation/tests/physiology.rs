@@ -1,4 +1,5 @@
-//! Oxygen requirement (add-aviation-practical-additions, "Oxygen requirement").
+//! Oxygen requirement and time of useful consciousness
+//! (add-aviation-practical-additions, aviation/physiology-references).
 
 use gp_aviation::REGISTRY;
 use serde_json::{Value, json};
@@ -147,4 +148,89 @@ fn cabin_altitude_invariants() {
     let lo = run(json!({"pressure_altitude": "30000 ft", "max_differential": "8 psi"}))["cabin_altitude"]["value"].as_f64().unwrap();
     let hi = run(json!({"pressure_altitude": "30000 ft", "max_differential": "6 psi"}))["cabin_altitude"]["value"].as_f64().unwrap();
     assert!(lo < hi);
+}
+
+#[test]
+fn va_for_weight_refuses_a_stall_speed_of_zero() {
+    let r: Value = serde_json::from_str(&REGISTRY.invoke(
+        "aviation.performance.va-for-weight",
+        &json!({"va_max": "105 kt", "max_weight": "2550 lb", "weight": "2000 lb", "vs": "0 kt"}).to_string(),
+    ))
+    .unwrap();
+    assert_eq!(r["error"]["code"], "INVALID_INPUT", "{r}");
+    assert_eq!(r["error"]["field"], "/vs");
+}
+
+#[test]
+fn time_of_useful_consciousness_invariants() {
+    let tuc = |h: &str| {
+        let r: Value = serde_json::from_str(&REGISTRY.invoke(
+            "aviation.physiology.time-of-useful-consciousness",
+            &json!({ "altitude": h }).to_string(),
+        ))
+        .unwrap();
+        r
+    };
+    // The spec's 25,000 ft scenario, with the caution and the notice.
+    let a = tuc("25000 ft");
+    assert_eq!(a["ok"], true, "{a}");
+    let a = &a["result"];
+    assert_eq!(a["tuc"], "3–5 min");
+    assert_eq!(a["tuc_rapid"], "1.5–2.5 min");
+    assert_eq!(a["tuc_phak"], "3–5 min");
+    assert!(a["caution"].as_str().unwrap().contains("wide variation"));
+    assert!(
+        a["notice"]
+            .as_str()
+            .unwrap()
+            .contains("not medical or legal advice")
+    );
+    // Between rows: both bracketing rows of each table, no interpolation.
+    let b = &tuc("23000 ft")["result"];
+    assert_eq!(b["tuc"], "10 min at 22,000 ft; 3–5 min at 25,000 ft");
+    assert_eq!(
+        b["tuc_rapid"],
+        "5–6 min at 22,000 ft; 1.5–2.5 min at 25,000 ft"
+    );
+    assert_eq!(b["tuc_phak"], "5–10 min at 22,000 ft; 3–5 min at 25,000 ft");
+    assert!(b["rows"].as_str().unwrap().contains("not interpolated"));
+    // Every printed row returns exactly its own entry.
+    for (h, ac, rapid) in [
+        ("18000 ft", "20–30 min", "10–15 min"),
+        ("22000 ft", "10 min", "5–6 min"),
+        ("28000 ft", "2.5–3 min", "1–1.5 min"),
+        ("30000 ft", "1–2 min", "30 s–1 min"),
+        ("35000 ft", "30 s–1 min", "15–30 s"),
+        ("40000 ft", "15–20 s", "nominal"),
+        ("43000 ft", "9–12 s", "nominal"),
+        ("50000 ft", "9–12 s", "nominal"),
+    ] {
+        let r = &tuc(h)["result"];
+        assert_eq!(r["tuc"], ac, "{h}");
+        assert_eq!(r["tuc_rapid"], rapid, "{h}");
+    }
+    for (h, phak) in [
+        ("20000 ft", "30 min or more"),
+        ("35000 ft", "30–60 s"),
+        ("45000 ft", "9–15 s"),
+    ] {
+        assert_eq!(tuc(h)["result"]["tuc_phak"], phak, "{h}");
+    }
+    // Outside the PHAK's rows it says so instead of borrowing an end row.
+    assert!(
+        tuc("19000 ft")["result"]["tuc_phak"]
+            .as_str()
+            .unwrap()
+            .contains("not tabulated")
+    );
+    assert!(
+        tuc("48000 ft")["result"]["tuc_phak"]
+            .as_str()
+            .unwrap()
+            .contains("not tabulated")
+    );
+    // Outside the AC table, it refuses rather than quote a row that does not apply.
+    for h in ["17999 ft", "50001 ft"] {
+        assert_eq!(tuc(h)["error"]["code"], "OUT_OF_DOMAIN", "{h}");
+    }
 }

@@ -1,6 +1,8 @@
 //! Approach references (add-aviation-practical-additions, aviation/approach-
 //! references): the aircraft approach category of 14 CFR 97.3, from VREF or
-//! 1.3 VS0, with the category bounds read from `data/regulations.json`.
+//! 1.3 VS0, with the category bounds read from `data/regulations.json`; the
+//! RVR to visibility table of 14 CFR 91.175(h)(2); and the circling approach
+//! radius of Order 8260.3G.
 
 use gp_base::error::ToolError;
 use gp_base::json::Json;
@@ -287,5 +289,218 @@ fn run_rvr_visibility(ctx: &mut Ctx) -> Result<Json, ToolError> {
             "rules",
             Json::str(format!("{}, rules as of {}", r.citation, r.reviewed)),
         ),
+    ]))
+}
+
+// ------------------------------------------------------------ circling radius
+
+const ORDER_8260_3G: Reference = Reference {
+    title: "Order 8260.3G, United States Standard for Terminal Instrument Procedures (TERPS)",
+    issuer: "FAA",
+    year: 2024,
+    edition: "Order 8260.3G, effective 07/01/2024",
+    locator: "Paragraph 2-7-1.a: Formula 2-7-1 (true airspeed), Formula 2-7-2 (circling approach radius, minimum 1.30 NM), and Table 2-7-1 (page 2-58)",
+    url: "https://www.faa.gov/documentLibrary/media/Order/Order_8260.3G.pdf",
+};
+
+const IPH_CIRCLING: Reference = Reference {
+    title: "Instrument Procedures Handbook, FAA-H-8083-16B",
+    issuer: "Federal Aviation Administration",
+    year: 2017,
+    edition: "FAA-H-8083-16B",
+    locator: "Chapter 4, Figure 4-2 (the radii before Order 8260.3 Change 21) and its text (Category C at a sea-level airport with a 1,500 ft HAA: 2.86 NM)",
+    url: "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/instrument_procedures_handbook",
+};
+
+/// Order 8260.3G Table 2-7-1 (category, KIAS, bank in degrees, straight
+/// segment in NM) and the radius before Change 21 (IPH Figure 4-2, NM).
+const CIRCLING: [(&str, f64, f64, f64, f64); 5] = [
+    ("A", 90.0, 25.0, 0.4, 1.3),
+    ("B", 120.0, 25.0, 0.4, 1.5),
+    ("C", 140.0, 20.0, 0.5, 1.7),
+    ("D", 165.0, 20.0, 0.6, 2.3),
+    ("E", 200.0, 22.0, 0.7, 4.5),
+];
+
+/// The minimum circling approach radius, NM (Order 8260.3G 2-7-1.a(2)).
+const MIN_CAR: f64 = 1.30;
+
+const fn ft(name: &'static str, title: &'static str, help: &'static str) -> Field {
+    Field::new(
+        name,
+        title,
+        help,
+        Kind::Quantity {
+            q: QT::Length,
+            unit: "ft",
+        },
+    )
+}
+
+const fn nm(name: &'static str, title: &'static str, help: &'static str) -> Field {
+    Field::new(
+        name,
+        title,
+        help,
+        Kind::Quantity {
+            q: QT::Length,
+            unit: "NM",
+        },
+    )
+}
+
+pub static CIRCLING_RADIUS: ToolDef = ToolDef {
+    id: "aviation.ifr.circling-radius",
+    title: "Circling approach radius",
+    summary: "The radius of the protected circling area for an approach category, by the FAA's TERPS formulas from the category's speed, bank, and the true airspeed at the airport's elevation, never less than 1.30 NM.",
+    aliases: &[
+        "circling approach radius",
+        "circling area size",
+        "TERPS circling radius",
+    ],
+    keywords: &["circling", "approach", "radius", "category", "TERPS", "MDA"],
+    inputs: &[
+        Field::new(
+            "category",
+            "Approach category",
+            "A, B, C, D, or E, like C",
+            Kind::Choice(&["A", "B", "C", "D", "E"]),
+        )
+        .required()
+        .core(),
+        ft(
+            "airport_elevation",
+            "Airport elevation",
+            "Above sea level, like 5,000 ft",
+        )
+        .required()
+        .core(),
+        ft(
+            "circling_altitude",
+            "Circling altitude",
+            "Optional, above sea level, like 6,400 ft; at least 1,000 ft above the airport is used",
+        )
+        .core(),
+    ],
+    outputs: &[
+        nm(
+            "radius",
+            "Circling approach radius",
+            "From each runway threshold",
+        )
+        .precision(Precision::Decimals(2)),
+        nm(
+            "radius_formula",
+            "Radius by the formula",
+            "Before the 1.30 NM minimum",
+        )
+        .precision(Precision::Decimals(3)),
+        speed("tas", "True airspeed", "Formula 2-7-1").precision(Precision::Decimals(1)),
+        speed("ias", "Indicated airspeed", "Table 2-7-1").precision(Precision::Decimals(0)),
+        Field::new(
+            "bank",
+            "Bank angle",
+            "Table 2-7-1",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(0)),
+        nm("straight_segment", "Straight segment", "Table 2-7-1").precision(Precision::Decimals(1)),
+        ft(
+            "height_used",
+            "Height above the airport used",
+            "At least 1,000 ft",
+        )
+        .precision(Precision::Decimals(0)),
+        nm(
+            "legacy_radius",
+            "Radius before Change 21",
+            "The fixed radius charted before Order 8260.3 Change 21",
+        )
+        .precision(Precision::Decimals(1)),
+    ],
+    errors: &[gp_base::ErrorCode::OutOfDomain],
+    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "V_KTAS = V_KIAS × 171233 × √(303 − 0.00198 (elevation + k)) / (288 − 0.00198 (elevation + k))^2.628, k ≥ 1,000 ft (Formula 2-7-1); CAR = 2 (V_KTAS + 25)² / (tan(bank) × 68625.4) + S, at least 1.30 NM (Formula 2-7-2), with Table 2-7-1's speed, bank, and S for the category (Order 8260.3G)",
+    accuracy: "Exact to the order's formulas; the 25 kt in the formula is the order's wind allowance",
+    when_to_use: "Use this to see how far from the runway a circling approach is protected for your category at a given airport, so you can stay inside it when you circle. Enter the category and the airport elevation, and the circling altitude when it is more than 1,000 ft above the airport. It shows each number the formula used.",
+    limitations: "This is the design radius of the TERPS circling area, measured from each runway threshold; the chart's own circling minimums and any restricted sectors govern. Older procedures may still be built on the fixed radii charted before Order 8260.3 Change 21, which the tool shows for comparison. It does not read the chart legend's banded table.",
+    references: &[ORDER_8260_3G, IPH_CIRCLING],
+    examples: &[Example {
+        id: "primary",
+        title: "Category C at a sea-level airport",
+        input: r#"{"category":"C","airport_elevation":"0 ft","circling_altitude":"1000 ft"}"#,
+        source: "Order 8260.3G Formulas 2-7-1 and 2-7-2 with Table 2-7-1",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "aviation.ifr.approach-category",
+            reason: "parent",
+        },
+        Related {
+            id: "aviation.performance.turn",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.airspeed.cas-to-tas",
+            reason: "alternative",
+        },
+    ],
+    sentence: "The circling approach radius is {radius} from each runway threshold.{if radius_formula < 1.3} The formula gives {radius_formula}, so the 1.30 NM minimum applies.{/if}",
+    limits: &[("batchRows", 10_000)],
+    run: run_circling_radius,
+    ..ToolDef::BLANK
+};
+
+fn run_circling_radius(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let ft_u = unit(QT::Length, "ft");
+    let nm_u = unit(QT::Length, "NM");
+    let cat = ctx.choice("category")?.expect("required");
+    let elev = ctx.req_quantity("airport_elevation")?.to(ft_u);
+    if !(-2_000.0..=15_000.0).contains(&elev) {
+        return Err(ToolError::new(
+            gp_base::ErrorCode::OutOfDomain,
+            "The airport elevation is from -2,000 to 15,000 ft.",
+        )
+        .at("/airport_elevation"));
+    }
+    let k = match ctx.quantity("circling_altitude")? {
+        Some(a) => {
+            let above = a.to(ft_u) - elev;
+            if !(0.0..=10_000.0).contains(&above) {
+                return Err(ToolError::new(
+                    gp_base::ErrorCode::OutOfDomain,
+                    "The circling altitude is from the airport elevation to 10,000 ft above it.",
+                )
+                .at("/circling_altitude"));
+            }
+            above.max(1_000.0)
+        }
+        None => 1_000.0,
+    };
+    let &(_, ias, bank, s, legacy) = CIRCLING.iter().find(|r| r.0 == cat).expect("choice");
+    let h = 0.00198 * (elev + k);
+    let tas = ias * 171_233.0 * libm::sqrt(303.0 - h) / libm::pow(288.0 - h, 2.628);
+    let formula = 2.0 * (tas + 25.0) * (tas + 25.0) / (libm::tan(bank.to_radians()) * 68_625.4) + s;
+    let q = |v: f64, u| gp_base::tool::Q { value: v, unit: u };
+    Ok(obj(vec![
+        ("radius", ctx.out("radius", q(formula.max(MIN_CAR), nm_u))),
+        (
+            "radius_formula",
+            ctx.out("radius_formula", q(formula, nm_u)),
+        ),
+        ("tas", ctx.out("tas", knots(tas))),
+        ("ias", ctx.out("ias", knots(ias))),
+        ("bank", ctx.out("bank", q(bank, unit(QT::Angle, "deg")))),
+        ("straight_segment", ctx.out("straight_segment", q(s, nm_u))),
+        ("height_used", ctx.out("height_used", q(k, ft_u))),
+        ("legacy_radius", ctx.out("legacy_radius", q(legacy, nm_u))),
     ]))
 }

@@ -75,3 +75,72 @@ fn rvr_visibility_invariants() {
     // No interpolation between rows.
     assert_eq!(vis("2000 ft")["error"]["code"], "INVALID_INPUT");
 }
+
+#[test]
+fn circling_radius_invariants() {
+    let car = |input: Value| {
+        let r: Value = serde_json::from_str(
+            &REGISTRY.invoke("aviation.ifr.circling-radius", &input.to_string()),
+        )
+        .unwrap();
+        r
+    };
+    let nm = |r: &Value, k: &str| r["result"][k]["value"].as_f64().unwrap();
+    // An independent number: IPH Figure 4-2's text, Category C at a sea-level
+    // airport with a 1,500 ft HAA, 2.86 NM.
+    let iph =
+        car(json!({"category": "C", "airport_elevation": "0 ft", "circling_altitude": "1500 ft"}));
+    assert!((nm(&iph, "radius") - 2.86).abs() < 0.005, "{iph}");
+    // The spec's category C scenario shows Table 2-7-1's inputs and is at least 1.30 NM.
+    let c =
+        car(json!({"category": "C", "airport_elevation": "0 ft", "circling_altitude": "1000 ft"}));
+    assert_eq!(nm(&c, "ias"), 140.0);
+    assert_eq!(nm(&c, "bank"), 20.0);
+    assert_eq!(nm(&c, "straight_segment"), 0.5);
+    assert!(nm(&c, "radius") >= 1.30);
+    // Category A at sea level: the formula falls below 1.30 NM, and the minimum applies.
+    let a = car(json!({"category": "A", "airport_elevation": "0 ft"}));
+    assert!(nm(&a, "radius_formula") < 1.30);
+    assert_eq!(nm(&a, "radius"), 1.30);
+    assert!(
+        a["summary"].as_str().unwrap().contains("1.30 NM minimum"),
+        "{a}"
+    );
+    // The height used is never under 1,000 ft above the airport.
+    let low = car(
+        json!({"category": "B", "airport_elevation": "2000 ft", "circling_altitude": "2400 ft"}),
+    );
+    assert_eq!(nm(&low, "height_used"), 1000.0);
+    assert_eq!(
+        nm(&low, "radius"),
+        nm(
+            &car(json!({"category": "B", "airport_elevation": "2000 ft"})),
+            "radius"
+        )
+    );
+    // Higher airports and faster categories need more room; the legacy radii are shown.
+    for (cat, legacy) in [("A", 1.3), ("B", 1.5), ("C", 1.7), ("D", 2.3), ("E", 4.5)] {
+        let sea = car(json!({"category": cat, "airport_elevation": "0 ft"}));
+        let high = car(json!({"category": cat, "airport_elevation": "5000 ft"}));
+        assert!(
+            nm(&high, "radius_formula") > nm(&sea, "radius_formula"),
+            "{cat}"
+        );
+        assert_eq!(nm(&sea, "legacy_radius"), legacy, "{cat}");
+    }
+    let order: Vec<f64> = ["A", "B", "C", "D", "E"]
+        .iter()
+        .map(|c| {
+            nm(
+                &car(json!({"category": c, "airport_elevation": "2000 ft"})),
+                "radius",
+            )
+        })
+        .collect();
+    assert!(order.windows(2).all(|w| w[0] < w[1]), "{order:?}");
+    // A circling altitude below the airport is refused.
+    let bad = car(
+        json!({"category": "C", "airport_elevation": "1000 ft", "circling_altitude": "900 ft"}),
+    );
+    assert_eq!(bad["error"]["code"], "OUT_OF_DOMAIN");
+}

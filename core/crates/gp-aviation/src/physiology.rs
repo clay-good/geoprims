@@ -1,8 +1,9 @@
 //! Physiology references (add-aviation-practical-additions, aviation/
 //! physiology-references): which supplemental-oxygen rule applies at a cabin
 //! altitude, quoted from 14 CFR 91.211, 135.89, or 121.329 with the
-//! thresholds held in `data/regulations.json`. A dated reference, never
-//! medical or legal advice.
+//! thresholds held in `data/regulations.json`; and the time of useful
+//! consciousness at an altitude, from AC 61-107B and the Pilot's Handbook. A
+//! dated reference, never medical or legal advice.
 
 use gp_base::error::ToolError;
 use gp_base::json::Json;
@@ -334,4 +335,247 @@ fn run_oxygen_requirement(ctx: &mut Ctx) -> Result<Json, ToolError> {
     ));
     out.push(("notice", Json::str(NOTICE)));
     Ok(obj(out))
+}
+
+// ---------------------------------------------------- time of useful consciousness
+
+const AC_61_107B: Reference = Reference {
+    title: "AC 61-107B, Aircraft Operations at Altitudes Above 25,000 Feet Mean Sea Level or Mach Numbers Greater Than .75",
+    issuer: "FAA",
+    year: 2015,
+    edition: "Change 1, 9/9/15",
+    locator: "Chapter 2, paragraph 2-7 and Figure 2-3, Times of Useful Consciousness Versus Altitude, with its caution (page 24)",
+    url: "https://www.faa.gov/documentLibrary/media/Advisory_Circular/AC_61-107B_CHG_1.pdf",
+};
+
+const PHAK_TUC: Reference = Reference {
+    title: "Pilot's Handbook of Aeronautical Knowledge",
+    issuer: "FAA",
+    year: 2023,
+    edition: "FAA-H-8083-25C",
+    locator: "Chapter 17, Hypoxia, Figure 17-1, Time of useful consciousness",
+    url: "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/phak",
+};
+
+/// AC 61-107B Change 1 Figure 2-3: altitude (ft), TUC/EPT, after a rapid decompression.
+const AC_TUC: &[(f64, &str, &str)] = &[
+    (18_000.0, "20–30 min", "10–15 min"),
+    (22_000.0, "10 min", "5–6 min"),
+    (25_000.0, "3–5 min", "1.5–2.5 min"),
+    (28_000.0, "2.5–3 min", "1–1.5 min"),
+    (30_000.0, "1–2 min", "30 s–1 min"),
+    (35_000.0, "30 s–1 min", "15–30 s"),
+    (40_000.0, "15–20 s", "nominal"),
+    (43_000.0, "9–12 s", "nominal"),
+    (50_000.0, "9–12 s", "nominal"),
+];
+
+/// PHAK-25C Figure 17-1: altitude (ft MSL), time of useful consciousness.
+const PHAK_TUC_ROWS: &[(f64, &str)] = &[
+    (20_000.0, "30 min or more"),
+    (22_000.0, "5–10 min"),
+    (25_000.0, "3–5 min"),
+    (28_000.0, "2.5–3 min"),
+    (30_000.0, "1–2 min"),
+    (35_000.0, "30–60 s"),
+    (40_000.0, "15–20 s"),
+    (45_000.0, "9–15 s"),
+];
+
+/// The caution printed under AC 61-107B Figure 2-3, first and last sentences.
+const TUC_CAUTION: &str = "TUCs are based on data that represent average values and reflect wide variation among individuals in time to incapacitation. The safest approach would be to assume the lower TUC value is limiting. (AC 61-107B Change 1, Figure 2-3 caution)";
+
+/// The rows of a table that an altitude, inside it, falls on or between:
+/// one row on a row, the two around it between rows.
+fn bracket(alts: &[f64], h: f64) -> (usize, usize) {
+    let hi = alts.iter().position(|&a| a >= h).expect("inside the table");
+    if alts[hi] == h || hi == 0 {
+        (hi, hi)
+    } else {
+        (hi - 1, hi)
+    }
+}
+
+fn ft_text(h: f64) -> String {
+    gp_base::display::number(
+        h,
+        Precision::Decimals(0),
+        gp_base::parse::NumberFormat::DecimalPoint,
+    )
+}
+
+/// One table's answer: "3–5 min", or "10 min at 22,000 ft; 3–5 min at
+/// 25,000 ft" between rows.
+fn rows_text(alts: &[f64], vals: &[&str], (a, b): (usize, usize)) -> String {
+    if a == b {
+        vals[a].to_owned()
+    } else {
+        format!(
+            "{} at {} ft; {} at {} ft",
+            vals[a],
+            ft_text(alts[a]),
+            vals[b],
+            ft_text(alts[b])
+        )
+    }
+}
+
+pub static TIME_OF_USEFUL_CONSCIOUSNESS: ToolDef = ToolDef {
+    id: "aviation.physiology.time-of-useful-consciousness",
+    title: "Time of useful consciousness",
+    summary: "How long a pilot stays able to act without oxygen at an altitude, from the FAA's AC 61-107B table, with its after-decompression column and the Pilot's Handbook table beside it, never interpolated.",
+    aliases: &[
+        "time of useful consciousness",
+        "TUC by altitude",
+        "effective performance time",
+    ],
+    keywords: &[
+        "hypoxia",
+        "TUC",
+        "EPT",
+        "oxygen",
+        "decompression",
+        "altitude",
+    ],
+    inputs: &[Field::new(
+        "altitude",
+        "Altitude",
+        "Cabin pressure altitude, like 25,000 ft",
+        Kind::Quantity {
+            q: QT::Length,
+            unit: "ft",
+        },
+    )
+    .required()
+    .core()],
+    outputs: &[
+        Field::new(
+            "tuc",
+            "Time of useful consciousness",
+            "AC 61-107B Figure 2-3, TUC/EPT",
+            Kind::Text { max_len: 80 },
+        ),
+        Field::new(
+            "tuc_rapid",
+            "After a rapid decompression",
+            "AC 61-107B Figure 2-3",
+            Kind::Text { max_len: 80 },
+        ),
+        Field::new(
+            "tuc_phak",
+            "Pilot's Handbook value",
+            "Pilot's Handbook Figure 17-1",
+            Kind::Text { max_len: 80 },
+        ),
+        Field::new(
+            "rows",
+            "Table rows used",
+            "The row, or the two rows around the altitude",
+            Kind::Text { max_len: 160 },
+        ),
+        Field::new("caution", "Caution", "", Kind::Text { max_len: 240 }),
+        Field::new("notice", "Notice", "", Kind::Text { max_len: 120 }),
+    ],
+    errors: &[gp_base::ErrorCode::OutOfDomain],
+    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Table lookup, no interpolation: AC 61-107B Change 1 Figure 2-3 (18,000 to 50,000 ft, with the rapid-decompression column) and PHAK-25C Figure 17-1 (20,000 to 45,000 ft MSL); an altitude between rows reports both rows",
+    accuracy: "Quotes the tables exactly; the tables are averages, and individual times vary widely",
+    when_to_use: "Use this to learn how little time you would have to act without oxygen at an altitude, for planning and training. Enter the altitude. It gives the FAA advisory circular's time, the shorter time after a rapid decompression, and the Pilot's Handbook time beside it, each named. Between table rows it shows both rows and does not guess between them.",
+    limitations: "The tables are averages with wide variation from person to person; the advisory circular says to treat the lower value as the limit. Impaired performance can begin at once, and a slow decompression can go unnoticed. The advisory circular's table covers 18,000 to 50,000 ft, and other altitudes are refused; the handbook's covers 20,000 to 45,000 ft. Not medical advice: use oxygen early, and rely on your aeromedical training.",
+    references: &[AC_61_107B, PHAK_TUC],
+    examples: &[Example {
+        id: "primary",
+        title: "25,000 ft",
+        input: r#"{"altitude":"25000 ft"}"#,
+        source: "AC 61-107B Change 1 Figure 2-3: 3–5 min, 1.5–2.5 min after rapid decompression; PHAK-25C Figure 17-1: 3 to 5 minutes",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "aviation.physiology.oxygen-requirement",
+            reason: "next",
+        },
+        Related {
+            id: "aviation.altimetry.cabin-altitude",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.altimetry.pressure-altitude",
+            reason: "alternative",
+        },
+    ],
+    sentence: "At {altitude}, the FAA table gives {tuc} of useful consciousness, or {tuc_rapid} after a rapid decompression. Times vary a lot from person to person.",
+    limits: &[("batchRows", 10_000)],
+    run: run_time_of_useful_consciousness,
+    ..ToolDef::BLANK
+};
+
+fn run_time_of_useful_consciousness(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let h = ft(ctx, "altitude")?.expect("required");
+    let (first, last) = (AC_TUC[0].0, AC_TUC[AC_TUC.len() - 1].0);
+    if !(first..=last).contains(&h) {
+        return Err(ToolError::new(
+            gp_base::ErrorCode::OutOfDomain,
+            "The AC 61-107B table covers 18,000 to 50,000 ft. Below it, see the oxygen rules; hypoxia can still begin there.",
+        )
+        .at("/altitude"));
+    }
+    let ac_alts: Vec<f64> = AC_TUC.iter().map(|r| r.0).collect();
+    let ph_alts: Vec<f64> = PHAK_TUC_ROWS.iter().map(|r| r.0).collect();
+    let ac = bracket(&ac_alts, h);
+    let tuc = rows_text(
+        &ac_alts,
+        &AC_TUC.iter().map(|r| r.1).collect::<Vec<_>>(),
+        ac,
+    );
+    let rapid = rows_text(
+        &ac_alts,
+        &AC_TUC.iter().map(|r| r.2).collect::<Vec<_>>(),
+        ac,
+    );
+    let rows_of = |name: &str, alts: &[f64], (a, b): (usize, usize)| {
+        if a == b {
+            format!("{name}: the {} ft row", ft_text(alts[a]))
+        } else {
+            format!(
+                "{name}: the {} and {} ft rows, not interpolated",
+                ft_text(alts[a]),
+                ft_text(alts[b])
+            )
+        }
+    };
+    let (ph_first, ph_last) = (ph_alts[0], ph_alts[ph_alts.len() - 1]);
+    let (phak, ph_rows) = if h < ph_first || h > ph_last {
+        (
+            format!(
+                "not tabulated outside {} to {} ft",
+                ft_text(ph_first),
+                ft_text(ph_last)
+            ),
+            "PHAK: outside its rows".to_owned(),
+        )
+    } else {
+        let ph = bracket(&ph_alts, h);
+        (
+            rows_text(
+                &ph_alts,
+                &PHAK_TUC_ROWS.iter().map(|r| r.1).collect::<Vec<_>>(),
+                ph,
+            ),
+            rows_of("PHAK", &ph_alts, ph),
+        )
+    };
+    let rows = format!("{}; {ph_rows}", rows_of("AC 61-107B", &ac_alts, ac));
+    Ok(obj(vec![
+        ("tuc", Json::str(tuc)),
+        ("tuc_rapid", Json::str(rapid)),
+        ("tuc_phak", Json::str(phak)),
+        ("rows", Json::str(rows)),
+        ("caution", Json::str(TUC_CAUTION)),
+        ("notice", Json::str(NOTICE)),
+    ]))
 }

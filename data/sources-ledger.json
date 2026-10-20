@@ -940,8 +940,8 @@
       "nextExpected": null,
       "validFrom": "2024-07-01",
       "validTo": null,
-      "lastVerified": "2026-10-13",
-      "verificationNote": "Checked the active order at the FAA on 2026-10-13. Paragraph 16-4-1 gives the 5 NM at 13,000 ft example as 4.52 NM horizontally, and Formula 16-14-7 gives the same right-triangle relation used by the DME slant-range tool.",
+      "lastVerified": "2026-10-20",
+      "verificationNote": "Checked the active order at the FAA on 2026-10-13. Paragraph 16-4-1 gives the 5 NM at 13,000 ft example as 4.52 NM horizontally, and Formula 16-14-7 gives the same right-triangle relation used by the DME slant-range tool. Read again on 2026-10-20 (Order_8260.3G.pdf, effective 07/01/2024): paragraph 2-7-1.a, Formula 2-7-1 (true airspeed at the airport elevation plus at least 1,000 ft), Formula 2-7-2 (circling approach radius, minimum 1.30 NM), and Table 2-7-1 (speed, bank, and straight segment for Categories A to E), page 2-58, the same as in Order 8260.3F.",
       "freeAccessUrl": "https://www.faa.gov/documentLibrary/media/Order/Order_8260.3G.pdf",
       "matchTerms": [
         "United States Standard for Terminal Instrument Procedures",
@@ -961,8 +961,8 @@
       "nextExpected": null,
       "validFrom": null,
       "validTo": null,
-      "lastVerified": "2026-10-13",
-      "verificationNote": "Rechecked at the FAA on 2026-10-13. FAA-H-8083-16B remains the published edition. Chapter 1, Figure 1-17 gives the highlighted climb example: a 2.8° path at 180 kt requires 892 ft/min and labels the rounded gradient 297 ft/NM.",
+      "lastVerified": "2026-10-20",
+      "verificationNote": "Rechecked at the FAA on 2026-10-13. FAA-H-8083-16B remains the published edition. Chapter 1, Figure 1-17 gives the highlighted climb example: a 2.8° path at 180 kt requires 892 ft/min and labels the rounded gradient 297 ft/NM. Read again on 2026-10-20: chapter 4, Figure 4-2, the circling radii before Order 8260.3 Change 21 (1.3, 1.5, 1.7, 2.3, 4.5 miles for Categories A to E), and the text beside it: a sea-level airport with a 1,500 ft HAA has a Category C radius of 2.86 NM.",
       "freeAccessUrl": "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/instrument_procedures_handbook",
       "matchTerms": [
         "Instrument Procedures Handbook"
@@ -1001,8 +1001,8 @@
       "nextExpected": null,
       "validFrom": null,
       "validTo": null,
-      "lastVerified": "2026-10-13",
-      "verificationNote": "Checked at the issuer on 2026-09-19: the handbook page links faa-h-8083-25c.pdf. Worked examples for pressure altitude, density altitude, runway wind components, and the wind triangle taken from it. Read again on 2026-09-25 (faa-h-8083-25c.pdf): chapter 16, Charting the Course and Figure 16-26 (the Chickasha to Guthrie flight log), and chapter 11, Figure 11-25 (fuel, time, and distance to climb) and Figure 11-26, for the nav log and the climb plan. On 2026-10-13, rechecked chapter 16's fuel-consumption example (400 NM at 100 kt takes 4 hours, and 5 gal/h uses 20 gal), chapter 10's Figures 10-5 and 10-6 (75 gal of avgas weighs 450 lb; 40 gal weighs 240 lb), chapter 5's Figure 5-56 (120 KTAS at 30° bank gives 5.25°/s), chapter 16's Figure 16-33 and following text (75 seconds over 10° gives 7.5 minutes; at 120 kt, 15 NM), and chapter 11's Figure 11-21 (1,115 ft and 1,230 ft averaged to 1,173 ft at 2,500 ft pressure altitude).",
+      "lastVerified": "2026-10-20",
+      "verificationNote": "Checked at the issuer on 2026-09-19: the handbook page links faa-h-8083-25c.pdf. Worked examples for pressure altitude, density altitude, runway wind components, and the wind triangle taken from it. Read again on 2026-09-25 (faa-h-8083-25c.pdf): chapter 16, Charting the Course and Figure 16-26 (the Chickasha to Guthrie flight log), and chapter 11, Figure 11-25 (fuel, time, and distance to climb) and Figure 11-26, for the nav log and the climb plan. On 2026-10-13, rechecked chapter 16's fuel-consumption example (400 NM at 100 kt takes 4 hours, and 5 gal/h uses 20 gal), chapter 10's Figures 10-5 and 10-6 (75 gal of avgas weighs 450 lb; 40 gal weighs 240 lb), chapter 5's Figure 5-56 (120 KTAS at 30° bank gives 5.25°/s), chapter 16's Figure 16-33 and following text (75 seconds over 10° gives 7.5 minutes; at 120 kt, 15 NM), and chapter 11's Figure 11-21 (1,115 ft and 1,230 ft averaged to 1,173 ft at 2,500 ft pressure altitude). On 2026-10-20, read in faa-h-8083-25c.pdf: chapter 7, the text beside Figure 7-41 (at 28,000 ft, 4.8 psi outside plus a 6.1 psid differential gives 10.9 psi, the pressure at 8,000 ft); chapter 11, Water on the Runway and Dynamic Hydroplaning, with Figure 11-18 (a 36 psi main gear tire hydroplanes from 54 knots); and chapter 17, Figure 17-1, time of useful consciousness from 20,000 to 45,000 ft MSL.",
       "freeAccessUrl": "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/phak",
       "matchTerms": [
         "Pilot's Handbook of Aeronautical Knowledge"
@@ -4234,6 +4234,26 @@
       "matchTerms": [
         "SpiritIT eXLerate"
       ]
+    },
+    {
+      "id": "faa-ac-61-107b",
+      "name": "AC 61-107B, Aircraft Operations at Altitudes Above 25,000 Feet MSL or Mach Numbers Greater Than .75",
+      "issuer": "FAA",
+      "currentEdition": "Change 1, 9/9/15",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-20",
+      "verificationNote": "Read at faa.gov on 2026-10-20 (AC_61-107B_CHG_1.pdf, fetched with a browser user agent): chapter 2, paragraph 2-7(3), and Figure 2-3, Times of Useful Consciousness Versus Altitude (page 24), nine rows from 18,000 to 50,000 ft with the rapid-decompression column, and the caution added by Change 1 on individual variation, which says to assume the lower value is limiting.",
+      "freeAccessUrl": "https://www.faa.gov/documentLibrary/media/Advisory_Circular/AC_61-107B_CHG_1.pdf",
+      "matchTerms": [
+        "AC 61-107B"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
     }
   ]
 }

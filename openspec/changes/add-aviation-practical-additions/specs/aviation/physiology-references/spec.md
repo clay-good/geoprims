@@ -26,6 +26,10 @@ The tool SHALL return, for an altitude, the AC 61-107B Change 1 Figure 2-3 range
 - **WHEN** 23,000 ft is entered
 - **THEN** the result shows the 22,000 ft and 25,000 ft rows of each table and states that no interpolation is made
 
+#### Scenario: Outside the table
+- **WHEN** an altitude below 18,000 ft or above 50,000 ft (the AC table's first and last rows) is entered
+- **THEN** the result is `OUT_OF_DOMAIN` naming the table's range, and between 18,000 and 20,000 ft or above 45,000 ft the handbook column says it is not tabulated rather than quoting a neighboring row
+
 ### Requirement: Reference-tool framing
 Both tools SHALL display "Dated reference, not medical or legal advice. The regulation and your aeromedical training govern."
 

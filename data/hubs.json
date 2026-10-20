@@ -219,6 +219,12 @@
           "tools": [
             "oxygen-requirement"
           ]
+        },
+        {
+          "want": "see how long you can act without oxygen at an altitude",
+          "tools": [
+            "time-of-useful-consciousness"
+          ]
         }
       ]
     },
@@ -278,6 +284,12 @@
           "want": "find my airplane's approach category",
           "tools": [
             "approach-category"
+          ]
+        },
+        {
+          "want": "find how far a circling approach is protected",
+          "tools": [
+            "circling-radius"
           ]
         },
         {

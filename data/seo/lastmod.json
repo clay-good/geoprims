@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "2784e8e4d87cb540",
+    "hash": "abeea07eea11dc73",
     "lastmod": "2026-10-20"
   },
   "/accuracy/": {
@@ -12,7 +12,7 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/": {
-    "hash": "86185d3535def234",
+    "hash": "a5b9dc9ad94b39b7",
     "lastmod": "2026-10-20"
   },
   "/aviation/airspace/": {
@@ -44,7 +44,7 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/altimetry/cabin-altitude/": {
-    "hash": "f428dfce17198343",
+    "hash": "3771e4e23c7074b4",
     "lastmod": "2026-10-20"
   },
   "/aviation/altimetry/cold-temperature/": {
@@ -104,15 +104,19 @@
     "lastmod": "2026-10-19"
   },
   "/aviation/ifr/": {
-    "hash": "e791ca17ac1889ee",
+    "hash": "858442ee44960b58",
     "lastmod": "2026-10-20"
   },
   "/aviation/ifr/approach-category/": {
-    "hash": "a94d9182bc7f3aca",
+    "hash": "d2aeed081a6aefc9",
+    "lastmod": "2026-10-20"
+  },
+  "/aviation/ifr/circling-radius/": {
+    "hash": "4e5e8667406c5790",
     "lastmod": "2026-10-20"
   },
   "/aviation/ifr/dme-arc-lead/": {
-    "hash": "061cd3e8fb8c30cc",
+    "hash": "ab786101355dec30",
     "lastmod": "2026-10-20"
   },
   "/aviation/ifr/dme-slant-range/": {
@@ -156,7 +160,7 @@
     "lastmod": "2026-10-19"
   },
   "/aviation/loading/burn-rate/": {
-    "hash": "45c81648b7211c43",
+    "hash": "051734f3cd971b38",
     "lastmod": "2026-10-20"
   },
   "/aviation/loading/fuel-density-temperature/": {
@@ -172,8 +176,8 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/loading/table-interpolate/": {
-    "hash": "e96fdccc34edc872",
-    "lastmod": "2026-10-19"
+    "hash": "e2c153a274394db1",
+    "lastmod": "2026-10-20"
   },
   "/aviation/loading/weight-balance/": {
     "hash": "dc621add522c519f",
@@ -188,15 +192,15 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/performance/climb-gradient/": {
-    "hash": "07bb073e282afd9c",
-    "lastmod": "2026-10-19"
+    "hash": "b45a99d9c43f47a9",
+    "lastmod": "2026-10-20"
   },
   "/aviation/performance/climb-plan/": {
-    "hash": "29d6fffb9f6dac1f",
+    "hash": "b20ce402b422b743",
     "lastmod": "2026-10-20"
   },
   "/aviation/performance/climb-requirement/": {
-    "hash": "9aab1cef787aef77",
+    "hash": "f27ed155fae138a5",
     "lastmod": "2026-10-20"
   },
   "/aviation/performance/etp-pnr/": {
@@ -216,12 +220,12 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/performance/specific-range/": {
-    "hash": "2e64fc1f86ab3151",
-    "lastmod": "2026-10-19"
+    "hash": "eb6dcad28553093b",
+    "lastmod": "2026-10-20"
   },
   "/aviation/performance/top-of-descent/": {
-    "hash": "13f5a9272369fa6b",
-    "lastmod": "2026-10-19"
+    "hash": "3eaef97bb0dc7d7f",
+    "lastmod": "2026-10-20"
   },
   "/aviation/performance/turn/": {
     "hash": "c28ff75500dd5828",
@@ -236,11 +240,15 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/physiology/": {
-    "hash": "0e2211907da451a2",
+    "hash": "94d74d56526e3923",
     "lastmod": "2026-10-20"
   },
   "/aviation/physiology/oxygen-requirement/": {
-    "hash": "bd0f560339d4b6dc",
+    "hash": "17c6509304c4b715",
+    "lastmod": "2026-10-20"
+  },
+  "/aviation/physiology/time-of-useful-consciousness/": {
+    "hash": "5f474c10c371f557",
     "lastmod": "2026-10-20"
   },
   "/aviation/weather/": {
@@ -276,12 +284,12 @@
     "lastmod": "2026-10-19"
   },
   "/aviation/wind/find-wind/": {
-    "hash": "cdb49e2998d637dd",
-    "lastmod": "2026-10-19"
+    "hash": "956012b10c59ba78",
+    "lastmod": "2026-10-20"
   },
   "/aviation/wind/heading-chain/": {
-    "hash": "9e3a80e75f6220b2",
-    "lastmod": "2026-10-19"
+    "hash": "528608ae82aabd8b",
+    "lastmod": "2026-10-20"
   },
   "/aviation/wind/heading-groundspeed/": {
     "hash": "34d1c428fece5d96",
@@ -1504,11 +1512,11 @@
     "lastmod": "2026-10-09"
   },
   "/licenses/": {
-    "hash": "c2a17effa9e1c50e",
-    "lastmod": "2026-10-13"
+    "hash": "e429b4233589b0ef",
+    "lastmod": "2026-10-20"
   },
   "/methodology/": {
-    "hash": "716272cf5da18aca",
+    "hash": "77ae69306175e855",
     "lastmod": "2026-10-20"
   },
   "/navigation/": {
@@ -1848,7 +1856,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "3c6a50f39cf0140a",
+    "hash": "088dc548d7e06fcb",
     "lastmod": "2026-10-20"
   },
   "/survey/": {
@@ -2244,7 +2252,7 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "563035b898d3e5f2",
+    "hash": "4d7c264a59f751ac",
     "lastmod": "2026-10-20"
   },
   "/units/": {
@@ -2508,7 +2516,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "76ef4a4903647cb8",
+    "hash": "04bda94344398d1c",
     "lastmod": "2026-10-20"
   },
   "/workflows/": {

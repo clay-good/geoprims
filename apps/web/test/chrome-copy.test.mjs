@@ -78,3 +78,13 @@ test('the lint catches an all-caps control and leaves acronyms alone', () => {
   assert.deepEqual(shouting('17T NE 86309 77770'), [], 'a result value is not chrome copy');
   assert.deepEqual(shouting('Density altitude in ft'), []);
 });
+
+test('the physiology pages show their notice, and the useful-consciousness page its caution', () => {
+  // aviation/physiology-references: "Reference-tool framing" and the AC
+  // 61-107B caution on individual variation, visible with the answer.
+  const page = (id) => textOf(readFileSync(join(dist, ...id.split('.'), 'index.html'), 'utf8'));
+  for (const id of ['aviation.physiology.oxygen-requirement', 'aviation.physiology.time-of-useful-consciousness']) {
+    assert.match(page(id), /Dated reference, not medical or legal advice\./, id);
+  }
+  assert.match(page('aviation.physiology.time-of-useful-consciousness'), /wide variation among individuals/);
+});

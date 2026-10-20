@@ -89,6 +89,8 @@ const DIAGRAMS = Object.fromEntries(
     'drone.photogrammetry.relief-displacement',
     'drone.photogrammetry.parallax-height',
     'drone.photogrammetry.stereo-base',
+    'survey.cogo.area-partition',
+    'survey.reduction.level-network',
   ].map((id) => [id, PARTS[id.split('.')[0]][id]]),
 );
 

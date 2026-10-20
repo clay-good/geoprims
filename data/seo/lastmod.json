@@ -1776,7 +1776,7 @@
     "lastmod": "2026-10-20"
   },
   "/survey/cogo/area-partition/": {
-    "hash": "1757b1bf984ca353",
+    "hash": "2841250855869074",
     "lastmod": "2026-10-20"
   },
   "/survey/cogo/azimuth-bearing/": {
@@ -2064,7 +2064,7 @@
     "lastmod": "2026-10-20"
   },
   "/survey/reduction/level-network/": {
-    "hash": "b959236cd5192974",
+    "hash": "ef332adc9f24f704",
     "lastmod": "2026-10-20"
   },
   "/survey/reduction/level-run/": {
@@ -2416,7 +2416,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "55551855b47134f8",
+    "hash": "bfcb445e2651aee6",
     "lastmod": "2026-10-20"
   },
   "/workflows/": {

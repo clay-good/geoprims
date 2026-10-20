@@ -430,6 +430,62 @@ function areaPlan(args, result) {
     `Parcel of ${pts.length} corners: ${disp(result, 'area')} (${disp(result, 'acres')}), perimeter ${disp(result, 'perimeter')}.`);
 }
 /**
+ * Area partition: the figure in plan with the cut piece shaded and the
+ * cutoff line drawn between the two ends the core found.
+ */
+function partitionPlan(args, result) {
+  const pts = (Array.isArray(args.points) ? args.points : []).map((p) => [Number.parseFloat(p.easting), Number.parseFloat(p.northing)]);
+  const a = [val(result, 'start_easting'), val(result, 'start_northing')];
+  const b = [val(result, 'end_easting'), val(result, 'end_northing')];
+  if (pts.length < 3 || ![...pts.flat(), ...a, ...b].every(Number.isFinite)) return null;
+  // The cut piece runs from the start, through its corners in order, to the end.
+  const corners = String(result.result.cut_piece ?? '').match(/\d+/g) ?? [];
+  const cut = [a, ...corners.map((c) => pts[Number(c) - 1]).filter(Boolean), b];
+  const S = fit(pts, 220, 150);
+  const xy = pts.map(S);
+  const body = [
+    `<path class="dg-muted" fill="none" d="${path(xy, true)}"/>`,
+    `<path class="dg-fill" d="${path(cut.map(S), true)}"/>`,
+    line('dg-accent', S(a), S(b)),
+    dot(...S(a), 'dg-dot-now'), dot(...S(b)),
+    ...xy.map((p, i) => text('dg-muted-text', p[0] + 7, p[1] - 7, String(i + 1))),
+    text('dg-muted-text', 296, 22, 'N ↑', 'end'),
+    text('dg-label', 160, 226, `Cut ${disp(result, 'cut_area')} · line ${disp(result, 'bearing')}, ${disp(result, 'length')}`, 'middle'),
+  ].join('');
+  const title = `The cutoff line runs ${disp(result, 'bearing')} for ${disp(result, 'length')}, taking ${disp(result, 'cut_area')} off a figure of ${disp(result, 'total_area')}.`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/**
+ * Leveling network: the benchmarks on a ring (the runs carry no positions),
+ * fixed ones filled, each run a line, and the run that fits worst marked.
+ */
+function levelNet(args, result) {
+  const fixed = (Array.isArray(args.fixed) ? args.fixed : []).map((f) => f.name);
+  const runs = (Array.isArray(args.observations) ? args.observations : []).map((o) => [o.from, o.to]);
+  const names = [...fixed];
+  for (const [f, t] of runs) for (const n of [f, t]) if (n && !names.includes(n)) names.push(n);
+  if (names.length < 2 || names.length > 24 || !runs.length) return null;
+  const [cx, cy, R0] = [160, 112, 80];
+  const at = new Map(names.map((n, i) => [n, [cx + R0 * Math.sin((2 * Math.PI * i) / names.length), cy - R0 * Math.cos((2 * Math.PI * i) / names.length)]]));
+  const res = (result.result.residuals ?? []).map((r) => Math.abs(Number.parseFloat(String(r.residual).replace(/[^0-9.+-]/g, ''))));
+  const worst = res.length ? res.indexOf(Math.max(...res)) : -1;
+  const body = [
+    ...runs.map(([f, t], k) => line(k === worst ? 'dg-accent' : 'dg-muted', at.get(f), at.get(t))),
+    ...names.map((n) => {
+      // Each name sits outside the ring, beyond its benchmark, clear of the runs.
+      const [x, y] = at.get(n);
+      const [ux, uy] = [(x - cx) / R0, (y - cy) / R0];
+      const anchor = ux > 0.3 ? 'start' : ux < -0.3 ? 'end' : 'middle';
+      return `${dot(x, y, fixed.includes(n) ? 'dg-dot-now' : 'dg-hollow')}${text('dg-muted-text', x + ux * 12, y + uy * 14 + 4, n, anchor)}`;
+    }),
+    text('dg-label', 160, 226, worst >= 0 ? `Largest residual: ${result.result.residuals[worst].observation}, ${result.result.residuals[worst].residual}` : '', 'middle'),
+  ].join('');
+  const title = `Leveling network of ${names.length} benchmarks and ${runs.length} runs; ${fixed.length} fixed.`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/**
  * An estimated box for a label, in drawing units: 11px text, the sans weight a
  * little narrower than the mono advance, with room for the halo. It runs a
  * touch wide on purpose, so a label the browser would collide with is dropped
@@ -612,6 +668,8 @@ export const DIAGRAMS = {
   'survey.cogo.forward': cogoForward,
   'survey.cogo.inverse': cogoInverse,
   'survey.cogo.area-by-coordinates': areaPlan,
+  'survey.cogo.area-partition': partitionPlan,
+  'survey.reduction.level-network': levelNet,
   'survey.cogo.traverse-closure': traverseClosure,
   'survey.cogo.bowditch': traverseClosure,
   'survey.cogo.transit': traverseClosure,

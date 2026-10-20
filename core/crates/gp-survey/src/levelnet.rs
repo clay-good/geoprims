@@ -231,8 +231,8 @@ pub static LEVEL_NETWORK: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "vector-diagram",
+        map: &[("value", "degrees_of_freedom")],
     }],
     related: &[
         Related {

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "cd748073cfdadac9",
+    "hash": "8bc095ce2b377eb9",
     "lastmod": "2026-10-20"
   },
   "/accuracy/": {
@@ -12,7 +12,7 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/": {
-    "hash": "90d95105d1babad7",
+    "hash": "6d7545f4fb49a9fd",
     "lastmod": "2026-10-20"
   },
   "/aviation/airspace/": {
@@ -40,12 +40,16 @@
     "lastmod": "2026-10-19"
   },
   "/aviation/altimetry/": {
-    "hash": "c2167e96e69d9cb4",
-    "lastmod": "2026-10-09"
+    "hash": "b94202dd211957ee",
+    "lastmod": "2026-10-20"
+  },
+  "/aviation/altimetry/cabin-altitude/": {
+    "hash": "f428dfce17198343",
+    "lastmod": "2026-10-20"
   },
   "/aviation/altimetry/cold-temperature/": {
-    "hash": "142ade6ba0a71e52",
-    "lastmod": "2026-10-19"
+    "hash": "90b031eb220422f2",
+    "lastmod": "2026-10-20"
   },
   "/aviation/altimetry/density-altitude/": {
     "hash": "3a66d3ab9e3bd62a",
@@ -1468,7 +1472,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "a67f6f43e333fc14",
+    "hash": "7f47bc8d60161879",
     "lastmod": "2026-10-20"
   },
   "/navigation/": {
@@ -1752,7 +1756,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "116ad708c2220663",
+    "hash": "e2abf2366765eb53",
     "lastmod": "2026-10-20"
   },
   "/survey/": {
@@ -2136,7 +2140,7 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "58b89148704a766a",
+    "hash": "606646ede5af9a55",
     "lastmod": "2026-10-20"
   },
   "/units/": {
@@ -2400,7 +2404,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "2d91954deb7948ab",
+    "hash": "4e431b373bb6d64b",
     "lastmod": "2026-10-20"
   },
   "/workflows/": {

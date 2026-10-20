@@ -288,3 +288,209 @@ fn run_hydroplaning_speed(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("speed_afh", ctx.out("speed_afh", knots(afh))),
     ]))
 }
+
+const PHAK_CABIN: Reference = Reference {
+    title: "Pilot's Handbook of Aeronautical Knowledge",
+    issuer: "FAA",
+    year: 2023,
+    edition: "FAA-H-8083-25C",
+    locator: "Chapter 7, cabin pressurization (Figure 7-41, cabin altitude from differential)",
+    url: "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/phak",
+};
+
+const fn pressure_field(name: &'static str, title: &'static str, help: &'static str) -> Field {
+    Field::new(
+        name,
+        title,
+        help,
+        Kind::Quantity {
+            q: QT::Pressure,
+            unit: "psi",
+        },
+    )
+}
+
+const fn ft_field(name: &'static str, title: &'static str, help: &'static str) -> Field {
+    Field::new(
+        name,
+        title,
+        help,
+        Kind::Quantity {
+            q: QT::Length,
+            unit: "ft",
+        },
+    )
+}
+
+pub static CABIN_ALTITUDE: ToolDef = ToolDef {
+    id: "aviation.altimetry.cabin-altitude",
+    title: "Cabin altitude from pressure differential",
+    summary: "The cabin altitude a pressurized airplane holds at a flight altitude with its maximum pressure differential, or the differential a chosen cabin altitude needs, through the standard atmosphere.",
+    aliases: &[
+        "cabin altitude calculator",
+        "pressure differential calculator",
+        "cabin pressure altitude",
+    ],
+    keywords: &[
+        "cabin",
+        "pressurization",
+        "differential",
+        "psid",
+        "pressurized",
+        "altitude",
+    ],
+    inputs: &[
+        ft_field(
+            "pressure_altitude",
+            "Pressure altitude",
+            "Of the airplane, like 28,000 ft",
+        )
+        .required()
+        .core(),
+        pressure_field(
+            "max_differential",
+            "Maximum differential",
+            "From the flight manual, like 6.1 psi",
+        )
+        .required()
+        .core(),
+        ft_field(
+            "cabin_selected",
+            "Cabin altitude selected",
+            "Optional, like 8,000 ft, to find the differential it needs",
+        )
+        .core(),
+    ],
+    outputs: &[
+        ft_field(
+            "cabin_altitude",
+            "Cabin altitude",
+            "The pressure altitude inside",
+        )
+        .precision(Precision::Decimals(0)),
+        pressure_field(
+            "cabin_pressure",
+            "Cabin pressure",
+            "Outside pressure plus the differential in use",
+        )
+        .precision(Precision::Decimals(2)),
+        pressure_field(
+            "outside_pressure",
+            "Outside pressure",
+            "Standard atmosphere at the pressure altitude",
+        )
+        .precision(Precision::Decimals(2)),
+        pressure_field(
+            "differential",
+            "Differential in use",
+            "Cabin minus outside pressure",
+        )
+        .precision(Precision::Decimals(2)),
+        Field::new(
+            "within_max",
+            "Within the maximum",
+            "Whether the selected cabin altitude is held",
+            Kind::Text { max_len: 4 },
+        )
+        .optional(),
+    ],
+    errors: &[ErrorCode::OutOfDomain],
+    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "p_cabin = p_ISA(pressure altitude) + differential; cabin altitude = the ISA altitude of p_cabin, by the site's standard-atmosphere engine (ICAO Doc 7488); a selected cabin altitude needs p_ISA(cabin) − p_ISA(airplane), up to the maximum",
+    accuracy: "Exact through the standard atmosphere; real cabins follow the controller's schedule and the airplane's limits",
+    when_to_use: "Use this to see what cabin altitude a pressurized airplane can hold at a planned flight altitude with its maximum differential, or how much differential a chosen cabin altitude takes. It helps plan the cruise altitude that keeps the cabin below the oxygen thresholds.",
+    limitations: "It works in pressure altitude through the standard atmosphere and assumes the cabin holds the full differential. The airplane's controller, its schedule, and its limits govern; the maximum differential comes from its flight manual. It says nothing about oxygen rules, which depend on the cabin altitude this returns.",
+    references: &[PHAK_CABIN],
+    examples: &[Example {
+        id: "primary",
+        title: "6.1 psi differential at 28,000 ft",
+        input: r#"{"pressure_altitude":"28000 ft","max_differential":"6.1 psi"}"#,
+        source: "PHAK (FAA-H-8083-25C) Figure 7-41: about 10.9 psi in the cabin, 8,000 ft",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "aviation.physiology.oxygen-requirement",
+            reason: "next",
+        },
+        Related {
+            id: "aviation.atmosphere.isa",
+            reason: "parent",
+        },
+        Related {
+            id: "aviation.altimetry.pressure-altitude",
+            reason: "alternative",
+        },
+    ],
+    sentence: "The cabin holds {cabin_altitude}, at {cabin_pressure}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_cabin_altitude,
+    ..ToolDef::BLANK
+};
+
+fn run_cabin_altitude(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    use crate::atmosphere::{altitude_for_pressure, at};
+    let m = unit(QT::Length, "m");
+    let pa = unit(QT::Pressure, "Pa");
+    let h = ctx.req_quantity("pressure_altitude")?.to(m);
+    let dp = ctx.req_quantity("max_differential")?.to(pa);
+    let range = |h: f64| (-2_000.0 * 0.3048..=65_000.0 * 0.3048).contains(&h);
+    if !range(h) {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "The pressure altitude is from -2,000 to 65,000 ft.",
+        )
+        .at("/pressure_altitude"));
+    }
+    if dp.is_nan() || dp < 0.0 || dp > 100_000.0 {
+        return Err(ToolError::invalid(
+            "/max_differential",
+            "The differential is from 0 to 14.5 psi.",
+        ));
+    }
+    let outside = at(h).p;
+    let (cabin_p, within) = match ctx.quantity("cabin_selected")? {
+        Some(c) => {
+            let c = c.to(m);
+            if !range(c) {
+                return Err(ToolError::new(
+                    ErrorCode::OutOfDomain,
+                    "The selected cabin altitude is from -2,000 to 65,000 ft.",
+                )
+                .at("/cabin_selected"));
+            }
+            // A cabin at or above the airplane needs no differential.
+            let need = (at(c).p - outside).max(0.0);
+            if need <= dp {
+                (outside + need, Some("yes"))
+            } else {
+                (outside + dp, Some("no"))
+            }
+        }
+        None => (outside + dp, None),
+    };
+    let q = |v: f64, u| gp_base::tool::Q { value: v, unit: u };
+    let mut out = vec![
+        (
+            "cabin_altitude",
+            ctx.out("cabin_altitude", q(altitude_for_pressure(cabin_p), m)),
+        ),
+        ("cabin_pressure", ctx.out("cabin_pressure", q(cabin_p, pa))),
+        (
+            "outside_pressure",
+            ctx.out("outside_pressure", q(outside, pa)),
+        ),
+        (
+            "differential",
+            ctx.out("differential", q(cabin_p - outside, pa)),
+        ),
+    ];
+    if let Some(w) = within {
+        out.push(("within_max", Json::str(w)));
+    }
+    Ok(obj(out))
+}

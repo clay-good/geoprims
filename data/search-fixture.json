@@ -1140,6 +1140,10 @@
     {
       "query": "can I make the climb gradient 297 ft/nm",
       "expect": "aviation.performance.climb-requirement"
+    },
+    {
+      "query": "cabin altitude 6.1 psi differential",
+      "expect": "aviation.altimetry.cabin-altitude"
     }
   ]
 }

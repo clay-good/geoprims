@@ -127,6 +127,12 @@
           "tools": [
             "density-altitude"
           ]
+        },
+        {
+          "want": "find the cabin altitude a pressure differential holds",
+          "tools": [
+            "cabin-altitude"
+          ]
         }
       ],
       "guide": {

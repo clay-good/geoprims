@@ -124,3 +124,27 @@ fn climb_requirement_invariants() {
     let made = m["result"]["available_gradient"]["value"].as_f64().unwrap();
     assert!((made * 120.0 / 60.0 - 700.0).abs() < 1e-9);
 }
+
+#[test]
+fn cabin_altitude_invariants() {
+    let run = |v: Value| invoke("aviation.altimetry.cabin-altitude", v)["result"].clone();
+    // The PHAK example at the figure's rounding: about 10.9 psi and 8,000 ft.
+    // Exactly, 6.1 psi at 28,000 ft gives 10.876 psi and 8,095 ft; the
+    // figure's 10.9 psi is 8,038 ft, and 0.05 psi of rounding in the
+    // differential moves the answer about 100 ft.
+    let a = run(json!({"pressure_altitude": "28000 ft", "max_differential": "6.1 psi"}));
+    assert!((a["cabin_pressure"]["value"].as_f64().unwrap() - 10.9).abs() < 0.05);
+    assert!((a["cabin_altitude"]["value"].as_f64().unwrap() - 8000.0).abs() < 120.0);
+    // A selected cabin below what the maximum allows uses only the differential it needs.
+    let b = run(
+        json!({"pressure_altitude": "12000 ft", "max_differential": "8 psi", "cabin_selected": "8000 ft"}),
+    );
+    assert!((b["differential"]["value"].as_f64().unwrap() - 1.6).abs() < 0.05);
+    assert!((b["cabin_altitude"]["value"].as_f64().unwrap() - 8000.0).abs() < 1e-6);
+    // No differential, no change; more differential, a lower cabin.
+    let z = run(json!({"pressure_altitude": "20000 ft", "max_differential": "0 psi"}));
+    assert!((z["cabin_altitude"]["value"].as_f64().unwrap() - 20000.0).abs() < 1e-6);
+    let lo = run(json!({"pressure_altitude": "30000 ft", "max_differential": "8 psi"}))["cabin_altitude"]["value"].as_f64().unwrap();
+    let hi = run(json!({"pressure_altitude": "30000 ft", "max_differential": "6 psi"}))["cabin_altitude"]["value"].as_f64().unwrap();
+    assert!(lo < hi);
+}

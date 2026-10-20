@@ -85,6 +85,7 @@
     "survey.cogo.crandall": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "courses" },
     "survey.cogo.least-squares-2d": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "control, unknowns, distances, angles, and directions" },
     "survey.cogo.helmert-3d-fit": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "points" },
+    "survey.reduction.level-network": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "fixed benchmarks and leveling runs" },
     "survey.cogo.radial-sideshots": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "shots" },
     "survey.cogo.resection": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "control" },
     "survey.cogo.transit": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "courses" },

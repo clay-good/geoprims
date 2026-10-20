@@ -4034,6 +4034,26 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": false
+    },
+    {
+      "id": "ghilani-adjustment",
+      "name": "Adjustment Computations: Spatial Data Analysis",
+      "issuer": "Ghilani, C. D., Wiley",
+      "currentEdition": "6th edition",
+      "currentReleaseDate": "2017-10",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-20",
+      "verificationNote": "Edition checked at the publisher on 2026-10-20: Wiley lists the 6th edition, October 2017. The text is not open, so its worked examples are not yet reproduced as vectors.",
+      "freeAccessUrl": "https://www.wiley.com/en-us/Adjustment+Computations%3A+Spatial+Data+Analysis%2C+6th+Edition-p-9781119385981",
+      "matchTerms": [
+        "Adjustment Computations"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "152bdef8f4c312a1",
+    "hash": "d8b969faa47f922c",
     "lastmod": "2026-10-20"
   },
   "/accuracy/": {
@@ -1472,7 +1472,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "abae0c04f05a3a43",
+    "hash": "575fb4e1024f7943",
     "lastmod": "2026-10-20"
   },
   "/navigation/": {
@@ -1756,11 +1756,11 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "a7cc5b004b822695",
+    "hash": "afdee53d5f2e25ad",
     "lastmod": "2026-10-20"
   },
   "/survey/": {
-    "hash": "433af2e3cc4d9b9c",
+    "hash": "e9910c5e4715c9ac",
     "lastmod": "2026-10-20"
   },
   "/survey/cogo/": {
@@ -2016,8 +2016,8 @@
     "lastmod": "2026-10-19"
   },
   "/survey/reduction/": {
-    "hash": "265236b95876c3e8",
-    "lastmod": "2026-10-14"
+    "hash": "67efcfc5b4a74c15",
+    "lastmod": "2026-10-20"
   },
   "/survey/reduction/angle-offset/": {
     "hash": "c7312925c9a6a7c2",
@@ -2056,12 +2056,16 @@
     "lastmod": "2026-10-19"
   },
   "/survey/reduction/level-adjust/": {
-    "hash": "b57af9638101c4d5",
-    "lastmod": "2026-10-19"
+    "hash": "7272e4c60764f307",
+    "lastmod": "2026-10-20"
+  },
+  "/survey/reduction/level-network/": {
+    "hash": "b959236cd5192974",
+    "lastmod": "2026-10-20"
   },
   "/survey/reduction/level-run/": {
-    "hash": "9440d69360b4216f",
-    "lastmod": "2026-10-19"
+    "hash": "ccd32163f37c82ed",
+    "lastmod": "2026-10-20"
   },
   "/survey/reduction/slope/": {
     "hash": "3eb3d55d0e87ee8d",
@@ -2144,7 +2148,7 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "efd28277dd0ea3a5",
+    "hash": "d70788a189813211",
     "lastmod": "2026-10-20"
   },
   "/units/": {
@@ -2408,7 +2412,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "4def9e0da46824f1",
+    "hash": "7828869e835755cf",
     "lastmod": "2026-10-20"
   },
   "/workflows/": {

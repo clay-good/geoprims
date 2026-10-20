@@ -2247,6 +2247,12 @@
             "distance-offset",
             "angle-offset"
           ]
+        },
+        {
+          "want": "adjust a leveling network with loops",
+          "tools": [
+            "level-network"
+          ]
         }
       ]
     },

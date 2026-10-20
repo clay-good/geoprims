@@ -1148,6 +1148,10 @@
     {
       "query": "7 parameter helmert fit common points",
       "expect": "survey.cogo.helmert-3d-fit"
+    },
+    {
+      "query": "least squares leveling network",
+      "expect": "survey.reduction.level-network"
     }
   ]
 }

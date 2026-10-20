@@ -421,7 +421,7 @@ pub fn chi2_inv(p: f64, k: f64) -> f64 {
 
 /// Cholesky factor (lower) of the symmetric `n`×`n` matrix `a`, or None if it
 /// is not positive definite.
-fn cholesky(a: &[f64], n: usize) -> Option<Vec<f64>> {
+pub(crate) fn cholesky(a: &[f64], n: usize) -> Option<Vec<f64>> {
     let mut l = vec![0.0; n * n];
     let scale = (0..n)
         .map(|i| a[i * n + i].abs())
@@ -443,7 +443,7 @@ fn cholesky(a: &[f64], n: usize) -> Option<Vec<f64>> {
     Some(l)
 }
 
-fn solve(l: &[f64], n: usize, b: &[f64]) -> Vec<f64> {
+pub(crate) fn solve(l: &[f64], n: usize, b: &[f64]) -> Vec<f64> {
     let mut y = vec![0.0; n];
     for i in 0..n {
         y[i] = (b[i] - (0..i).map(|k| l[i * n + k] * y[k]).sum::<f64>()) / l[i * n + i];

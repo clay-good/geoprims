@@ -14,6 +14,7 @@ pub mod intersect;
 pub mod land;
 pub mod layout;
 pub mod leveling;
+pub mod levelnet;
 pub mod localize;
 pub mod lsq;
 pub mod profile;
@@ -3577,6 +3578,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &closure::ANGULAR,
     &stationing::STATION_OFFSET,
     &helmert::HELMERT_3D_FIT,
+    &levelnet::LEVEL_NETWORK,
     &stationing::PERPENDICULAR_FOOT,
     &stationing::POINT_FROM_STATION_OFFSET,
     &leveling::LEVEL_RUN,

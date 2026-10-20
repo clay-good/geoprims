@@ -4054,6 +4054,66 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": true
+    },
+    {
+      "id": "osada-shape-distributions",
+      "name": "Shape distributions (Osada, Funkhouser, Chazelle, Dobkin)",
+      "issuer": "ACM Transactions on Graphics",
+      "currentEdition": "Vol. 21, No. 4",
+      "currentReleaseDate": "2002-10",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-20",
+      "verificationNote": "Volume, issue, pages 807-832, and date checked at Crossref on 2026-10-20; section 4.2 read in the authors' copy at cs.princeton.edu: the triangle is chosen by binary search on cumulative areas and the point is P = (1 − √r1)A + √r1(1 − r2)B + √r1 r2 C.",
+      "freeAccessUrl": "https://www.cs.princeton.edu/~funk/tog02.pdf",
+      "matchTerms": [
+        "Shape distributions"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "blackman-vigna-xoshiro",
+      "name": "Scrambled linear pseudorandom number generators (Blackman and Vigna)",
+      "issuer": "ACM Transactions on Mathematical Software",
+      "currentEdition": "Vol. 47, No. 4",
+      "currentReleaseDate": "2021-09",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-20",
+      "verificationNote": "Volume, issue, and date checked at Crossref on 2026-10-20. The generator step and splitmix64 seeding were read in the authors' public-domain reference code at prng.di.unimi.it (xoshiro256starstar.c, splitmix64.c), whose outputs for seeds 0 and 42 are pinned in gp-base.",
+      "freeAccessUrl": "https://prng.di.unimi.it/xoshiro256starstar.c",
+      "matchTerms": [
+        "Scrambled linear pseudorandom number generators"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
+    },
+    {
+      "id": "epa-qa-g5s",
+      "name": "Guidance on Choosing a Sampling Design for Environmental Data Collection (EPA QA/G-5S)",
+      "issuer": "US Environmental Protection Agency",
+      "currentEdition": "EPA/240/R-02/005",
+      "currentReleaseDate": "2002-12",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-20",
+      "verificationNote": "Title page and contents read in the final PDF on 2026-10-20: December 2002; chapter 5 simple random sampling (p. 33), chapter 6 stratified sampling (p. 51), chapter 7 systematic/grid sampling (p. 63).",
+      "freeAccessUrl": "https://www.epa.gov/sites/default/files/2015-06/documents/g5s-final.pdf",
+      "matchTerms": [
+        "EPA QA/G-5S"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
     }
   ]
 }

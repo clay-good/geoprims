@@ -15,6 +15,8 @@ pub mod num;
 pub mod parse;
 pub mod profile;
 pub mod regulation;
+#[cfg(feature = "sampling")]
+pub mod rng;
 pub mod status;
 pub mod template;
 pub mod tool;

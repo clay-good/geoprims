@@ -14,7 +14,7 @@ module = "geometry"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-gp-base.workspace = true
+gp-base = { workspace = true, features = ["sampling"] }
 serde_json.workspace = true
 libm.workspace = true
 gp-geo = { path = "../gp-geo" }

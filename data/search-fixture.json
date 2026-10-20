@@ -1156,6 +1156,10 @@
     {
       "query": "cut off 2 acres parallel to the road",
       "expect": "survey.cogo.area-partition"
+    },
+    {
+      "query": "random sample points in a polygon",
+      "expect": "geometry.sampling.random-points"
     }
   ]
 }

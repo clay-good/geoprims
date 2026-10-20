@@ -43,6 +43,7 @@
     "geometry.buffer.geodesic": { "kind": "data-proportional", "p95Ms": 75, "scalesWith": "vertices" },
     "geometry.distance.tracks": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "track_a and track_b" },
     "geometry.mesh.delaunay": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "points" },
+    "geometry.sampling.random-points": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "polygon corners and points asked for" },
     "geometry.mesh.voronoi": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "points" },
     "geometry.overlay.boolean": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "polygon_a and polygon_b" },
     "geometry.predicate.point-in-polygon": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "polygon and points" },

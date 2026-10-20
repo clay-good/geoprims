@@ -1295,6 +1295,18 @@
         }
       ]
     },
+    "geometry.sampling": {
+      "summary": "Sample points laid out inside a study area, reproducible from a seed.",
+      "intro": "This group places sample points inside a polygon for field work: plots, soil cores, check shots, or survey stations. Ecologists, foresters, and environmental consultants use it to plan a sampling design they can hand to a field crew. Start with random points and a seed you write down, so anyone can rebuild the same layout. The pitfall is choosing sites by eye, which biases the sample toward easy ground.",
+      "tasks": [
+        {
+          "want": "pick random sample sites in a field",
+          "tools": [
+            "random-points"
+          ]
+        }
+      ]
+    },
     "geometry.mesh": {
       "summary": "Triangles and nearest-point regions from scattered points.",
       "intro": "This group builds Delaunay triangles and Voronoi cells from a set of points, on a local flat map for a regional set or on the sphere for a global one. GIS analysts and developers use them for nearest-station areas, interpolation, and coverage maps. Start with Voronoi cells to see which point is nearest each place. The pitfall is triangulating global data on a flat map, which breaks at the antimeridian and near the poles.",

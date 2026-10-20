@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "8cfc1f197eb5e1ea",
+    "hash": "6fb3e0eade0f6e4d",
     "lastmod": "2026-10-20"
   },
   "/accuracy/": {
@@ -972,8 +972,8 @@
     "lastmod": "2026-10-19"
   },
   "/geometry/": {
-    "hash": "fdd56d5e27835bc8",
-    "lastmod": "2026-09-24"
+    "hash": "4730201c56b2f537",
+    "lastmod": "2026-10-20"
   },
   "/geometry/area/": {
     "hash": "fc929048424717f2",
@@ -1030,6 +1030,14 @@
   "/geometry/predicate/relate/": {
     "hash": "9108ae40ea816f17",
     "lastmod": "2026-10-19"
+  },
+  "/geometry/sampling/": {
+    "hash": "49cb56a25f63e584",
+    "lastmod": "2026-10-20"
+  },
+  "/geometry/sampling/random-points/": {
+    "hash": "e0b65d2c6582ac22",
+    "lastmod": "2026-10-20"
   },
   "/geometry/shape/": {
     "hash": "c7b16b462e49990a",
@@ -1472,7 +1480,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "331fcf91aba75678",
+    "hash": "dddc49b44a381a44",
     "lastmod": "2026-10-20"
   },
   "/navigation/": {
@@ -1756,7 +1764,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "d584cbfb9e8dee4e",
+    "hash": "18b4d53175610348",
     "lastmod": "2026-10-20"
   },
   "/survey/": {
@@ -2064,7 +2072,7 @@
     "lastmod": "2026-10-20"
   },
   "/survey/reduction/level-network/": {
-    "hash": "ef332adc9f24f704",
+    "hash": "e0e943d9b99a66f1",
     "lastmod": "2026-10-20"
   },
   "/survey/reduction/level-run/": {
@@ -2152,7 +2160,7 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "646dcbeb5575a8e3",
+    "hash": "0ebb16a8f605abe8",
     "lastmod": "2026-10-20"
   },
   "/units/": {
@@ -2416,7 +2424,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "bfcb445e2651aee6",
+    "hash": "1eecbd1d710c9efd",
     "lastmod": "2026-10-20"
   },
   "/workflows/": {

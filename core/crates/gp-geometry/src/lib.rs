@@ -10,6 +10,7 @@ pub mod overlay;
 pub mod predicate;
 pub mod relate;
 pub mod robust;
+pub mod sampling;
 pub mod shape;
 pub mod simplify;
 pub mod validity;
@@ -534,6 +535,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &densify::DENSIFY,
     &mesh::DELAUNAY,
     &mesh::VORONOI,
+    &sampling::RANDOM_POINTS,
 ];
 
 pub static REGISTRY: Registry = Registry {

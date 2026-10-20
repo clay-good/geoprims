@@ -1087,6 +1087,14 @@
       ]
     },
     {
+      "id": "epa",
+      "term": "EPA",
+      "expansion": "US Environmental Protection Agency",
+      "definition": "The US agency whose quality guidance, EPA QA/G-5S, describes the standard sampling designs: simple random, stratified, and systematic.",
+      "source": "epa-qa-g5s",
+      "relatedTools": []
+    },
+    {
       "id": "noaa",
       "term": "NOAA",
       "expansion": "National Oceanic and Atmospheric Administration",

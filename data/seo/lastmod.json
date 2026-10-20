@@ -1040,7 +1040,7 @@
     "lastmod": "2026-10-20"
   },
   "/geometry/sampling/hex-grid/": {
-    "hash": "e4f3cb7a83ec0b76",
+    "hash": "2c9fd13809c6a810",
     "lastmod": "2026-10-20"
   },
   "/geometry/sampling/points-along-line/": {
@@ -2476,7 +2476,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "79c3bb1ac4e01529",
+    "hash": "76d6dc197321b68c",
     "lastmod": "2026-10-20"
   },
   "/workflows/": {

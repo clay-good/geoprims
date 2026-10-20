@@ -2671,8 +2671,8 @@ pub static HEX_GRID: ToolDef = ToolDef {
     references: &[QGIS_GRID],
     examples: &[Example {
         id: "primary",
-        title: "50 m hexagons over a field",
-        input: r#"{"polygon":[{"lat":40.0,"lon":-105.0},{"lat":40.0,"lon":-104.996},{"lat":40.003,"lon":-104.996},{"lat":40.003,"lon":-105.0}],"size":"50 m","cells":"clip"}"#,
+        title: "80 m hexagons over a field",
+        input: r#"{"polygon":[{"lat":40.0,"lon":-105.0},{"lat":40.0,"lon":-104.996},{"lat":40.003,"lon":-104.996},{"lat":40.003,"lon":-105.0}],"size":"80 m","cells":"clip"}"#,
         source: "A 340 m × 333 m field",
     }],
     primary_example: "primary",

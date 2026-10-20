@@ -69,6 +69,7 @@ fn catalog_examples_vectors() {
         TOOLS,
         &taxonomy,
         &[
+            "geodesy.datum.helmert",
             "geodesy.spcs.spcs83-forward",
             "time.scale.gps-week",
             "units.length.convert",

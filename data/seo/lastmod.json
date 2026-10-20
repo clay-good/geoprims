@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "8bc095ce2b377eb9",
+    "hash": "152bdef8f4c312a1",
     "lastmod": "2026-10-20"
   },
   "/accuracy/": {
@@ -1472,7 +1472,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "7f47bc8d60161879",
+    "hash": "abae0c04f05a3a43",
     "lastmod": "2026-10-20"
   },
   "/navigation/": {
@@ -1756,16 +1756,16 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "e2abf2366765eb53",
+    "hash": "a7cc5b004b822695",
     "lastmod": "2026-10-20"
   },
   "/survey/": {
-    "hash": "34db288babd6e4c1",
-    "lastmod": "2026-10-14"
+    "hash": "433af2e3cc4d9b9c",
+    "lastmod": "2026-10-20"
   },
   "/survey/cogo/": {
-    "hash": "67fdd210a664d284",
-    "lastmod": "2026-10-14"
+    "hash": "6799dad543de24be",
+    "lastmod": "2026-10-20"
   },
   "/survey/cogo/angular-closure/": {
     "hash": "e6cdb7d63e142d4e",
@@ -1808,12 +1808,16 @@
     "lastmod": "2026-10-19"
   },
   "/survey/cogo/forward/": {
-    "hash": "e7a9a4ebae5303a2",
-    "lastmod": "2026-10-19"
+    "hash": "d8c145b2465b6f70",
+    "lastmod": "2026-10-20"
+  },
+  "/survey/cogo/helmert-3d-fit/": {
+    "hash": "4c838c261d795411",
+    "lastmod": "2026-10-20"
   },
   "/survey/cogo/intersection/": {
-    "hash": "52fbba4a98c07ee1",
-    "lastmod": "2026-10-19"
+    "hash": "db36bd23f5fdf0a8",
+    "lastmod": "2026-10-20"
   },
   "/survey/cogo/inverse/": {
     "hash": "7fa3994686f551fa",
@@ -2140,7 +2144,7 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "606646ede5af9a55",
+    "hash": "efd28277dd0ea3a5",
     "lastmod": "2026-10-20"
   },
   "/units/": {
@@ -2404,7 +2408,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "4e431b373bb6d64b",
+    "hash": "4def9e0da46824f1",
     "lastmod": "2026-10-20"
   },
   "/workflows/": {

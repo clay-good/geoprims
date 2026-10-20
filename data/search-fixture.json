@@ -1144,6 +1144,10 @@
     {
       "query": "cabin altitude 6.1 psi differential",
       "expect": "aviation.altimetry.cabin-altitude"
+    },
+    {
+      "query": "7 parameter helmert fit common points",
+      "expect": "survey.cogo.helmert-3d-fit"
     }
   ]
 }

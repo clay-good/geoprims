@@ -9,6 +9,7 @@ pub mod dop;
 pub mod edm;
 pub mod gnss;
 pub mod grade;
+pub mod helmert;
 pub mod intersect;
 pub mod land;
 pub mod layout;
@@ -3575,6 +3576,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &intersect::RESECTION,
     &closure::ANGULAR,
     &stationing::STATION_OFFSET,
+    &helmert::HELMERT_3D_FIT,
     &stationing::PERPENDICULAR_FOOT,
     &stationing::POINT_FROM_STATION_OFFSET,
     &leveling::LEVEL_RUN,

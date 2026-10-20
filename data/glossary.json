@@ -420,7 +420,8 @@
         "geodesy.crs.search",
         "geodesy.crs.transform",
         "geodesy.datum.helmert",
-        "geodesy.spcs.spcs83-forward"
+        "geodesy.spcs.spcs83-forward",
+        "survey.cogo.helmert-3d-fit"
       ]
     },
     {
@@ -1405,6 +1406,16 @@
       "relatedTools": [
         "survey.gnss.opus-plan",
         "time.scale.julian-date"
+      ]
+    },
+    {
+      "id": "rms",
+      "term": "RMS",
+      "expansion": "root mean square",
+      "definition": "The square root of the average of the squared values. For residuals it is one number for how far, typically, the fitted points sit from the measured ones.",
+      "source": "iogp-g7-2",
+      "relatedTools": [
+        "survey.cogo.helmert-3d-fit"
       ]
     },
     {

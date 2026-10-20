@@ -19,6 +19,27 @@ const CFR_97_3: Reference = Reference {
     url: "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-F/part-97/subpart-A/section-97.3",
 };
 
+const CFR_91_175: Reference = Reference {
+    title: "14 CFR 91.175(h), Comparable values of RVR and ground visibility",
+    issuer: "FAA (eCFR)",
+    year: 2018,
+    edition: "current eCFR text (amended 2018-04-27)",
+    locator: "Paragraph (h)(2) table",
+    url: "https://www.ecfr.gov/current/title-14/chapter-I/subchapter-F/part-91/subpart-B/section-91.175",
+};
+
+/// The 91.175(h)(2) rows: RVR in feet, its regulation entry, and the
+/// visibility as the table writes it.
+const RVR_TABLE: [(f64, &str, &str); 7] = [
+    (1600.0, "faa-91-175-h2-1600", "1/4"),
+    (2400.0, "faa-91-175-h2-2400", "1/2"),
+    (3200.0, "faa-91-175-h2-3200", "5/8"),
+    (4000.0, "faa-91-175-h2-4000", "3/4"),
+    (4500.0, "faa-91-175-h2-4500", "7/8"),
+    (5000.0, "faa-91-175-h2-5000", "1"),
+    (6000.0, "faa-91-175-h2-6000", "1 1/4"),
+];
+
 const fn speed(name: &'static str, title: &'static str, help: &'static str) -> Field {
     Field::new(
         name,
@@ -134,6 +155,137 @@ fn run_approach_category(ctx: &mut Ctx) -> Result<Json, ToolError> {
         (
             "rules",
             Json::str(format!("14 CFR 97.3, rules as of {}", r.reviewed)),
+        ),
+    ]))
+}
+
+pub static RVR_VISIBILITY: ToolDef = ToolDef {
+    id: "aviation.ifr.rvr-visibility",
+    title: "RVR to ground visibility",
+    summary: "The ground visibility an RVR minimum stands for when RVR is not reported, by the table in 14 CFR 91.175(h)(2): 1,600 ft is 1/4 statute mile up to 6,000 ft at 1 1/4.",
+    aliases: &[
+        "RVR to visibility",
+        "RVR conversion table",
+        "runway visual range to statute miles",
+    ],
+    keywords: &[
+        "RVR",
+        "visibility",
+        "minimums",
+        "runway",
+        "approach",
+        "91.175",
+    ],
+    inputs: &[Field::new(
+        "rvr",
+        "RVR minimum",
+        "As the approach chart gives it, like 2,400 ft",
+        Kind::Quantity {
+            q: QT::Length,
+            unit: "ft",
+        },
+    )
+    .required()
+    .core()],
+    outputs: &[
+        Field::new(
+            "visibility",
+            "Ground visibility",
+            "In statute miles, as the table writes it",
+            Kind::Text { max_len: 16 },
+        ),
+        Field::new(
+            "visibility_sm",
+            "Ground visibility (decimal)",
+            "Statute miles",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "mi",
+            },
+        )
+        .precision(Precision::Decimals(3)),
+        Field::new(
+            "applies",
+            "When it applies",
+            "The rule's conditions",
+            Kind::Text { max_len: 200 },
+        ),
+        Field::new(
+            "rules",
+            "Rules as of",
+            "Citation and review date",
+            Kind::Text { max_len: 120 },
+        ),
+    ],
+    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Table lookup, 14 CFR 91.175(h)(2): RVR 1,600, 2,400, 3,200, 4,000, 4,500, 5,000, and 6,000 ft are 1/4, 1/2, 5/8, 3/4, 7/8, 1, and 1 1/4 statute miles; no interpolation",
+    accuracy: "Exact to the regulation's table; values between rows are not in the rule and are refused",
+    when_to_use: "Use this when an approach chart gives an RVR minimum but the runway's RVR is not being reported: 14 CFR 91.175(h)(1) then makes the comparable ground visibility from the table in (h)(2) the minimum. Enter the RVR as charted to read its visibility.",
+    limitations: "Only the seven RVR values in the regulation's table convert; the rule does not interpolate between them, so neither does this tool. It does not apply to Category II or III minimums, and it is the US rule only: EASA's conversion of reported visibility to RVR is a different rule, with factors that depend on the lights and time of day, which this tool does not cover. A dated reference, not legal advice.",
+    references: &[CFR_91_175],
+    examples: &[Example {
+        id: "primary",
+        title: "An RVR 2,400 minimum with RVR not reported",
+        input: r#"{"rvr":"2400 ft"}"#,
+        source: "14 CFR 91.175(h)(2): 2,400 ft RVR is 1/2 statute mile",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "aviation.ifr.approach-category",
+            reason: "next",
+        },
+        Related {
+            id: "aviation.weather.metar-decode",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.performance.vdp",
+            reason: "next",
+        },
+    ],
+    sentence: "Without an RVR report, use {visibility} mile as the limit.",
+    limits: &[("batchRows", 10_000)],
+    run: run_rvr_visibility,
+    ..ToolDef::BLANK
+};
+
+fn run_rvr_visibility(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let rvr = ctx.req_quantity("rvr")?.to(unit(QT::Length, "ft"));
+    // A value entered in meters converts to feet; match the table to the foot.
+    let row = RVR_TABLE.iter().find(|(r, _, _)| (r - rvr).abs() < 0.5).ok_or_else(|| {
+        ToolError::invalid(
+            "/rvr",
+            "14 CFR 91.175(h)(2) lists only RVR 1,600, 2,400, 3,200, 4,000, 4,500, 5,000, and 6,000 ft, and does not interpolate between them.",
+        )
+        .hint("Example: rvr 2400 ft")
+    })?;
+    let r = rule(row.1);
+    Ok(obj(vec![
+        ("visibility", Json::str(row.2)),
+        (
+            "visibility_sm",
+            ctx.out(
+                "visibility_sm",
+                gp_base::tool::Q {
+                    value: r.value * 1609.344,
+                    unit: unit(QT::Length, "m"),
+                },
+            ),
+        ),
+        (
+            "applies",
+            Json::str(
+                "When RVR minimums are prescribed but RVR is not reported for the runway, except for Category II or III minimums (91.175(h)(1)).",
+            ),
+        ),
+        (
+            "rules",
+            Json::str(format!("{}, rules as of {}", r.citation, r.reviewed)),
         ),
     ]))
 }

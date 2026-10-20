@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "ef289927207b3002",
+    "hash": "a2dfeaab3cb68a98",
     "lastmod": "2026-10-20"
   },
   "/accuracy/": {
@@ -12,7 +12,7 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/": {
-    "hash": "7bd204dffcfd4ade",
+    "hash": "cee5d238fbf1693a",
     "lastmod": "2026-10-20"
   },
   "/aviation/airspace/": {
@@ -100,7 +100,7 @@
     "lastmod": "2026-10-19"
   },
   "/aviation/ifr/": {
-    "hash": "bbeae6adfa82840b",
+    "hash": "e791ca17ac1889ee",
     "lastmod": "2026-10-20"
   },
   "/aviation/ifr/approach-category/": {
@@ -132,12 +132,16 @@
     "lastmod": "2026-10-19"
   },
   "/aviation/ifr/radial-intercept/": {
-    "hash": "30ef9625144aa05d",
-    "lastmod": "2026-10-19"
+    "hash": "83be59b1d2ad40e4",
+    "lastmod": "2026-10-20"
+  },
+  "/aviation/ifr/rvr-visibility/": {
+    "hash": "f040307bcd107df0",
+    "lastmod": "2026-10-20"
   },
   "/aviation/ifr/time-to-station/": {
-    "hash": "35f74a32a3e09cad",
-    "lastmod": "2026-10-19"
+    "hash": "8ea35cf2b7acb238",
+    "lastmod": "2026-10-20"
   },
   "/aviation/loading/": {
     "hash": "73a38039a967b4fe",
@@ -1452,7 +1456,7 @@
     "lastmod": "2026-10-13"
   },
   "/methodology/": {
-    "hash": "8b3a639c1e6fc699",
+    "hash": "8ba39f013baf4a78",
     "lastmod": "2026-10-20"
   },
   "/navigation/": {
@@ -1736,7 +1740,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "732b9b8ce2af08ff",
+    "hash": "170dc5c43d6394e1",
     "lastmod": "2026-10-20"
   },
   "/survey/": {
@@ -2120,7 +2124,7 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "097e84b2e4eb58df",
+    "hash": "cb0fd8752b2b8840",
     "lastmod": "2026-10-20"
   },
   "/units/": {
@@ -2384,7 +2388,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "768da730a4873e2d",
+    "hash": "48160e1c8cd376a7",
     "lastmod": "2026-10-20"
   },
   "/workflows/": {

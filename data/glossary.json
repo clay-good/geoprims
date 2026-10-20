@@ -1428,6 +1428,16 @@
       ]
     },
     {
+      "id": "rvr",
+      "term": "RVR",
+      "expansion": "runway visual range",
+      "definition": "How far down the runway a pilot on the centerline can see the runway lights or markings, measured by instruments beside the runway and reported in feet.",
+      "source": "cfr-14-91",
+      "relatedTools": [
+        "aviation.ifr.rvr-visibility"
+      ]
+    },
+    {
       "id": "s2",
       "term": "S2",
       "expansion": "S2 Geometry",

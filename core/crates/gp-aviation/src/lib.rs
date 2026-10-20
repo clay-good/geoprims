@@ -2600,6 +2600,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &weather::FB_WINDS,
     &weather::TAF,
     &approach::APPROACH_CATEGORY,
+    &approach::RVR_VISIBILITY,
     &physiology::OXYGEN_REQUIREMENT,
     &ifr::HOLD_ENTRY,
     &ifr::HOLD_WIND,

@@ -1124,6 +1124,10 @@
     {
       "query": "when do I need oxygen 13500 ft",
       "expect": "aviation.physiology.oxygen-requirement"
+    },
+    {
+      "query": "rvr 2400 to visibility",
+      "expect": "aviation.ifr.rvr-visibility"
     }
   ]
 }

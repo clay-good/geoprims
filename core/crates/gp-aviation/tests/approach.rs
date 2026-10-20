@@ -45,3 +45,33 @@ fn approach_category_invariants() {
     );
     assert_eq!(category(json!({"vref": "121 kt", "vs0": "50 kt"})), "C");
 }
+
+#[test]
+fn rvr_visibility_invariants() {
+    let vis = |rvr: &str| -> Value {
+        serde_json::from_str(&REGISTRY.invoke(
+            "aviation.ifr.rvr-visibility",
+            &json!({"rvr": rvr}).to_string(),
+        ))
+        .unwrap()
+    };
+    // Every row of the regulation's table, exactly, and visibility rises with RVR.
+    let mut last = 0.0;
+    for (rvr, want) in [
+        ("1600 ft", "1/4"),
+        ("2400 ft", "1/2"),
+        ("3200 ft", "5/8"),
+        ("4000 ft", "3/4"),
+        ("4500 ft", "7/8"),
+        ("5000 ft", "1"),
+        ("6000 ft", "1 1/4"),
+    ] {
+        let r = vis(rvr);
+        assert_eq!(r["result"]["visibility"], want, "{rvr}");
+        let sm = r["result"]["visibility_sm"]["value"].as_f64().unwrap();
+        assert!(sm > last);
+        last = sm;
+    }
+    // No interpolation between rows.
+    assert_eq!(vis("2000 ft")["error"]["code"], "INVALID_INPUT");
+}

@@ -157,3 +157,15 @@ test('blocked storage keeps profiles for this page and says so', () => {
   assert.equal(P.put(camera()), 'page');
   assert.ok(P.ofKind('camera')['Zenmuse P1']);
 });
+
+test('shipped examples are read-only, fill tools, and are never stored or counted', () => {
+  const cams = P.examplesOf('camera');
+  assert.deepEqual(Object.keys(cams), ['1-inch 20 MP camera']);
+  const ex = cams['1-inch 20 MP camera'];
+  assert.equal(ex.example, true);
+  assert.equal(P.valuesFor(ex, 'drone.photogrammetry.trigger-interval').min_interval, '2 s');
+  assert.equal(P.valuesFor(ex, 'drone.photogrammetry.trigger-interval').focal_length, '8.8 mm');
+  assert.equal(P.put(ex), 'example');
+  assert.deepEqual(P.ofKind('camera'), {});
+});
+

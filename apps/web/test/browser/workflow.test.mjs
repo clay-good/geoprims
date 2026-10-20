@@ -48,3 +48,35 @@ test('a step that fails shows its own error, and later steps wait', { timeout: 1
   assert.equal(waiting.filter((x) => x === 'Waiting for step 1.').length, 3);
   assert.match(await page.textContent('.workflow-answer .sentence'), /^Stopped at step 1 \(METAR decoder\):/);
 });
+
+// Equipment profiles (web/workflows, "Workflow inputs filled from profiles",
+// scenario "Mapping flight from a camera and a drone").
+test('a mapping flight fills from a camera and a drone profile, and the assumptions name both', { timeout: 120_000 }, async (t) => {
+  const origin = await serveBuiltSite(t);
+  const browser = await chromium.launch({ headless: true });
+  t.after(() => browser.close());
+  const context = await browser.newContext();
+  const profile = (kind, name, tools) => ({ format: 'geoprims-profile', version: 1, kind, name, savedOn: '2026-10-19', tools });
+  const store = {
+    camera: { P1: profile('camera', 'P1', { 'drone.photogrammetry.gsd': { sensor_width: '35.9 mm', sensor_height: '24 mm', image_width: 8192, image_height: 5460, focal_length: '35 mm' } }) },
+    drone: { M3E: profile('drone', 'M3E', { 'drone.mission.sorties': { flight_time: '38 min', reserve: 25 } }) },
+  };
+  await context.addInitScript((s) => localStorage.setItem('gp-profiles', s), JSON.stringify(store));
+  const page = await context.newPage();
+  await page.goto(`${origin}/workflows/mapping-flight/`);
+  await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
+  for (const kind of ['camera', 'drone']) {
+    await page.locator('summary', { hasText: `Use my ${kind}` }).click();
+    await page.getByRole('button', { name: `Fill from this ${kind}` }).click();
+  }
+  await page.waitForFunction(() => !document.querySelector('.workflow-answer.stale'));
+  assert.equal(await page.locator('#wf-sensor_width').inputValue(), '35.9 mm');
+  assert.equal(await page.locator('#wf-focal_length').inputValue(), '35 mm');
+  assert.equal(await page.locator('#wf-flight_time').inputValue(), '38 min');
+  assert.equal(await page.locator('#wf-reserve').inputValue(), '25');
+  const named = await page.locator('.assumptions .from-profile').allTextContents();
+  assert.deepEqual(named.map((s) => s.trim()).sort(), ['Camera: from profile P1', 'Drone: from profile M3E']);
+  // Editing a filled value drops that profile from the assumptions.
+  await page.locator('#wf-flight_time').fill('30 min');
+  assert.deepEqual((await page.locator('.assumptions .from-profile').allTextContents()).map((s) => s.trim()), ['Camera: from profile P1']);
+});

@@ -43,6 +43,18 @@ export function profileProblems(profiles, catalog) {
       }
     }
   }
+  for (const ex of profiles.examples ?? []) {
+    const fields = profiles.kinds?.[ex.kind]?.tools ?? null;
+    if (!fields) {
+      problems.push(`example ${ex.name}: no kind ${ex.kind}`);
+      continue;
+    }
+    for (const [id, values] of Object.entries(ex.tools)) {
+      for (const f of Object.keys(values)) {
+        if (!(fields[id] ?? []).includes(f)) problems.push(`example ${ex.name}: ${ex.kind} keeps no ${f} for ${id}`);
+      }
+    }
+  }
   return problems;
 }
 

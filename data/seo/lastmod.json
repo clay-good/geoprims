@@ -8,8 +8,8 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "187de8347d0da410",
-    "lastmod": "2026-10-19"
+    "hash": "a5085267bf9b9b7f",
+    "lastmod": "2026-10-20"
   },
   "/aviation/": {
     "hash": "429347ebf243360f",
@@ -1592,8 +1592,8 @@
     "lastmod": "2026-10-19"
   },
   "/privacy/": {
-    "hash": "88d6ce3cc38046e5",
-    "lastmod": "2026-10-12"
+    "hash": "4c8019420bd291d9",
+    "lastmod": "2026-10-20"
   },
   "/quality/": {
     "hash": "7666270d9c7fb2a2",
@@ -2380,55 +2380,55 @@
     "lastmod": "2026-10-09"
   },
   "/workflows/boundary-retracement/": {
-    "hash": "5cf1c3bb315d1ebb",
-    "lastmod": "2026-10-09"
+    "hash": "984395bd77676da9",
+    "lastmod": "2026-10-20"
   },
   "/workflows/can-i-fly-now/": {
-    "hash": "936c4cf681c045de",
-    "lastmod": "2026-10-19"
+    "hash": "90f1fa7406d57b0a",
+    "lastmod": "2026-10-20"
   },
   "/workflows/convert-coordinate/": {
-    "hash": "b21a801caa50b6f4",
-    "lastmod": "2026-10-09"
+    "hash": "b6b94fe3c05711e1",
+    "lastmod": "2026-10-20"
   },
   "/workflows/gnss-to-state-plane/": {
-    "hash": "caedd6cb63552ce2",
-    "lastmod": "2026-10-09"
+    "hash": "65640b8b64544443",
+    "lastmod": "2026-10-20"
   },
   "/workflows/ifr-approach-brief/": {
-    "hash": "2785a1f257faaf37",
-    "lastmod": "2026-10-13"
+    "hash": "7f3ff8db70cbff01",
+    "lastmod": "2026-10-20"
   },
   "/workflows/index-to-area/": {
-    "hash": "506c59e4a19fa00b",
-    "lastmod": "2026-10-12"
+    "hash": "aa0956f4e7fe9017",
+    "lastmod": "2026-10-20"
   },
   "/workflows/inspection/": {
-    "hash": "296c3f86d930547f",
-    "lastmod": "2026-10-19"
+    "hash": "02e2bdd7b70efad5",
+    "lastmod": "2026-10-20"
   },
   "/workflows/lidar-bid/": {
-    "hash": "33060a05de05ef21",
-    "lastmod": "2026-10-19"
+    "hash": "46ca4fa95a14fe68",
+    "lastmod": "2026-10-20"
   },
   "/workflows/mapping-flight/": {
-    "hash": "b44af715f94fbc9a",
-    "lastmod": "2026-10-19"
+    "hash": "72d8a4186b7564dc",
+    "lastmod": "2026-10-20"
   },
   "/workflows/preflight-check/": {
-    "hash": "a1c486b0a6f45d19",
-    "lastmod": "2026-10-19"
+    "hash": "c9a56f99c56345c0",
+    "lastmod": "2026-10-20"
   },
   "/workflows/preflight-performance/": {
-    "hash": "88ebe341cb85b8f2",
-    "lastmod": "2026-10-13"
+    "hash": "55b84a7fdf858e99",
+    "lastmod": "2026-10-20"
   },
   "/workflows/road-curve/": {
-    "hash": "006318e7c2e9dbbc",
-    "lastmod": "2026-10-09"
+    "hash": "b8659145bea25d45",
+    "lastmod": "2026-10-20"
   },
   "/workflows/vfr-cross-country/": {
-    "hash": "bb056817b520237d",
-    "lastmod": "2026-10-10"
+    "hash": "89812f314dfe9960",
+    "lastmod": "2026-10-20"
   }
 }

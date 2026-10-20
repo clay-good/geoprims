@@ -41,6 +41,39 @@
       });
   }
 
+  // Equipment profiles (web/workflows, "Workflow inputs filled from
+  // profiles"): one "Use my <kind>" control per kind the inputs declare. The
+  // profile store loads when a reader opens one, not with the page.
+  const profileKinds = [...new Set(workflow.inputs.filter((i) => i.profile).map((i) => i.profile.kind))];
+  const kindTitle = (k) => (k === 'gnss-receiver' ? 'GNSS receiver' : k);
+  let store = $state.raw(null);
+  let pick = $state({});
+  async function loadStore() {
+    store ??= await import('../lib/profiles.mjs');
+    // The reader's own profile first; an example when there is none.
+    for (const k of profileKinds) pick[k] ??= Object.keys(store.ofKind(k))[0] ?? Object.keys(store.examplesOf(k))[0];
+  }
+  // Per kind, the profile that filled the inputs and the text it filled them with.
+  let filledFrom = $state({});
+  const choices = (k) => (store ? { ...store.examplesOf(k), ...store.ofKind(k) } : {});
+  function useProfile(k) {
+    const all = choices(k);
+    const p = all[pick[k]];
+    if (!p) return;
+    const wrote = {};
+    for (const i of workflow.inputs.filter((x) => x.profile?.kind === k)) {
+      const v = store.valuesFor(p, i.tool)[i.profile.field];
+      if (v === undefined) continue;
+      values[i.name] = wrote[i.name] = toText(i, v);
+    }
+    filledFrom = { ...filledFrom, [k]: { name: p.name, wrote } };
+    edited();
+  }
+  // A profile is named in the assumptions while every value it wrote stands.
+  const fromProfiles = $derived(
+    Object.entries(filledFrom).filter(([, f]) => Object.keys(f.wrote).length && Object.entries(f.wrote).every(([n, v]) => values[n] === v)),
+  );
+
   const shown = workflow.inputs.filter((i) => !i.advanced);
   const more = workflow.inputs.filter((i) => i.advanced);
   const exampleText = () => Object.fromEntries(workflow.inputs.map((i) => [i.name, toText(i, i.example)]));
@@ -210,6 +243,25 @@
   <div class="fields">
     {#each shown as input}{@render field(input)}{/each}
   </div>
+  {#each profileKinds as k (k)}
+    <details class="more profile-use" ontoggle={(e) => e.currentTarget.open && loadStore()}>
+      <summary>Use my {kindTitle(k)}</summary>
+      {#if store}
+        {@const all = choices(k)}
+        {#if Object.keys(all).length}
+          <label>
+            <span class="label-text">{kindTitle(k)[0].toUpperCase() + kindTitle(k).slice(1)} profile</span>
+            <select bind:value={pick[k]}>
+              {#each Object.keys(all) as n (n)}<option value={n}>{n}{all[n].example ? ' (Example)' : ''}</option>{/each}
+            </select>
+          </label>
+          <button type="button" class="quiet" onclick={() => useProfile(k)}>Fill from this {kindTitle(k)}</button>
+        {:else}
+          <p class="help">No {kindTitle(k)} profiles yet: save one from a tool's profile panel.</p>
+        {/if}
+      {:else}<p class="help">Loading…</p>{/if}
+    </details>
+  {/each}
   {#if more.length}
     <details class="more">
       <summary>More options</summary>
@@ -259,9 +311,12 @@
 {/if}
 
 <details class="card assumptions">
-  <summary>Assumptions ({guide.assumptions.length})</summary>
+  <summary>Assumptions ({guide.assumptions.length + fromProfiles.length})</summary>
   <p class="help">Values this workflow fixes for you. Open the step's tool to change one.</p>
   <ul>
+    {#each fromProfiles as [k, f] (k)}
+      <li class="from-profile">{kindTitle(k)[0].toUpperCase() + kindTitle(k).slice(1)}: from profile {f.name}</li>
+    {/each}
     {#each guide.assumptions as a}
       <li>Step {a.step + 1}, {tools[a.tool].title}: {fieldTitle(a.tool, a.name)} = {shownValue(a.value)} (<a href={steps[a.step].href}>change</a>)</li>
     {/each}

@@ -1,5 +1,5 @@
 {
-  "note": "Equipment profile kinds (web/equipment-profiles). Per kind, the tool inputs a profile keeps: values that belong to the equipment, never to the job (no location, date, time, wind, or load). `tables` names the kept inputs that are arrays of rows. Checked against the catalog by tools/trust/profiles.test.mjs.",
+  "note": "Equipment profile kinds (web/equipment-profiles). `examples` are read-only profiles shipped with the site, taken from the tools' own worked examples. Per kind, the tool inputs a profile keeps: values that belong to the equipment, never to the job (no location, date, time, wind, or load). `tables` names the kept inputs that are arrays of rows. Checked against the catalog by tools/trust/profiles.test.mjs.",
   "format": "geoprims-profile",
   "version": 1,
   "limits": {
@@ -7,6 +7,33 @@
     "maxName": 60,
     "perKind": 50
   },
+  "examples": [
+    {
+      "kind": "camera",
+      "name": "1-inch 20 MP camera",
+      "tools": {
+        "drone.photogrammetry.gsd": {"sensor_width": "13.2 mm", "sensor_height": "8.8 mm", "image_width": 5472, "image_height": 3648, "focal_length": "8.8 mm"},
+        "drone.photogrammetry.trigger-interval": {"min_interval": "2 s"}
+      }
+    },
+    {
+      "kind": "drone",
+      "name": "Small multirotor",
+      "tools": {
+        "drone.power.endurance": {"energy": "90.4 Wh", "usable": 80, "power": "150.6 W"},
+        "drone.power.battery-energy": {"capacity": "5870 mAh", "voltage": "15.4 V"},
+        "drone.ops.kinetic-energy": {"mass": "0.9 kg"},
+        "drone.sensors.vlos": {"characteristic_dimension": "0.35 m"}
+      }
+    },
+    {
+      "kind": "gnss-receiver",
+      "name": "Published RTK specification",
+      "tools": {
+        "survey.gnss.rtk-budget": {"h_constant": "8 mm", "h_ppm": 1, "v_constant": "15 mm", "v_ppm": 1}
+      }
+    }
+  ],
   "kinds": {
     "aircraft": {
       "title": "Aircraft",

@@ -3,7 +3,7 @@
   // save this tool's equipment inputs of one kind under a name, load them
   // back, and move a profile between browsers as a JSON file. Everything
   // stays in this browser.
-  import { blank, fieldsFor, fileName, fromFile, KINDS, MAX_BYTES, MAX_NAME, MAX_PER_KIND, ofKind, put, remove, saveTool, toFile, valuesFor } from '../lib/profiles.mjs';
+  import { blank, examplesOf, fieldsFor, fileName, fromFile, KINDS, MAX_BYTES, MAX_NAME, MAX_PER_KIND, ofKind, put, remove, saveTool, toFile, valuesFor } from '../lib/profiles.mjs';
   import { saveBlob } from '../lib/canvas-export.mjs';
 
   let { tool, kind, getInputs, setInputs, onLoaded = () => {} } = $props();
@@ -19,15 +19,18 @@
   };
   const noun = KINDS[kind].title.toLowerCase();
 
-  let profiles = $state(ofKind(kind));
-  let chosen = $state(Object.keys(profiles)[0] ?? '');
+  // Saved profiles, with the shipped examples (read-only) beneath any of the same name.
+  const listed = () => ({ ...examplesOf(kind), ...ofKind(kind) });
+  let profiles = $state(listed());
+  // The reader's own profiles come first; an example only when there are none.
+  let chosen = $state(Object.keys(ofKind(kind))[0] ?? Object.keys(profiles)[0] ?? '');
   let name = $state(chosen);
   let status = $state('');
   const names = $derived(Object.keys(profiles).sort((a, b) => a.localeCompare(b)));
   const kept = fieldsFor(kind, tool.id).map((f) => tool.inputs.properties[f]?.title ?? f).join(', ');
 
   function refresh(select) {
-    profiles = ofKind(kind);
+    profiles = listed();
     chosen = select;
     name = select;
   }
@@ -35,6 +38,7 @@
   function save() {
     const n = name.trim();
     if (n === '') return (status = 'Give the profile a name first.');
+    if (profiles[n]?.example) return (status = `${n} is an example profile and cannot be changed; save under another name.`);
     const next = { ...saveTool(profiles[n] ?? blank(kind, n), tool.id, getInputs()), savedOn: new Date().toISOString().slice(0, 10) };
     const how = put(next);
     if (how === 'full') return (status = `This browser already keeps ${MAX_PER_KIND} ${noun} profiles; delete one first.`);
@@ -75,10 +79,11 @@
   }
 
   function drop() {
+    if (profiles[chosen]?.example) return (status = `${chosen} is an example profile; it cannot be deleted.`);
     if (!chosen || !confirm(`Delete the profile ${chosen} from this browser?`)) return;
     const gone = chosen;
     remove(kind, gone);
-    refresh(Object.keys(ofKind(kind))[0] ?? '');
+    refresh(Object.keys(ofKind(kind))[0] ?? Object.keys(listed())[0] ?? '');
     status = `Deleted ${gone}.`;
   }
 </script>
@@ -89,13 +94,13 @@
     <label>
       <span>Saved profiles</span>
       <select bind:value={chosen} onchange={() => (name = chosen)}>
-        {#each names as n (n)}<option value={n}>{n}{profiles[n].savedOn ? ` (saved ${profiles[n].savedOn})` : ''}</option>{/each}
+        {#each names as n (n)}<option value={n}>{n}{profiles[n].example ? ' (Example)' : profiles[n].savedOn ? ` (saved ${profiles[n].savedOn})` : ''}</option>{/each}
       </select>
     </label>
     <div class="row">
       <button type="button" class="quiet" onclick={load}>Load</button>
       <button type="button" class="quiet" onclick={exportFile}>Export</button>
-      <button type="button" class="quiet" onclick={drop}>Delete</button>
+      {#if !profiles[chosen]?.example}<button type="button" class="quiet" onclick={drop}>Delete</button>{/if}
     </div>
   {/if}
   <label>

@@ -52,6 +52,12 @@ const toolsets = Object.keys(TOOLSETS).map((name) => ({ name, tools: directTools
     and warnings. Aviation, drone, navigation, and magnetic results also carry the notice that they are planning aids and not
     for primary navigation.
   </p>
+  <p>
+    Equipment profiles exported from this site (a <code>geoprims-profile</code> file for an aircraft, drone, camera, lidar
+    sensor, GNSS receiver, or radio) can be passed inline as the <code>profile</code> argument of <code>geoprims_run</code>.
+    The profile fills the equipment inputs your <code>args</code> leave out, <code>meta.profileFilled</code> names them, and
+    the server keeps nothing between calls.
+  </p>
 
   <h2>Workflow prompts</h2>
   <ul>

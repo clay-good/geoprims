@@ -149,6 +149,17 @@ export function all() {
 /** The saved profiles of one kind, { name: profile }. */
 export const ofKind = (kind) => all()[kind] ?? {};
 
+/**
+ * The read-only example profiles shipped for a kind (data/profiles.json),
+ * { name: profile } with `example: true`. Never stored, never counted.
+ */
+export const examplesOf = (kind) =>
+  Object.fromEntries(
+    (PROFILES.examples ?? [])
+      .filter((e) => e.kind === kind)
+      .map((e) => [e.name, { format: FORMAT, version: VERSION, kind, name: e.name, savedOn: '', tools: e.tools, example: true }]),
+  );
+
 function write(next) {
   memory = next;
   try {
@@ -164,10 +175,12 @@ export const hasRoom = (kind, name) => Object.hasOwn(ofKind(kind), name) || Obje
 
 /**
  * Saves a profile under its kind and name. Returns 'saved', 'page' when the
- * browser would not keep it (it lasts for this page), or 'full' when the kind
- * already holds MAX_PER_KIND other profiles.
+ * browser would not keep it (it lasts for this page), 'full' when the kind
+ * already holds MAX_PER_KIND other profiles, or 'example' for a shipped
+ * example, which is never stored.
  */
 export function put(profile) {
+  if (profile.example) return 'example';
   if (!hasRoom(profile.kind, profile.name)) return 'full';
   const store = all();
   return write({ ...store, [profile.kind]: { ...(store[profile.kind] ?? {}), [profile.name]: profile } }) ? 'saved' : 'page';

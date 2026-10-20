@@ -44,3 +44,18 @@ test('a table must be declared as one', () => {
   t.kinds.aircraft.tables = t.kinds.aircraft.tables.filter((f) => f !== 'envelope');
   assert.deepEqual(profileProblems(t, catalog), ['aircraft: aviation.loading.weight-balance envelope is a table but not listed in tables']);
 });
+
+test('shipped examples keep only fields their kind keeps, and match the tools\' worked examples', () => {
+  assert.deepEqual(profiles.examples.map((e) => e.kind), ['camera', 'drone', 'gnss-receiver']);
+  const bad = structuredClone(profiles);
+  bad.examples[0].tools['drone.photogrammetry.gsd'].wind_rating = '12 m/s';
+  assert.deepEqual(profileProblems(bad, catalog), ['example 1-inch 20 MP camera: camera keeps no wind_rating for drone.photogrammetry.gsd']);
+  for (const ex of profiles.examples) {
+    for (const [id, values] of Object.entries(ex.tools)) {
+      const t = catalog.tools.find((x) => x.id === id);
+      const input = (t.examples.find((e) => e.id === t['x-primary-example']) ?? t.examples[0]).input;
+      for (const [f, v] of Object.entries(values)) assert.deepEqual(v, input[f], `${ex.name}: ${id} ${f}`);
+    }
+  }
+});
+

@@ -48,3 +48,21 @@ test('a camera saved on one tool fills another, and the chip follows edits', { t
   await settle(page);
   assert.equal((await page.locator('.profile-chip').textContent()).trim(), `Edited from ${NAME}`);
 });
+
+test('a shipped example profile fills a tool and cannot be deleted', { timeout: 120_000 }, async (t) => {
+  const origin = await serveBuiltSite(t);
+  const browser = await chromium.launch({ headless: true });
+  t.after(() => browser.close());
+  const page = await browser.newPage();
+  await page.goto(`${origin}/drone/photogrammetry/footprint/`);
+  await settle(page);
+  await page.locator('summary', { hasText: 'Camera profiles' }).click();
+  assert.match(await page.locator('.profiles select').textContent(), /1-inch 20 MP camera \(Example\)/);
+  assert.equal(await page.getByRole('button', { name: 'Delete', exact: true }).count(), 0);
+  await page.getByRole('button', { name: 'Load', exact: true }).click();
+  await settle(page);
+  await openMore(page);
+  assert.equal(await page.locator('#field-focal_length').inputValue(), '8.8 mm');
+  assert.equal((await page.locator('.profile-chip').textContent()).trim(), 'From profile: 1-inch 20 MP camera');
+});
+

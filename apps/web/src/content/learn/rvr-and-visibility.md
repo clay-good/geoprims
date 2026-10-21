@@ -1,7 +1,7 @@
 ---
 title: RVR and visibility
 description: What runway visual range measures, how it differs from the visibility in a weather report, and how to turn an RVR minimum into statute miles when RVR is not reported.
-summary: RVR versus prevailing visibility, and the 91.175(h) table that converts one to the other.
+summary: RVR versus prevailing visibility, the 91.175(h) table that converts one to the other, and the chart legend's longer table.
 audience: Pilots
 published: 2026-10-20
 tools:
@@ -19,6 +19,11 @@ sources:
     edition: FAA-H-8083-16B
     locator: Chapter 1, Runway Visual Range (RVR) and its types
     url: https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/instrument_procedures_handbook
+  - title: Terminal Procedures Publication legend
+    issuer: FAA Aeronautical Information Services
+    edition: d-TPP cycle 2611, 29 OCT 2026 to 26 NOV 2026
+    locator: Terms/Landing Minima Data, Comparable Values of RVR and Visibility
+    url: https://www.faa.gov/air_traffic/flight_info/aeronav/digital_products/dtpp/
 ---
 
 An approach chart may give its visibility minimum as RVR 2400. If the runway's RVR is not being reported, that number becomes 1/2 statute mile. The conversion is a seven-row table in 14 CFR 91.175(h), and it is not interpolated.
@@ -60,6 +65,12 @@ Notice what the table is not. It is not a unit conversion. 2,400 feet is not hal
 
 That is why a calculator should not draw a line between rows. An RVR of 2,800 feet does not have a regulation value. If an approach printed an RVR the table lacks, the honest answer is that the table does not cover it, not a number made up halfway between two rows.
 
+## The chart legend's longer table
+
+The FAA's approach chart books carry a longer version in their legend. It keeps the regulation's seven rows, marked with a star, and adds eight more, from 1,200 to 5,500 ft. It also adds a rule the regulation lacks: for an RVR between rows, use the next higher listed RVR. The legend's own example turns 4,800 RVR into 5,000 RVR, which is 1 mile.
+
+The legend is careful about one thing. Its starred rows, the ones copied from 91.175, are the ones to use for takeoff or landing minimums. The extra rows help with other conversions, like adjusting a visibility minimum, and a calculator should say so when it uses one.
+
 ## A worked example
 
 You are planning an ILS whose chart lists the minimum as RVR 2400. The METAR shows no RVR group for your runway, and the NOTAMs say the touchdown sensor is out.
@@ -73,4 +84,4 @@ Now check the METAR's prevailing visibility against that. If it says `3/4SM`, yo
 
 Two cautions. First, the conversion does not apply to Category II or III minimums; those need RVR. Second, your operator may have rules stricter than Part 91. Commercial operators often do.
 
-The [RVR to visibility tool](/aviation/ifr/rvr-visibility/) looks up any row of the table and refuses values the table does not hold. The [METAR decoder](/aviation/weather/metar-decode/) reads the visibility and any RVR groups out of a report, and the [approach category tool](/aviation/ifr/approach-category/) finds which column of minimums is yours.
+The [RVR to visibility tool](/aviation/ifr/rvr-visibility/) looks up any row of the regulation's table and refuses values it does not hold; set its table to the legend to use the longer one, with a caution on the rows the regulation lacks. The [METAR decoder](/aviation/weather/metar-decode/) reads the visibility and any RVR groups out of a report, and the [approach category tool](/aviation/ifr/approach-category/) finds which column of minimums is yours.

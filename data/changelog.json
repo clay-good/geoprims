@@ -5,6 +5,15 @@
       "date": "2026-10-20",
       "kind": "changed",
       "tools": [
+        "aviation.ifr.rvr-visibility"
+      ],
+      "vectors": [],
+      "summary": "RVR to visibility can also use the approach chart legend's longer table, which takes the next higher listed RVR between rows; rows the regulation does not list carry a caution that they are not takeoff or landing minima. Each result now names the row it used. Results in the default regulation mode are unchanged."
+    },
+    {
+      "date": "2026-10-20",
+      "kind": "changed",
+      "tools": [
         "aviation.ifr.circling-radius"
       ],
       "vectors": [],

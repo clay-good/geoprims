@@ -397,6 +397,10 @@
     "WIND_EXCEEDS_TAS": {
       "severity": "caution",
       "message": "On at least one leg the wind is too strong for the true airspeed, so that leg cannot be flown."
+    },
+    "RVR_NOT_IN_REGULATION": {
+      "severity": "caution",
+      "message": "The RVR row used is in the chart legend's table but not in 14 CFR 91.175(h)(2), so it is not a takeoff or landing minimum."
     }
   }
 }

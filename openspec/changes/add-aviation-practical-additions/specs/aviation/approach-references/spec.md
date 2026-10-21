@@ -5,11 +5,19 @@ Gives the approach-planning references that pilots look up from regulations and 
 ## ADDED Requirements
 
 ### Requirement: RVR and visibility conversion
-The tool SHALL convert RVR to the equivalent visibility by the 14 CFR 91.175(h)(2) table (1,600 ft = ¼ SM; 2,400 = ½; 3,200 = ⅝; 4,000 = ¾; 4,500 = ⅞; 5,000 = 1; 6,000 = 1¼), stating that it applies when RVR minimums are prescribed but RVR is not reported and not to Category II or III, and SHALL convert reported meteorological visibility to RVR/CMV by the EASA AMC10 CAT.OP.MPA.110 Table 8 factors (high-intensity lights ×1.5 day, ×2.0 night; other lights ×1.0 day, ×1.5 night; no lights ×1.0 day, not applicable at night) with its exclusions. Values SHALL come from `data/regulations.json` with "rules as of" shown.
+The tool SHALL convert RVR to the equivalent visibility by the 14 CFR 91.175(h)(2) table (1,600 ft = ¼ SM; 2,400 = ½; 3,200 = ⅝; 4,000 = ¾; 4,500 = ⅞; 5,000 = 1; 6,000 = 1¼), stating that it applies when RVR minimums are prescribed but RVR is not reported and not to Category II or III, and SHALL convert reported meteorological visibility to RVR/CMV by the EASA AMC10 CAT.OP.MPA.110 Table 8 factors (high-intensity lights ×1.5 day, ×2.0 night; other lights ×1.0 day, ×1.5 night; no lights ×1.0 day, not applicable at night) with its exclusions. Values SHALL come from `data/regulations.json` with "rules as of" shown. As an option, the tool SHALL also convert by the Terminal Procedures Publication legend's Comparable Values of RVR and Visibility table, dated by its d-TPP cycle, which adds rows to the regulation's and says to use the next higher listed RVR between rows; a row the regulation does not list SHALL carry the caution `RVR_NOT_IN_REGULATION`, because the legend reserves the regulation's rows for takeoff and landing minima.
 
 #### Scenario: FAA table
 - **WHEN** RVR 2,400 ft is converted
 - **THEN** the visibility is ½ SM and the applicability note is shown
+
+#### Scenario: Chart legend table
+- **WHEN** RVR 4,800 ft is converted with the Terminal Procedures Publication legend's table
+- **THEN** the next higher listed RVR, 5,000 ft, is used and the visibility is 1 SM, as the legend's own example gives
+
+#### Scenario: A legend row the regulation lacks
+- **WHEN** RVR 2,800 ft is converted with the legend's table
+- **THEN** the 3,000 ft row gives 5/8 SM with a caution that the regulation does not list that row, so it is not a takeoff or landing minimum
 
 #### Scenario: EASA night, no lights
 - **WHEN** meteorological visibility is converted at night with no approach lights

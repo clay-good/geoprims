@@ -200,3 +200,81 @@ fn circling_legend_is_the_formula_at_each_band_floor() {
     .unwrap();
     assert!(r["result"].get("legend_radius").is_none());
 }
+
+#[test]
+fn rvr_legend_table() {
+    let run = |input: Value| -> Value {
+        serde_json::from_str(&REGISTRY.invoke("aviation.ifr.rvr-visibility", &input.to_string()))
+            .unwrap()
+    };
+    let codes = |r: &Value| -> Vec<String> {
+        r["meta"]["warnings"]
+            .as_array()
+            .map(|w| {
+                w.iter()
+                    .map(|x| x["code"].as_str().unwrap().to_owned())
+                    .collect()
+            })
+            .unwrap_or_default()
+    };
+    // The legend's own example: 4,800 takes the next higher row, 5,000 ft, 1 SM.
+    let a = run(json!({"rvr": "4800 ft", "table": "legend"}));
+    assert_eq!(a["result"]["visibility"], "1", "{a}");
+    assert_eq!(a["result"]["rvr_used"]["value"], 5000.0);
+    assert!(!codes(&a).contains(&"RVR_NOT_IN_REGULATION".to_owned()));
+    // A row the regulation lacks carries the caution, and the sentence says so.
+    let b = run(json!({"rvr": "2800 ft", "table": "legend"}));
+    assert_eq!(b["result"]["visibility"], "5/8");
+    assert_eq!(b["result"]["rvr_used"]["value"], 3000.0);
+    assert!(
+        codes(&b).contains(&"RVR_NOT_IN_REGULATION".to_owned()),
+        "{b}"
+    );
+    assert!(
+        b["summary"]
+            .as_str()
+            .unwrap()
+            .contains("not a takeoff or landing minimum")
+    );
+    // Every printed row returns itself, and the seven regulation rows agree
+    // with the regulation table, with no caution.
+    for (rvr, vis, in_reg) in [
+        (1200, "1/4", false),
+        (1600, "1/4", true),
+        (1800, "1/2", false),
+        (2000, "1/2", false),
+        (2200, "1/2", false),
+        (2400, "1/2", true),
+        (2600, "1/2", false),
+        (3000, "5/8", false),
+        (3200, "5/8", true),
+        (3500, "5/8", false),
+        (4000, "3/4", true),
+        (4500, "7/8", true),
+        (5000, "1", true),
+        (5500, "1", false),
+        (6000, "1 1/4", true),
+    ] {
+        let r = run(json!({"rvr": format!("{rvr} ft"), "table": "legend"}));
+        assert_eq!(r["result"]["visibility"], vis, "{rvr}");
+        assert_eq!(r["result"]["rvr_used"]["value"], f64::from(rvr));
+        assert_eq!(
+            codes(&r).contains(&"RVR_NOT_IN_REGULATION".to_owned()),
+            !in_reg,
+            "{rvr}"
+        );
+        if in_reg {
+            let reg = run(json!({"rvr": format!("{rvr} ft")}));
+            assert_eq!(reg["result"]["visibility"], vis, "{rvr}");
+        }
+    }
+    // Outside the legend's rows it refuses; the regulation mode still refuses 2,800.
+    for rvr in ["1100 ft", "6100 ft"] {
+        assert_eq!(
+            run(json!({"rvr": rvr, "table": "legend"}))["ok"],
+            false,
+            "{rvr}"
+        );
+    }
+    assert_eq!(run(json!({"rvr": "2800 ft"}))["ok"], false);
+}

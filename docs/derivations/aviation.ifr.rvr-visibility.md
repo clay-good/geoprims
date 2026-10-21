@@ -5,6 +5,8 @@
 
 When an approach has RVR minimums but the runway's RVR is not reported, 14 CFR 91.175(h)(1) makes the comparable ground visibility in the table of (h)(2) the minimum. The tool converts the entered RVR to feet, finds the table row within half a foot, and returns that row's visibility as the table writes it and as a decimal. The decimal values are read from `data/regulations.json` (entries `faa-91-175-h2-1600` to `faa-91-175-h2-6000`). It does not interpolate between rows, because the rule does not.
 
+With `table` set to `legend`, the tool uses the Terminal Procedures Publication legend's Comparable Values of RVR and Visibility instead (read in the d-TPP cycle 2611 front matter, effective October 29, 2026). That table repeats the regulation's seven rows, marked with a star, and adds eight more: 1,200, 1,800, 2,000, 2,200, 2,600, 3,000, 3,500, and 5,500 ft. For an RVR between rows it takes the next higher listed RVR, as the legend says (its own example: 4,800 ft uses 5,000 ft, 1 mile). The legend says the starred rows "shall be used for takeoff or landing minima", so a row the regulation does not list carries the RVR_NOT_IN_REGULATION caution, and the sentence says it is not a takeoff or landing minimum. Every result names the row it used as `rvr_used`.
+
 ## Equations
 
 - Row match: |RVR_row − RVR| < 0.5 ft.
@@ -38,9 +40,11 @@ None; it is exact to the regulation's table, effective 2018-04-27 and reviewed 2
 
 ## Differential tests
 
-- No generator script in `tools/vectors/` names this tool. The vectors' source field is 14 CFR 91.175(h)(2) (eCFR, read 2026-10-19); each expected value is a row of the regulation's table.
-- `core/vectors/aviation.ifr.rvr-visibility.jsonl`: 24 vectors. Each of the seven rows three ways: in feet, as a bare number, and in meters; and three INVALID_INPUT refusals: 2,000 ft and 1,800 ft between rows, and 7,000 ft above the table.
+- The first 24 vectors have no generator script; their source field is 14 CFR 91.175(h)(2) (eCFR, read 2026-10-19), and each expected value is a row of the regulation's table.
+- `tools/vectors/gen_rvr_legend.py`: the legend option, v025 to v043: the legend's own 4,800 ft example, all 15 printed rows (the eight the regulation lacks with the caution), 2,800 ft taking the 3,000 ft row, and refusals at 1,100 and 6,100 ft.
+- `core/vectors/aviation.ifr.rvr-visibility.jsonl`: 43 vectors. The regulation mode: Each of the seven rows three ways: in feet, as a bare number, and in meters; and three INVALID_INPUT refusals: 2,000 ft and 1,800 ft between rows, and 7,000 ft above the table.
 
 ## Invariants
 
+- `core/crates/gp-aviation/tests/approach.rs` `rvr_legend_table`: the legend's 4,800 ft example; every printed row returns itself, with the caution exactly on the rows the regulation lacks; the regulation's rows agree in both modes; refusals outside 1,200 to 6,000 ft; the regulation mode still refuses 2,800 ft.
 - `core/crates/gp-aviation/tests/approach.rs` `rvr_visibility_invariants`: every row of the table returns exactly its visibility text, the decimal visibility rises with RVR from row to row, and 2,000 ft, between rows, is refused with INVALID_INPUT.

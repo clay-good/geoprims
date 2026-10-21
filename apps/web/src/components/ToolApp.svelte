@@ -19,7 +19,7 @@
   import { keyboardInset, trackKeyboard } from '../lib/keyboard.mjs';
   import { assetMessage } from '../lib/messages.js';
   import { publicInputs } from '../lib/private.mjs';
-  import { cameFrom, chainHref, chainState, chainTargets, routeOf, windHandoff, fuelHandoff } from '../lib/chain.mjs';
+  import { cameFrom, chainHref, chainState, chainTargets, routeOf } from '../lib/chain.mjs';
   import { degrees, pairOf } from '../lib/coordinate.mjs';
   import { checkSize } from '../lib/import.mjs';
   import { csvProjected, csvRows, importReport, rowsFor, rowsText } from '../lib/import-rows.mjs';
@@ -512,16 +512,19 @@
     }
     sendLinks = { ...sendLinks, [name]: links };
   }
-  // A decoded wind goes to the runway tool still marked true; a corrected fuel
-  // density goes to the fuel weight tool with its temperature.
+  // A result that is more than one value goes on to the tool that uses it:
+  // a decoded wind still marked true, a corrected fuel density with its
+  // temperature, a predicted tide with its datum. The code loads with the
+  // first result.
   let handoff = $state(null);
   $effect(() => {
-    const h = windHandoff(tool.id, result) ?? fuelHandoff(tool.id, result, drawnArgs);
-    if (!h || !compute) {
-      handoff = null;
-      return;
-    }
-    compute.encodeLink(h.state).then((enc) => (handoff = enc?.ok ? { ...h, href: `${routeOf(h.id)}#${enc.result.fragment}` } : null));
+    const [r, args, at] = [result, drawnArgs, tool.id];
+    handoff = null;
+    if (!r?.ok || !compute) return;
+    import('../lib/handoff.mjs').then(({ handoff: find }) => {
+      const h = find(at, r, args);
+      if (h && result === r) compute.encodeLink(h.state).then((enc) => (handoff = enc?.ok && result === r ? { ...h, href: `${routeOf(h.id)}#${enc.result.fragment}` } : null));
+    });
   });
   async function copyRow(k, v) {
     await navigator.clipboard.writeText(v);

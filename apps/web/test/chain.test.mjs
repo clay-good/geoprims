@@ -5,7 +5,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cameFrom, chainHref, chainState, chainTargets, MAX_TARGETS, routeOf, windHandoff, fuelHandoff } from '../src/lib/chain.mjs';
+import { cameFrom, chainHref, chainState, chainTargets, MAX_TARGETS, routeOf } from '../src/lib/chain.mjs';
+import { fuelHandoff, tideHandoff, windHandoff } from '../src/lib/handoff.mjs';
 import { nodeHost } from '../../../packages/runtime/src/node.mjs';
 
 const web = new URL('..', import.meta.url).pathname;
@@ -154,4 +155,30 @@ test('a fuel density at a temperature goes to fuel weight, and its sentence name
   assert.ok(chainTargets(catalog.tools, from, 'density').some((t) => t.id === 'aviation.loading.fuel-weight'));
   assert.equal(fuelHandoff('aviation.loading.fuel-weight', corrected, input), null);
   assert.equal(fuelHandoff('aviation.loading.fuel-density-temperature', corrected, {}), null);
+});
+
+test('a predicted tide goes to the datum tool with its datum and the station sheet', async () => {
+  // navigation/tides "Tide results feed other tools".
+  const invoke = async (id, input) => JSON.parse(await host.invoke(id, JSON.stringify(input)));
+  const f = JSON.parse(readFileSync(join(root, 'core/crates/gp-navigation/tests/data/tides/8443970.json'), 'utf8'));
+  const input = { constituents: JSON.stringify(f.harcon), datum_sheet: JSON.stringify(f.datums), start: '2026-10-21', days: 1 };
+  const predicted = await invoke('navigation.tide.predict', input);
+  assert.ok(predicted.ok, JSON.stringify(predicted.error));
+  const h = tideHandoff('navigation.tide.predict', predicted, input);
+  assert.equal(h.id, 'navigation.tide.datums');
+  assert.equal(h.state.i.from, 'MLLW');
+  // The link carries the sheet intact, within the link's size limit.
+  const enc = await link(h.state);
+  assert.ok(enc.ok, JSON.stringify(enc).slice(0, 200));
+  assert.deepEqual((await unlink(enc.result.fragment)).result.state.i, h.state.i);
+  // The datum tool converts it: Boston's NAVD88 is 5.50 ft above MLLW.
+  const converted = await invoke(h.id, { ...h.state.i, to: 'NAVD88' });
+  assert.ok(converted.ok, JSON.stringify(converted.error));
+  const ft = (q) => (q.unit === 'ft' ? q.value : q.value / 0.3048);
+  assert.ok(Math.abs(ft(converted.result.converted) - (predicted.result.high.value - 5.5)) < 1e-6);
+  // No datum sheet, no hand-off; the page loads the hand-off code only with a result.
+  assert.equal(tideHandoff('navigation.tide.predict', predicted, { ...input, datum_sheet: undefined }), null);
+  const app = readFileSync(join(web, 'src/components/ToolApp.svelte'), 'utf8');
+  assert.match(app, /import\('\.\.\/lib\/handoff\.mjs'\)/);
+  assert.doesNotMatch(app, /from '\.\.\/lib\/handoff\.mjs'/);
 });

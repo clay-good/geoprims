@@ -1894,6 +1894,18 @@
         }
       ]
     },
+    "navigation.celestial": {
+      "summary": "Almanac data for celestial navigation: GHA and declination of the Sun, Moon, planets, and stars, computed for the second of a sight.",
+      "intro": "These tools give the numbers a navigator takes from the Nautical Almanac before reducing a sextant sight. Enter the time of the sight in UTC and get the GHA and declination of the Sun, Moon, Venus, Mars, Jupiter, and Saturn, GHA Aries, and the SHA and declination of the 57 navigational stars and Polaris. Mariners, sailing students, and aviators who still practice celestial use them to check their almanac work. Start with the almanac tool and compare it with your printed almanac, which governs. The pitfall is time: a sight's GHA moves 15 minutes of arc for every minute of clock error.",
+      "tasks": [
+        {
+          "want": "find a body's GHA and declination for a sight",
+          "tools": [
+            "almanac"
+          ]
+        }
+      ]
+    },
     "navigation.route": {
       "summary": "Routes, legs, and the geometry around them.",
       "intro": "These tools work with routes and moving objects: legs and totals for a route, cross-track error, the closest point on a route, range rings, fly-by turns, closest point of approach, intercepts, and time, speed, and distance. Pilots, drone operators, and mariners use them for planning. Start with route legs. A pitfall is mixing true and magnetic courses between legs; the legs tool lists both.",

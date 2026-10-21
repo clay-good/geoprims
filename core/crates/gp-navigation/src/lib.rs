@@ -2,6 +2,7 @@
 //! (2013) is the default; Vincenty and haversine are comparison tools that
 //! always report their difference from Karney.
 
+pub mod celestial;
 pub mod intersect;
 pub mod los;
 pub mod piloting;
@@ -1117,6 +1118,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &piloting::COMPASS_CONVERSION,
     &tide::PREDICT,
     &tide::DATUMS,
+    &celestial::ALMANAC,
 ];
 
 pub static REGISTRY: Registry = Registry {

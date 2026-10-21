@@ -278,6 +278,115 @@ pub fn leap_second_after(days: i64) -> bool {
     }
 }
 
+/// ΔT = TT − UT (s) by the Espenak and Meeus (2006) polynomials used by NASA
+/// eclipse predictions. For 2005–2050 it runs a few seconds above observed
+/// values; 1 s of ΔT moves the sun about 0.000_000_5°, far inside SPA's bound.
+pub fn delta_t(year: f64, month: f64) -> f64 {
+    let y = year + (month - 0.5) / 12.0;
+    let p = |t: f64, c: &[f64]| c.iter().rev().fold(0.0, |acc, k| acc * t + k);
+    if year < -500.0 || year >= 2150.0 {
+        -20.0 + 32.0 * ((y - 1820.0) / 100.0).powi(2)
+    } else if year < 500.0 {
+        p(
+            y / 100.0,
+            &[
+                10583.6,
+                -1014.41,
+                33.78311,
+                -5.952053,
+                -0.1798452,
+                0.022174192,
+                0.0090316521,
+            ],
+        )
+    } else if year < 1600.0 {
+        p(
+            (y - 1000.0) / 100.0,
+            &[
+                1574.2,
+                -556.01,
+                71.23472,
+                0.319781,
+                -0.8503463,
+                -0.005050998,
+                0.0083572073,
+            ],
+        )
+    } else if year < 1700.0 {
+        p(y - 1600.0, &[120.0, -0.9808, -0.01532, 1.0 / 7129.0])
+    } else if year < 1800.0 {
+        p(
+            y - 1700.0,
+            &[8.83, 0.1603, -0.0059285, 0.00013336, -1.0 / 1_174_000.0],
+        )
+    } else if year < 1860.0 {
+        p(
+            y - 1800.0,
+            &[
+                13.72,
+                -0.332447,
+                0.0068612,
+                0.0041116,
+                -0.00037436,
+                0.0000121272,
+                -0.0000001699,
+                0.000000000875,
+            ],
+        )
+    } else if year < 1900.0 {
+        p(
+            y - 1860.0,
+            &[
+                7.62,
+                0.5737,
+                -0.251754,
+                0.01680668,
+                -0.0004473624,
+                1.0 / 233_174.0,
+            ],
+        )
+    } else if year < 1920.0 {
+        p(
+            y - 1900.0,
+            &[-2.79, 1.494119, -0.0598939, 0.0061966, -0.000197],
+        )
+    } else if year < 1941.0 {
+        p(y - 1920.0, &[21.20, 0.84493, -0.076100, 0.0020936])
+    } else if year < 1961.0 {
+        p(y - 1950.0, &[29.07, 0.407, -1.0 / 233.0, 1.0 / 2547.0])
+    } else if year < 1986.0 {
+        p(y - 1975.0, &[45.45, 1.067, -1.0 / 260.0, -1.0 / 718.0])
+    } else if year < 2005.0 {
+        p(
+            y - 2000.0,
+            &[
+                63.86,
+                0.3345,
+                -0.060374,
+                0.0017275,
+                0.000651814,
+                0.00002373599,
+            ],
+        )
+    } else if year < 2050.0 {
+        p(y - 2000.0, &[62.92, 0.32217, 0.005589])
+    } else {
+        -20.0 + 32.0 * ((y - 1820.0) / 100.0).powi(2) - 0.5628 * (2150.0 - y)
+    }
+}
+
+/// TT − UT1 (s) on a UTC day: TAI − UTC + 32.184 s − DUT1 from 1972 (the
+/// leap-second table), else the dated ΔT estimate.
+pub fn tt_minus_ut1(days: i64, dut1: f64) -> f64 {
+    match tai_minus_utc(days) {
+        Some(tai) => f64::from(tai) + 32.184 - dut1,
+        None => {
+            let (y, m, _) = civil_from_days(days);
+            delta_t(y as f64, f64::from(m))
+        }
+    }
+}
+
 /// GPS epoch 1980-01-06 as a day number.
 pub fn gps_epoch() -> i64 {
     days_from_civil(1980, 1, 6)

@@ -1280,6 +1280,10 @@
     {
       "query": "greenwich sidereal time at J2000",
       "expect": "time.scale.sidereal"
+    },
+    {
+      "query": "GHA and declination of the sun for a sextant sight",
+      "expect": "navigation.celestial.almanac"
     }
   ]
 }

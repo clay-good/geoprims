@@ -142,14 +142,50 @@ pub fn ecliptic_j2000_to_true(v: [f64; 3], t: f64) -> [f64; 3] {
     icrs_to_true(rot1(-84_381.406 * AS2R, v), t)
 }
 
-/// A vector on the ICRS carried to the true equator and equinox of date:
-/// bias, precession, and nutation by the Fukushima-Williams angles,
-/// R1(−(εA + Δε)) R3(−(ψ̄ + Δψ)) R1(φ̄) R3(γ̄) (IERS eq. 5.39).
+/// The bias-precession-nutation rotation for one instant, from the ICRS to
+/// the true equator and equinox of date: R1(−(εA + Δε)) R3(−(ψ̄ + Δψ))
+/// R1(φ̄) R3(γ̄) by the Fukushima-Williams angles (IERS eq. 5.39), with the
+/// nutation and true obliquity it was built from.
+pub struct Frame {
+    pub dpsi: f64,
+    pub eps_true: f64,
+    m: [[f64; 3]; 3],
+}
+
+impl Frame {
+    pub fn at(t: f64) -> Frame {
+        let (gamb, phib, psib) = precession_angles(t);
+        let (dpsi, deps) = nutation(t);
+        let eps_true = mean_obliquity(t) + deps;
+        let rot = |v| rot1(-eps_true, rot3(-(psib + dpsi), rot1(phib, rot3(gamb, v))));
+        let c = [
+            rot([1.0, 0.0, 0.0]),
+            rot([0.0, 1.0, 0.0]),
+            rot([0.0, 0.0, 1.0]),
+        ];
+        Frame {
+            dpsi,
+            eps_true,
+            m: [
+                [c[0][0], c[1][0], c[2][0]],
+                [c[0][1], c[1][1], c[2][1]],
+                [c[0][2], c[1][2], c[2][2]],
+            ],
+        }
+    }
+
+    pub fn apply(&self, v: [f64; 3]) -> [f64; 3] {
+        let m = &self.m;
+        [
+            m[0][0] * v[0] + m[0][1] * v[1] + m[0][2] * v[2],
+            m[1][0] * v[0] + m[1][1] * v[1] + m[1][2] * v[2],
+            m[2][0] * v[0] + m[2][1] * v[1] + m[2][2] * v[2],
+        ]
+    }
+}
+
+/// A vector on the ICRS carried to the true equator and equinox of date
+/// (`Frame`).
 pub fn icrs_to_true(v: [f64; 3], t: f64) -> [f64; 3] {
-    let (gamb, phib, psib) = precession_angles(t);
-    let (dpsi, deps) = nutation(t);
-    rot1(
-        -(mean_obliquity(t) + deps),
-        rot3(-(psib + dpsi), rot1(phib, rot3(gamb, v))),
-    )
+    Frame::at(t).apply(v)
 }

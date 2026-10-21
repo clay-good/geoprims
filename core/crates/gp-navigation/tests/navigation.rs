@@ -64,6 +64,7 @@ fn catalog_lint() {
         "geodesy.height.convert",
         "geodesy.frame.to-local",
         "time.sun.position",
+        "time.scale.sidereal",
         "drone.links.link-budget",
         "aviation.wind.heading-groundspeed",
         "survey.cogo.traverse-closure",

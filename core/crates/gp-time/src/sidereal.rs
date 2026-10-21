@@ -251,13 +251,7 @@ fn run_sidereal(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let jd_day = JD_UNIX + days as f64;
     let (ut1_day, ut1_frac) = (jd_day, ut1 / 86_400.0);
     // TT: TAI − UTC + 32.184 s from 1972, else the dated ΔT estimate.
-    let tt_minus_ut1 = match civil::tai_minus_utc(days) {
-        Some(tai) => f64::from(tai) + 32.184 - dut1.unwrap_or(0.0),
-        None => {
-            let (y, m, _) = civil::civil_from_days(days);
-            crate::spa::delta_t(y as f64, f64::from(m))
-        }
-    };
+    let tt_minus_ut1 = civil::tt_minus_ut1(days, dut1.unwrap_or(0.0));
     let t_tt = ((jd_day - J2000) + (ut1 + tt_minus_ut1) / 86_400.0) / 36_525.0;
     let st = sidereal(ut1_day, ut1_frac, t_tt);
     let rad = units::by_symbol(QT::Angle, "rad").expect("rad");

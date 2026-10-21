@@ -4492,7 +4492,8 @@
       "verificationNote": "Used on 2026-10-20 as a test oracle only, not shipped: celnav GHA and Dec (geocentric, times taken as UT1) for the Sun, Moon, Venus, Mars, Jupiter, and Saturn at 40 instants from 1995 to 2045, 239 body-instants (core/crates/gp-astro/tests/data/usno_celnav.json), and GHA and Dec of the 57 navigational stars and GHA Aries at the same instants (usno_stars.json), and siderealtime at 40 instants (core/crates/gp-time/tests/data/usno_sidereal.json). Celnav lists only the bodies above the observer's horizon, so each instant was asked at 0,0 and at 0,180. Its Venus GHA and Dec depart from JPL Horizons by up to 0.4 arcminutes within weeks of inferior conjunction, and its Moon GHA drifts from Horizons by about 0.005 arcminutes a year (0.18 arcminutes by 2041), likely from its predicted Delta T (72.8 s for 2024, reported by its eclipse service, where 69.2 s was observed). US Government work.",
       "freeAccessUrl": "https://aa.usno.navy.mil/data/api",
       "matchTerms": [
-        "USNO API"
+        "USNO API",
+        "USNO Astronomical Applications API"
       ]
     },
     {

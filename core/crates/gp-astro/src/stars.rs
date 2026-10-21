@@ -7,8 +7,8 @@
 
 pub use crate::star_tables::{STARS, Star};
 
-use crate::apparent::{Place, earth_true};
-use crate::nutation::{AS2R, icrs_to_true};
+use crate::apparent::{Place, earth_true_with};
+use crate::nutation::{AS2R, Frame};
 use std::f64::consts::TAU;
 
 const J2000: f64 = 2_451_545.0;
@@ -21,6 +21,7 @@ const C_AU_PER_DAY: f64 = 173.144_632_684_7;
 /// true equator and equinox of date, shared by every star at one instant.
 pub struct Earth {
     t: f64,
+    frame: Frame,
     pos: [f64; 3],
     vel: [f64; 3],
 }
@@ -28,16 +29,22 @@ pub struct Earth {
 impl Earth {
     pub fn at(jd_tt: f64) -> Earth {
         let h = 0.05;
-        let a = earth_true(jd_tt - h);
-        let b = earth_true(jd_tt + h);
+        let t = (jd_tt - J2000) / 36_525.0;
+        // One frame for the instant; over ±0.05 day the nutation and
+        // obliquity change by less than 1e-9 rad.
+        let frame = Frame::at(t);
+        let at = |jd| earth_true_with(jd, frame.dpsi, frame.eps_true);
+        let a = at(jd_tt - h);
+        let b = at(jd_tt + h);
         Earth {
-            t: (jd_tt - J2000) / 36_525.0,
-            pos: earth_true(jd_tt),
+            t,
+            pos: at(jd_tt),
             vel: [
                 (b[0] - a[0]) / (2.0 * h),
                 (b[1] - a[1]) / (2.0 * h),
                 (b[2] - a[2]) / (2.0 * h),
             ],
+            frame,
         }
     }
 }
@@ -59,7 +66,7 @@ pub fn star(s: &Star, earth: &Earth) -> Place {
         cd * sa + mu_a * ca - mu_d * sd * sa,
         sd + mu_d * cd,
     ];
-    let u = unit(icrs_to_true(unit(v), earth.t));
+    let u = unit(earth.frame.apply(unit(v)));
     // Annual parallax: the star seen from the Earth, not the Sun.
     let p = s.parallax * mas;
     let u = unit([

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "b7afe754dff5ba9c",
+    "hash": "921c09d977b9ad55",
     "lastmod": "2026-10-21"
   },
   "/accuracy/": {
@@ -1544,11 +1544,19 @@
     "lastmod": "2026-10-20"
   },
   "/methodology/": {
-    "hash": "29c27d223f0d97a8",
+    "hash": "334b43aca536fa12",
     "lastmod": "2026-10-21"
   },
   "/navigation/": {
-    "hash": "0dc6eeb96bf7ad31",
+    "hash": "536cf87ceb41a762",
+    "lastmod": "2026-10-21"
+  },
+  "/navigation/celestial/": {
+    "hash": "53b6ea147c5958aa",
+    "lastmod": "2026-10-21"
+  },
+  "/navigation/celestial/almanac/": {
+    "hash": "f3be1affbf741af4",
     "lastmod": "2026-10-21"
   },
   "/navigation/geodesic/": {
@@ -1896,7 +1904,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "debd88a47dfb1632",
+    "hash": "9ed9c6d93d085e3d",
     "lastmod": "2026-10-21"
   },
   "/survey/": {
@@ -2304,7 +2312,7 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "b4872cc7c3242c5b",
+    "hash": "5f26bf6ff6547dad",
     "lastmod": "2026-10-21"
   },
   "/units/": {
@@ -2568,7 +2576,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "f7df1307405fb841",
+    "hash": "fd6b956334104382",
     "lastmod": "2026-10-21"
   },
   "/workflows/": {

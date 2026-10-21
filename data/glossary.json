@@ -343,6 +343,7 @@
       "definition": "The difference between Earth-rotation time and UTC, always under 0.9 s, broadcast so users can recover UT1.",
       "source": "iers-bulletin-c",
       "relatedTools": [
+        "navigation.celestial.almanac",
         "time.scale.sidereal",
         "time.sun.position"
       ]
@@ -597,6 +598,16 @@
       ]
     },
     {
+      "id": "gha",
+      "term": "GHA",
+      "expansion": "Greenwich hour angle",
+      "definition": "How far west of the Greenwich meridian a body is, measured along the celestial equator from 0° to 360°; it grows about 15° an hour as the Earth turns.",
+      "source": "bowditch",
+      "relatedTools": [
+        "navigation.celestial.almanac"
+      ]
+    },
+    {
       "id": "gmst",
       "term": "GMST",
       "expansion": "Greenwich mean sidereal time",
@@ -789,6 +800,7 @@
       "source": "iers-bulletin-c",
       "relatedTools": [
         "geodesy.datum.helmert",
+        "navigation.celestial.almanac",
         "time.scale.sidereal",
         "time.sun.position"
       ]
@@ -1184,6 +1196,14 @@
       "expansion": "US Environmental Protection Agency",
       "definition": "The US agency whose quality guidance, EPA QA/G-5S, describes the standard sampling designs: simple random, stratified, and systematic.",
       "source": "epa-qa-g5s",
+      "relatedTools": []
+    },
+    {
+      "id": "sha",
+      "term": "SHA",
+      "expansion": "sidereal hour angle",
+      "definition": "How far west of the first point of Aries a star is, from 0° to 360°; it changes slowly, so a star's GHA is GHA Aries plus its SHA.",
+      "source": "bowditch",
       "relatedTools": []
     },
     {
@@ -1779,6 +1799,7 @@
       "definition": "The uniform time scale of astronomical ephemerides: TAI plus 32.184 seconds.",
       "source": "espenak-meeus",
       "relatedTools": [
+        "navigation.celestial.almanac",
         "time.sun.position"
       ]
     },
@@ -1822,6 +1843,7 @@
       "definition": "Time kept by Earth's actual rotation. It drifts against atomic time, and UTC is kept within 0.9 s of it.",
       "source": "iers-bulletin-c",
       "relatedTools": [
+        "navigation.celestial.almanac",
         "time.scale.sidereal",
         "time.sun.position"
       ]
@@ -1835,6 +1857,7 @@
       "relatedTools": [
         "aviation.weather.metar-decode",
         "aviation.weather.taf-decode",
+        "navigation.celestial.almanac",
         "navigation.route.legs",
         "navigation.route.time-speed-distance",
         "navigation.tide.predict",

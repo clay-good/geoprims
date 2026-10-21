@@ -70,12 +70,17 @@ fn cart(l: f64, b: f64, r: f64) -> [f64; 3] {
 /// date: VSOP87D's ecliptic of date, nutated in longitude, by the true
 /// obliquity.
 pub fn earth_true(jd_tt: f64) -> [f64; 3] {
-    let tau = (jd_tt - J2000) / 365_250.0;
-    let t = tau * 10.0;
-    let (l, b, r) = heliocentric(Body::Sun, tau);
+    let t = (jd_tt - J2000) / 36_525.0;
     let (dpsi, deps) = nutation(t);
+    earth_true_with(jd_tt, dpsi, mean_obliquity(t) + deps)
+}
+
+/// `earth_true` with the nutation in longitude and true obliquity given,
+/// for several nearby instants that share them.
+pub fn earth_true_with(jd_tt: f64, dpsi: f64, eps: f64) -> [f64; 3] {
+    let tau = (jd_tt - J2000) / 365_250.0;
+    let (l, b, r) = heliocentric(Body::Sun, tau);
     let v = cart(l + dpsi, b, r);
-    let eps = mean_obliquity(t) + deps;
     let (s, c) = (libm::sin(eps), libm::cos(eps));
     [v[0], c * v[1] - s * v[2], s * v[1] + c * v[2]]
 }

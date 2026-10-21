@@ -1260,6 +1260,14 @@
     {
       "query": "CMV from 1500 m visibility at night",
       "expect": "aviation.ifr.visibility-to-cmv"
+    },
+    {
+      "query": "high and low tide times from harmonic constituents",
+      "expect": "navigation.tide.predict"
+    },
+    {
+      "query": "convert MLLW to NAVD88",
+      "expect": "navigation.tide.datums"
     }
   ]
 }

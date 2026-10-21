@@ -951,6 +951,14 @@
       ]
     },
     {
+      "id": "mllw",
+      "term": "MLLW",
+      "expansion": "mean lower low water",
+      "definition": "The average height of the lower of each day's two low tides at a station over a 19-year epoch; the chart datum NOAA uses for US soundings and tide predictions.",
+      "source": "noaa-coops-tides",
+      "relatedTools": []
+    },
+    {
       "id": "mndwi",
       "term": "MNDWI",
       "expansion": "modified normalized difference water index",
@@ -1150,6 +1158,8 @@
       "definition": "The US agency that includes the National Geodetic Survey and the National Weather Service.",
       "source": "noaa-solar",
       "relatedTools": [
+        "navigation.tide.datums",
+        "navigation.tide.predict",
         "survey.reduction.combined-factor",
         "survey.reduction.elevation-factor",
         "survey.reduction.grid-to-ground",
@@ -1783,6 +1793,7 @@
         "aviation.weather.taf-decode",
         "navigation.route.legs",
         "navigation.route.time-speed-distance",
+        "navigation.tide.predict",
         "survey.gnss.opus-plan",
         "time.scale.gps-to-utc",
         "time.scale.gps-week",

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "2b6401d458a6165f",
+    "hash": "5ad56b355f254472",
     "lastmod": "2026-10-21"
   },
   "/accuracy/": {
@@ -1532,12 +1532,12 @@
     "lastmod": "2026-10-20"
   },
   "/methodology/": {
-    "hash": "a94df26ad3345219",
+    "hash": "b29d7e0673a0d125",
     "lastmod": "2026-10-21"
   },
   "/navigation/": {
-    "hash": "c9fee17c82bb2bc2",
-    "lastmod": "2026-10-20"
+    "hash": "0dc6eeb96bf7ad31",
+    "lastmod": "2026-10-21"
   },
   "/navigation/geodesic/": {
     "hash": "927429e8c69ee6c2",
@@ -1719,6 +1719,18 @@
     "hash": "e29eff60b58a4c5f",
     "lastmod": "2026-10-20"
   },
+  "/navigation/tide/": {
+    "hash": "cc5067824ea004e5",
+    "lastmod": "2026-10-21"
+  },
+  "/navigation/tide/datums/": {
+    "hash": "99ac44501ed10ccb",
+    "lastmod": "2026-10-21"
+  },
+  "/navigation/tide/predict/": {
+    "hash": "6051eca55796de1d",
+    "lastmod": "2026-10-21"
+  },
   "/navigation/vector/": {
     "hash": "b4632ebf29994bf8",
     "lastmod": "2026-09-23"
@@ -1872,7 +1884,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "eb3425edf4d37882",
+    "hash": "c1a16368db8651c3",
     "lastmod": "2026-10-21"
   },
   "/survey/": {
@@ -2268,7 +2280,7 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "ff238a85ff70f45d",
+    "hash": "d88a3f347f457b47",
     "lastmod": "2026-10-21"
   },
   "/units/": {
@@ -2532,7 +2544,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "2230eff3806aeb19",
+    "hash": "bb4d5c4d7668fd58",
     "lastmod": "2026-10-21"
   },
   "/workflows/": {

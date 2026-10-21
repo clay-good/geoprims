@@ -10,6 +10,7 @@ pub mod rings;
 pub mod route;
 pub mod sailing;
 pub mod sphere;
+pub mod tide;
 pub mod vector;
 pub mod vincenty;
 pub mod waypoints;
@@ -1114,6 +1115,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &piloting::TWO_BEARING_FIX,
     &piloting::VERTICAL_ANGLE,
     &piloting::COMPASS_CONVERSION,
+    &tide::PREDICT,
+    &tide::DATUMS,
 ];
 
 pub static REGISTRY: Registry = Registry {

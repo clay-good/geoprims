@@ -401,6 +401,10 @@
     "RVR_NOT_IN_REGULATION": {
       "severity": "caution",
       "message": "The RVR row used is in the chart legend's table but not in 14 CFR 91.175(h)(2), so it is not a takeoff or landing minimum."
+    },
+    "PARTIAL_CONSTITUENTS": {
+      "severity": "accuracy",
+      "message": "The tide was predicted without some of NOAA's 37 constituents, which the result lists; heights and times may differ from NOAA's."
     }
   }
 }

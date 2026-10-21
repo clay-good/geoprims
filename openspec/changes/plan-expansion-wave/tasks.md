@@ -5,5 +5,5 @@
 
 ## 2. Budget checks
 
-- [ ] 2.1 Before starting change 6 or 7, measure `gp-navigation` with the tide engine and `gp-astro` linked; verify the measurement is recorded in the change's design and the split decision made
+- [ ] 2.1 Before starting change 6 or 7, measure `gp-navigation` with the tide engine and `gp-astro` linked; verify the measurement is recorded in the change's design and the split decision made (done so far, 2026-10-20: with the tide engine linked, `navigation.wasm` is 255,608 bytes Brotli of the 409,600 budget, recorded in add-marine-navigation's design; no split. Pending: the measurement with `gp-astro`, which does not exist until add-celestial-and-moon starts)
 - [ ] 2.2 Before starting change 9, confirm each asset's license text at the issuer and record it in the registry; verify `/licenses` renders every attribution in a preview build

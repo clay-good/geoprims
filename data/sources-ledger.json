@@ -4294,6 +4294,66 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": true
+    },
+    {
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-20",
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false,
+      "id": "schureman-sp98",
+      "name": "Manual of Harmonic Analysis and Prediction of Tides (Special Publication No. 98)",
+      "issuer": "Schureman, P., U.S. Coast and Geodetic Survey",
+      "currentEdition": "Revised 1940 edition, reprinted 1958",
+      "verificationNote": "Read at tidesandcurrents.noaa.gov on 2026-10-20 (SpecialPubNo98.pdf, a 336-page scan without a text layer, read as page images; book page = PDF page − 6): paragraphs 121 and 122 and equations 188 to 197 on page 41 (the M1 composite of A16 and A23: argument T − s + h + p − 90° − ν − Q_a, tan Q_a = sin 2P / (3 cos I / cos² ½I + cos 2P), and 1/Q_a); the node factors and arguments of Table 2 as pytides2 transcribes them. NOAA's predictions need a further +20.5° on M1, measured at five stations, which the manual does not give.",
+      "freeAccessUrl": "https://tidesandcurrents.noaa.gov/publications/SpecialPubNo98.pdf",
+      "matchTerms": [
+        "Manual of Harmonic Analysis and Prediction of Tides"
+      ]
+    },
+    {
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-20",
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false,
+      "id": "noaa-coops-tides",
+      "name": "NOAA CO-OPS harmonic constituents, tidal datums, and tide predictions",
+      "issuer": "NOAA Center for Operational Oceanographic Products and Services (CO-OPS)",
+      "currentEdition": "station pages and APIs as served on 2026-10-20",
+      "verificationNote": "Read at api.tidesandcurrents.noaa.gov on 2026-10-20: mdapi harcon.json (37 constituents with Greenwich and local phases; local = Greenwich − speed × UTC offset) and datums.json (heights above STND, with GT, MN, DHQ, DLQ, HWI, and LWI as ranges and intervals and LAT and HAT beside the list) for Boston, Seattle, San Francisco, Key West, Honolulu, and Anchorage (120 constituents), and the predictions API, hourly and highs and lows, MLLW, GMT. NOAA states its published predictions are authoritative. US Government work.",
+      "freeAccessUrl": "https://tidesandcurrents.noaa.gov/api/",
+      "matchTerms": [
+        "CO-OPS"
+      ]
+    },
+    {
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-20",
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false,
+      "id": "pytides2",
+      "name": "pytides2 (Python tide prediction, after Schureman and Meeus)",
+      "issuer": "Sam Cox and contributors (open source)",
+      "currentEdition": "0.0.5",
+      "verificationNote": "Read on 2026-10-20 (the PyPI source distribution): astro.py (Meeus mean longitudes and Schureman's I, ξ, ν, ν′, 2ν″, P), constituent.py, and nodal_corrections.py. Used as the cross-check the tide engine follows, with four differences NOAA's predictions require: M1 as Schureman's composite plus +20.5°, 2MK3 as 2 M2 − K1, RHO and 2Q1 as O1-type constituents, and equation 195's cos² ½I where pytides has cos^0.5.",
+      "freeAccessUrl": "https://pypi.org/project/pytides2/",
+      "matchTerms": [
+        "pytides2"
+      ]
     }
   ]
 }

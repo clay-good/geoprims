@@ -60,7 +60,7 @@ The navigation rollup moves from 46 to 61 operations. Alias slugs (`tide-calcula
 ## Risks / Trade-offs
 
 - **[Tide predictions treated as official]** → Every result names NOAA's predictions as authoritative, states the f/u year, and the tool refuses to run without a complete 37-row paste or an explicit "partial constituents" acknowledgment with the missing ones listed.
-- **[Navigation module budget]** → The tide engine's astronomical arguments are small; if the module passes 400 KB, `tide` becomes its own Wasm module behind the same ids.
+- **[Navigation module budget]** → The tide engine's astronomical arguments are small; if the module passes 400 KB, `tide` becomes its own Wasm module behind the same ids. Measured 2026-10-20 with the tide engine and both tide tools linked: `navigation.wasm` is 723,812 bytes, 255,608 Brotli against the 409,600-byte domain budget (62%), so `tide` stays in the navigation module.
 - **[Readers use UKC as a go/no-go]** → No verdict wording; margin is the reader's; the port authority and master are named as governing.
 
 ## Migration Plan

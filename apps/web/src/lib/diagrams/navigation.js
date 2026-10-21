@@ -258,6 +258,49 @@ function currentTriangle(args, result) {
   return { markup: svg(body, title), desc: title };
 }
 
+/**
+ * Datum stack: each datum on the pasted sheet as a level above the station
+ * datum, to scale, with the from and to datums marked and the height drawn
+ * between them. Reads the sheet back from the result's `datums` text
+ * ("MHHW 4.205, MSL 2.660, ... (m above STND)").
+ */
+function datumStack(args, result) {
+  const list = String(result.result?.datums ?? '');
+  const levels = [...list.matchAll(/([A-Z0-9]+) (-?[\d.]+)/g)].map((m) => [m[1], Number(m[2])]).filter(([, v]) => Number.isFinite(v));
+  const from = result.result?.from_datum;
+  const to = result.result?.to_datum;
+  const h = measure(args.height, LENGTH, 'm');
+  if (levels.length < 2 || !from || !to || h === null || !Number.isFinite(h)) return null;
+  const at = Object.fromEntries(levels);
+  if (!(from in at) || !(to in at)) return null;
+  const point = at[from] + h;
+  const vals = [...levels.map(([, v]) => v), point];
+  const [lo, hi] = [Math.min(...vals), Math.max(...vals)];
+  const span = hi - lo || 1;
+  const Y = (v) => 210 - ((v - lo) / span) * 180;
+  // The from and to datums claim their labels first; any other datum closer
+  // than a label's height to one already labeled is drawn but not named.
+  const placed = [];
+  const body = [];
+  const order = [...levels].sort((x, y) => Number(y[0] === from || y[0] === to) - Number(x[0] === from || x[0] === to) || y[1] - x[1]);
+  for (const [name, v] of order) {
+    const y = Y(v);
+    const key = name === from || name === to;
+    body.push(line(key ? 'dg-accent' : 'dg-grid', [70, y], [250, y]));
+    if (key || !placed.some((p) => Math.abs(p - y) < 11)) {
+      body.push(text(key ? 'dg-label' : 'dg-muted-text', 64, y + 4, name, 'end'));
+      placed.push(y);
+    }
+  }
+  // The height as a stem from the from datum to the point, labeled above it.
+  body.push(line('dg-casing', [200, Y(at[from])], [200, Y(point)]), line('dg-accent', [200, Y(at[from])], [200, Y(point)]), dot(200, Y(point)));
+  body.push(text('dg-label', 312, Y(point) - 10, `${disp(result, 'converted')} above ${to}`, 'end'));
+  const diff = val(result, 'difference');
+  const rel = Number.isFinite(diff) && diff < 0 ? `${disp(result, 'difference').replace(/^[-−]/, '')} below` : `${disp(result, 'difference')} above`;
+  const title = `Datum stack: ${typed(args.height, 'm')} above ${from} is ${disp(result, 'converted')} above ${to}; ${to} is ${rel} ${from}. To scale.`;
+  return { markup: svg(body.join(''), title), desc: title };
+}
+
 export const DIAGRAMS = {
   'navigation.piloting.set-and-drift': currentTriangle,
   'navigation.route.cpa': cpa,
@@ -267,4 +310,5 @@ export const DIAGRAMS = {
   'navigation.los.visibility': sightLine,
   'navigation.los.fresnel': fresnelZone,
   'navigation.los.dip': horizonDip,
+  'navigation.tide.datums': datumStack,
 };

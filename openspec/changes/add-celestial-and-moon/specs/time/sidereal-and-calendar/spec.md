@@ -9,7 +9,9 @@ The sidereal tool SHALL return GMST, GAST, ERA, the equation of the equinoxes, a
 
 #### Scenario: J2000.0
 - **WHEN** 2000-01-01T12:00:00 UT1 is converted
-- **THEN** GMST is 18h 41m 50.548s (±0.001 s) and ERA is 280.4606° (±0.0001°)
+- **THEN** GMST is 18h 41m 50.549s (±0.001 s), with the IAU 1982 value 18h 41m 50.548s beside it, and ERA is 280.4606° (±0.0001°)
+
+Spec note (2026-10-20): the scenario first gave 18h 41m 50.548s, which is the IAU 1982 value (50.54841 s); IAU 2006, as ERFA's gmst06 computes it, gives 50.5494 s, 1.4 ms more.
 
 #### Scenario: Local sidereal
 - **WHEN** longitude 74°30'W is given

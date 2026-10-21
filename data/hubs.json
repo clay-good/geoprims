@@ -2482,6 +2482,12 @@
           "tools": [
             "iso-week"
           ]
+        },
+        {
+          "want": "find sidereal time for a telescope or star sight",
+          "tools": [
+            "sidereal"
+          ]
         }
       ]
     },

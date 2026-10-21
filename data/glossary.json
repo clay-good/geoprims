@@ -343,6 +343,7 @@
       "definition": "The difference between Earth-rotation time and UTC, always under 0.9 s, broadcast so users can recover UT1.",
       "source": "iers-bulletin-c",
       "relatedTools": [
+        "time.scale.sidereal",
         "time.sun.position"
       ]
     },
@@ -555,6 +556,16 @@
       ]
     },
     {
+      "id": "gast",
+      "term": "GAST",
+      "expansion": "Greenwich apparent sidereal time",
+      "definition": "Sidereal time at Greenwich measured from the true equinox of date: mean sidereal time plus the equation of the equinoxes, which nutation causes.",
+      "source": "iers-conventions-2010",
+      "relatedTools": [
+        "time.scale.sidereal"
+      ]
+    },
+    {
       "id": "gcp",
       "term": "GCP",
       "expansion": "ground control point",
@@ -583,6 +594,16 @@
       "relatedTools": [
         "geodesy.grid-ref.georef-forward",
         "geodesy.grid-ref.georef-inverse"
+      ]
+    },
+    {
+      "id": "gmst",
+      "term": "GMST",
+      "expansion": "Greenwich mean sidereal time",
+      "definition": "The hour angle of the mean equinox at Greenwich, the star-based time a telescope or star sight uses; it gains about 3 minutes 56 seconds a day on solar time.",
+      "source": "iers-conventions-2010",
+      "relatedTools": [
+        "time.scale.sidereal"
       ]
     },
     {
@@ -751,6 +772,16 @@
       ]
     },
     {
+      "id": "iau",
+      "term": "IAU",
+      "expansion": "International Astronomical Union",
+      "definition": "The body that adopts the standard models of astronomy, such as the IAU 2006 precession and IAU 2000A nutation used for sidereal time.",
+      "source": "iers-conventions-2010",
+      "relatedTools": [
+        "time.scale.sidereal"
+      ]
+    },
+    {
       "id": "iers",
       "term": "IERS",
       "expansion": "International Earth Rotation and Reference Systems Service",
@@ -758,6 +789,7 @@
       "source": "iers-bulletin-c",
       "relatedTools": [
         "geodesy.datum.helmert",
+        "time.scale.sidereal",
         "time.sun.position"
       ]
     },
@@ -1790,6 +1822,7 @@
       "definition": "Time kept by Earth's actual rotation. It drifts against atomic time, and UTC is kept within 0.9 s of it.",
       "source": "iers-bulletin-c",
       "relatedTools": [
+        "time.scale.sidereal",
         "time.sun.position"
       ]
     },
@@ -1809,6 +1842,7 @@
         "time.scale.gps-to-utc",
         "time.scale.gps-week",
         "time.scale.julian-date",
+        "time.scale.sidereal",
         "time.scale.unix-time",
         "time.scale.utc-offset",
         "time.scale.zone-info",

@@ -35,11 +35,11 @@ test('practitioner operation counts match the implemented catalog cut', () => {
   ).length;
   assert.deepEqual(
     Object.fromEntries(Object.keys(groups).map((domain) => [domain, count(domain)])),
-    // time 16: the 14 practitioner tools plus unix-time and iso-week
+    // time 17: the 14 practitioner tools plus unix-time, iso-week, and sidereal
     // (add-celestial-and-moon), which share the scale group.
     // aviation 16: the 12 practitioner tools plus approach-category,
     // rvr-visibility, visibility-to-cmv, and circling-radius
     // (add-aviation-practical-additions), which share the ifr group.
-    { time: 16, aviation: 16, survey: 11, drone: 5 },
+    { time: 17, aviation: 16, survey: 11, drone: 5 },
   );
 });

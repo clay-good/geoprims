@@ -7,6 +7,8 @@ pub mod boundary;
 pub mod calendar;
 pub mod civil;
 pub mod currency;
+mod iers_tables;
+pub mod sidereal;
 pub mod solar;
 pub mod spa;
 mod spa_tables;
@@ -1427,6 +1429,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &solar::HOTSPOT,
     &calendar::UNIX_TIME,
     &calendar::ISO_WEEK,
+    &sidereal::SIDEREAL,
 ];
 
 pub static REGISTRY: Registry = Registry {

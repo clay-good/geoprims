@@ -4394,6 +4394,46 @@
       "matchTerms": [
         "ISO 8601-1"
       ]
+    },
+    {
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-20",
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false,
+      "id": "iers-conventions-2010",
+      "name": "IERS Conventions (2010), IERS Technical Note 36",
+      "issuer": "International Earth Rotation and Reference Systems Service (Petit and Luzum, eds.)",
+      "currentEdition": "Technical Note 36, chapter 5 of 10 August 2012",
+      "verificationNote": "Read at iers-conventions.obspm.fr on 2026-10-20: chapter 5 (icc5.pdf, 10 August 2012) equations 5.14 and 5.15 (ERA), 5.32 (GMST), 5.40 (mean obliquity), 5.43 and 5.44 (fundamental arguments, with the note that SOFA uses MHB2000's rounded constants, a 2 µas difference); and the electronic Table 5.3a (IAU 2000A_R06 nutation in longitude, 1,320 + 38 terms) and Table 5.2e (the non-polynomial part of GST, 33 + 1 terms), kept in core/crates/gp-time/data/iers/.",
+      "freeAccessUrl": "https://iers-conventions.obspm.fr/content/chapter5/icc5.pdf",
+      "matchTerms": [
+        "IERS Conventions (2010)"
+      ]
+    },
+    {
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-20",
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false,
+      "id": "erfa",
+      "name": "ERFA (Essential Routines for Fundamental Astronomy), via pyerfa",
+      "issuer": "NumFOCUS (derived from the IAU SOFA library)",
+      "currentEdition": "ERFA 2.0.1 (pyerfa 2.0.1.5)",
+      "verificationNote": "Used on 2026-10-20 as the test oracle only, not shipped: era00, gmst06, and gst06a, with UTC to TT by utctai and taitt and UT1 by utcut1, at 240 instants from 1972 to 2050 (core/crates/gp-time/tests/data/erfa_sidereal.json). Its nut00b.c also confirmed that the IAU 2000B series is the first 77 luni-solar terms of IAU 2000A. BSD-3-Clause.",
+      "freeAccessUrl": "https://github.com/liberfa/erfa",
+      "matchTerms": [
+        "ERFA"
+      ]
     }
   ]
 }

@@ -1276,6 +1276,10 @@
     {
       "query": "what ISO week is 2027-01-01",
       "expect": "time.scale.iso-week"
+    },
+    {
+      "query": "greenwich sidereal time at J2000",
+      "expect": "time.scale.sidereal"
     }
   ]
 }

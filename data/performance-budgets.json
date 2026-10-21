@@ -45,6 +45,7 @@
     "geometry.mesh.delaunay": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "points" },
     "navigation.piloting.compass-conversion": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "deviation table rows" },
     "navigation.sailing.traverse": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "legs" },
+    "navigation.tide.predict": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "constituents, datum_sheet, and days" },
     "geometry.sampling.random-points": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "polygon corners and points asked for" },
     "geometry.sampling.systematic-points": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "polygon corners and grid points" },
     "geometry.sampling.stratified-points": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "polygon corners, cells, and points" },

@@ -785,6 +785,57 @@ fn height(y: &YearTerms, t: f64) -> (f64, f64) {
     (h, dh)
 }
 
+/// The rate of change of the height (m/h) on an even time grid within one
+/// year, without trigonometry at each step: each term's phase advances by a
+/// fixed angle per step, so its (cos, sin) pair is rotated forward. The
+/// highs and lows are bracketed on this grid and then found exactly.
+struct Rotator {
+    rate: Vec<f64>,
+    c: Vec<f64>,
+    s: Vec<f64>,
+    cr: Vec<f64>,
+    sr: Vec<f64>,
+}
+
+impl Rotator {
+    fn new(y: &YearTerms, t: f64, step_s: f64) -> Rotator {
+        let hrs = (t - y.start) / 3_600.0;
+        let n = y.terms.len();
+        let (mut rate, mut c, mut s, mut cr, mut sr) = (
+            Vec::with_capacity(n),
+            Vec::with_capacity(n),
+            Vec::with_capacity(n),
+            Vec::with_capacity(n),
+            Vec::with_capacity(n),
+        );
+        for (a, sp, ph) in &y.terms {
+            let x = (sp * hrs + ph).to_radians();
+            let d = (sp * step_s / 3_600.0).to_radians();
+            rate.push(a * sp.to_radians());
+            c.push(libm::cos(x));
+            s.push(libm::sin(x));
+            cr.push(libm::cos(d));
+            sr.push(libm::sin(d));
+        }
+        Rotator { rate, c, s, cr, sr }
+    }
+    fn dh(&self) -> f64 {
+        -self
+            .rate
+            .iter()
+            .zip(&self.s)
+            .map(|(r, s)| r * s)
+            .sum::<f64>()
+    }
+    fn step(&mut self) {
+        for k in 0..self.c.len() {
+            let (c, s) = (self.c[k], self.s[k]);
+            self.c[k] = c * self.cr[k] - s * self.sr[k];
+            self.s[k] = s * self.cr[k] + c * self.sr[k];
+        }
+    }
+}
+
 /// The same with f, u, and V taken at the instant itself (as XTide does).
 fn height_instant(rows: &[Row], t: f64) -> f64 {
     let a = Astro::at(t);
@@ -1056,20 +1107,58 @@ fn run_predict(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let grid = 360.0;
     let mut a = t0;
     let mut da = dh_at(a);
+    // Mid-year mode steps the rate by rotation inside each year; a step that
+    // leaves the year, or the last short one, is evaluated directly.
+    let year_index = |t: f64| years.iter().position(|y| t >= y.start && t < y.end);
+    let mut rot = (!instant).then(|| (year_index(t0), Rotator::new(terms_at(t0), t0, grid)));
     while a < t1 {
         let b = (a + grid).min(t1);
-        let db = dh_at(b);
+        let db = match rot.as_mut() {
+            Some((yi, r)) if b - a == grid && year_index(b) == *yi => {
+                r.step();
+                r.dh()
+            }
+            Some(slot) => {
+                *slot = (year_index(b), Rotator::new(terms_at(b), b, grid));
+                dh_at(b)
+            }
+            None => dh_at(b),
+        };
         if da > 0.0 && db <= 0.0 || da < 0.0 && db >= 0.0 {
-            let (mut l, mut r) = (a, b);
-            while r - l > 0.5 {
-                let m = 0.5 * (l + r);
-                if (dh_at(m) > 0.0) == (da > 0.0) {
-                    l = m;
+            // Regula falsi with the Illinois step: the rate is smooth and
+            // changes sign once in the bracket, so a few steps reach half a
+            // second, where bisection would take ten.
+            let (mut l, mut r, mut fl, mut fr) = (a, b, da, db);
+            let mut side = 0;
+            let mut t = 0.5 * (l + r);
+            for _ in 0..60 {
+                t = if fr != fl {
+                    r - fr * (r - l) / (fr - fl)
                 } else {
-                    r = m;
+                    0.5 * (l + r)
+                };
+                if !(t > l && t < r) {
+                    t = 0.5 * (l + r);
+                }
+                let ft = dh_at(t);
+                if (ft > 0.0) == (fl > 0.0) {
+                    (l, fl) = (t, ft);
+                    if side == -1 {
+                        fr *= 0.5;
+                    }
+                    side = -1;
+                } else {
+                    (r, fr) = (t, ft);
+                    if side == 1 {
+                        fl *= 0.5;
+                    }
+                    side = 1;
+                }
+                if r - l <= 0.5 || ft == 0.0 {
+                    break;
                 }
             }
-            let t = (0.5 * (l + r)).round();
+            let t = t.round();
             let h = z0 + h_at(t);
             let kind = if da > 0.0 { "H" } else { "L" };
             extremes.push(Json::obj([

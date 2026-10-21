@@ -19,4 +19,4 @@ export const EXPLAINERS = Object.entries(files)
 export const explainersFor = (id) => EXPLAINERS.filter((e) => e.tools.includes(id));
 
 /** The order audiences appear in on /learn/. */
-export const AUDIENCES = ['Pilots', 'Drone operators', 'Surveyors', 'Developers and GIS'];
+export const AUDIENCES = ['Pilots', 'Mariners', 'Drone operators', 'Surveyors', 'Developers and GIS'];

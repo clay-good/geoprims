@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "5ad56b355f254472",
+    "hash": "cb1501d6525ce273",
     "lastmod": "2026-10-21"
   },
   "/accuracy/": {
@@ -296,8 +296,8 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/wind/heading-groundspeed/": {
-    "hash": "34d1c428fece5d96",
-    "lastmod": "2026-10-19"
+    "hash": "9bef6c2b6c3e9a45",
+    "lastmod": "2026-10-21"
   },
   "/aviation/wind/one-in-sixty/": {
     "hash": "95d248f5050b6bf5",
@@ -748,8 +748,8 @@
     "lastmod": "2026-10-14"
   },
   "/geodesy/height/convert/": {
-    "hash": "bfae40a57af83121",
-    "lastmod": "2026-10-19"
+    "hash": "45752432d1a2d24e",
+    "lastmod": "2026-10-21"
   },
   "/geodesy/height/ellipsoidal-to-orthometric/": {
     "hash": "dcc6c66a2e445e54",
@@ -1380,7 +1380,7 @@
     "lastmod": "2026-09-19"
   },
   "/learn/": {
-    "hash": "d36522945d572331",
+    "hash": "639bf554615ac136",
     "lastmod": "2026-10-21"
   },
   "/learn/crosswind-components/": {
@@ -1479,6 +1479,10 @@
     "hash": "0521bb0b590623f6",
     "lastmod": "2026-10-21"
   },
+  "/learn/set-and-drift/": {
+    "hash": "a4581fdbd5f62bb8",
+    "lastmod": "2026-10-21"
+  },
   "/learn/state-plane-coordinates/": {
     "hash": "1ea1f7afb98f6287",
     "lastmod": "2026-10-09"
@@ -1486,6 +1490,14 @@
   "/learn/sunrise-and-twilight/": {
     "hash": "09712a4d221cb835",
     "lastmod": "2026-10-09"
+  },
+  "/learn/the-sailings/": {
+    "hash": "82f9d9a9b6645133",
+    "lastmod": "2026-10-21"
+  },
+  "/learn/tidal-datums/": {
+    "hash": "467837c79be6c85e",
+    "lastmod": "2026-10-21"
   },
   "/learn/top-of-descent/": {
     "hash": "4d592ef15df4ee9c",
@@ -1620,8 +1632,8 @@
     "lastmod": "2026-10-20"
   },
   "/navigation/piloting/dead-reckoning/": {
-    "hash": "5330fe09ad3d6504",
-    "lastmod": "2026-10-20"
+    "hash": "66fec5e7d11afff1",
+    "lastmod": "2026-10-21"
   },
   "/navigation/piloting/distance-by-vertical-angle/": {
     "hash": "da558cc1e8969b1f",
@@ -1632,8 +1644,8 @@
     "lastmod": "2026-10-20"
   },
   "/navigation/piloting/set-and-drift/": {
-    "hash": "53623036175f0580",
-    "lastmod": "2026-10-20"
+    "hash": "1bd1a36a5a55f673",
+    "lastmod": "2026-10-21"
   },
   "/navigation/piloting/two-bearing-fix/": {
     "hash": "b3bdde54872d0c6d",
@@ -1696,24 +1708,24 @@
     "lastmod": "2026-10-20"
   },
   "/navigation/sailing/great-circle/": {
-    "hash": "a3fd608f2f5380a9",
-    "lastmod": "2026-10-20"
+    "hash": "8391f754dc7e74d9",
+    "lastmod": "2026-10-21"
   },
   "/navigation/sailing/mercator/": {
-    "hash": "24ea489a23336364",
-    "lastmod": "2026-10-20"
+    "hash": "4fd0d0b784adea7a",
+    "lastmod": "2026-10-21"
   },
   "/navigation/sailing/mid-latitude/": {
-    "hash": "e548623ecd916d15",
-    "lastmod": "2026-10-20"
+    "hash": "9dbd1fae92fecdb8",
+    "lastmod": "2026-10-21"
   },
   "/navigation/sailing/parallel/": {
     "hash": "bec49216e32d3fce",
     "lastmod": "2026-10-20"
   },
   "/navigation/sailing/plane/": {
-    "hash": "547507cf530f2c7c",
-    "lastmod": "2026-10-20"
+    "hash": "8fa5648d51ff2ad5",
+    "lastmod": "2026-10-21"
   },
   "/navigation/sailing/traverse/": {
     "hash": "e29eff60b58a4c5f",
@@ -1724,11 +1736,11 @@
     "lastmod": "2026-10-21"
   },
   "/navigation/tide/datums/": {
-    "hash": "99ac44501ed10ccb",
+    "hash": "c825a073f2b05174",
     "lastmod": "2026-10-21"
   },
   "/navigation/tide/predict/": {
-    "hash": "6051eca55796de1d",
+    "hash": "f84983ade9243196",
     "lastmod": "2026-10-21"
   },
   "/navigation/vector/": {

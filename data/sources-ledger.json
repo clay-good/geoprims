@@ -4274,6 +4274,26 @@
       "editionStatus": "current",
       "legalStatus": null,
       "editionCheck": false
+    },
+    {
+      "id": "easa-ear-air-ops",
+      "name": "Easy Access Rules for Air Operations (Regulation (EU) No 965/2012)",
+      "issuer": "European Union Aviation Safety Agency",
+      "currentEdition": "Revision 24, March 2026",
+      "currentReleaseDate": "2026-03-27",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-20",
+      "verificationNote": "Read at easa.europa.eu on 2026-10-20 (the Revision 24 PDF, March 2026, 2,566 pages): AMC10 CAT.OP.MPA.110, Conversion of visibility to CMV, aeroplanes (ED Decision 2022/012/R, applicable from 30 October 2022), page 967: a CMV may replace an unavailable reported RVR except for take-off minima or to continue an approach in LVOs; a factor of 1.0 for flight planning; and Table 16 (formerly Table 8): high-intensity approach and runway lights 1.5 by day and 2.0 at night, any other light installation 1.0 and 1.5, no lights 1.0 by day and not applicable at night. The factors did not move out of AMC10, contrary to an earlier note; only the table's number changed. The consolidated text is unofficial; the ED Decisions are the legal text.",
+      "freeAccessUrl": "https://www.easa.europa.eu/en/document-library/easy-access-rules/easy-access-rules-air-operations-regulation-eu-no-9652012",
+      "matchTerms": [
+        "Easy Access Rules for Air Operations"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": true
     }
   ]
 }

@@ -1256,6 +1256,10 @@
     {
       "query": "convert 4800 RVR to visibility",
       "expect": "aviation.ifr.rvr-visibility"
+    },
+    {
+      "query": "CMV from 1500 m visibility at night",
+      "expect": "aviation.ifr.visibility-to-cmv"
     }
   ]
 }

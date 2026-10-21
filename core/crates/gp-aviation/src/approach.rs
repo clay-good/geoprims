@@ -386,6 +386,207 @@ fn run_rvr_visibility(ctx: &mut Ctx) -> Result<Json, ToolError> {
     ]))
 }
 
+// ------------------------------------------------------- visibility to CMV
+
+const EASA_AMC10: Reference = Reference {
+    title: "Easy Access Rules for Air Operations, AMC10 CAT.OP.MPA.110, Conversion of visibility to CMV",
+    issuer: "European Union Aviation Safety Agency",
+    year: 2026,
+    edition: "Revision 24, March 2026 (ED Decision 2022/012/R, applicable from 30 October 2022)",
+    locator: "AMC10 CAT.OP.MPA.110 (a) to (c) and Table 16, Conversion of reported VIS to RVR/CMV (page 967)",
+    url: "https://www.easa.europa.eu/en/document-library/easy-access-rules/easy-access-rules-air-operations-regulation-eu-no-9652012",
+};
+
+pub static VISIBILITY_TO_CMV: ToolDef = ToolDef {
+    id: "aviation.ifr.visibility-to-cmv",
+    title: "Converted meteorological visibility",
+    summary: "The converted meteorological visibility (CMV) that stands in for an unavailable RVR under EASA rules: the reported visibility times 1.0, 1.5, or 2.0 by the lights in operation and day or night, from AMC10 CAT.OP.MPA.110 Table 16.",
+    aliases: &[
+        "CMV calculator",
+        "visibility to RVR EASA",
+        "converted meteorological visibility",
+    ],
+    keywords: &[
+        "CMV",
+        "RVR",
+        "visibility",
+        "EASA",
+        "minima",
+        "approach",
+    ],
+    inputs: &[
+        Field::new(
+            "visibility",
+            "Reported visibility",
+            "Meteorological visibility, like 1,500 m",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "lights",
+            "Lights in operation",
+            "hi (high-intensity approach and runway lights), other, or none, like hi",
+            Kind::Choice(&["hi", "other", "none"]),
+        )
+        .required()
+        .core(),
+        Field::new(
+            "period",
+            "Day or night",
+            "day or night, like night",
+            Kind::Choice(&["day", "night"]),
+        )
+        .required()
+        .core(),
+        Field::new(
+            "purpose",
+            "Used for",
+            "approach (the default), planning, takeoff, or lvo-continuation (going on with an approach in low-visibility operations), like approach",
+            Kind::Choice(&["approach", "planning", "takeoff", "lvo-continuation"]),
+        )
+        .core(),
+    ],
+    outputs: &[
+        Field::new(
+            "cmv",
+            "Converted visibility (CMV)",
+            "Reported visibility × factor",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "factor",
+            "Factor",
+            "From Table 16, or 1.0 for flight planning",
+            Kind::Number { min: 1.0, max: 2.0 },
+        )
+        .precision(Precision::Decimals(1)),
+        Field::new(
+            "applies",
+            "When it applies",
+            "The rule's conditions",
+            Kind::Text { max_len: 240 },
+        ),
+        Field::new(
+            "rules",
+            "Rules as of",
+            "Citation and review date",
+            Kind::Text { max_len: 120 },
+        ),
+    ],
+    errors: &[gp_base::ErrorCode::OutOfDomain],
+    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "CMV = reported visibility × factor: AMC10 CAT.OP.MPA.110 Table 16 (high-intensity approach and runway lights 1.5 day, 2.0 night; other lights 1.0 day, 1.5 night; no lights 1.0 day, not applicable at night), or 1.0 for flight planning; not for take-off minima or to continue an approach in LVOs",
+    accuracy: "Exact to the AMC's table as of the review date",
+    when_to_use: "Use this under EASA rules when the runway's RVR is not reported and you need the value that stands in for it: enter the reported visibility, the lights in use, and whether it is day or night. It returns the CMV to compare with the approach's RVR minimum. For flight planning it uses a factor of 1.0, as the AMC says.",
+    limitations: "It quotes the EASA acceptable means of compliance for commercial air transport by aeroplane; your operator's approved procedures govern. The conversion is not allowed for take-off minima or to continue an approach in low-visibility operations, and at night with no lights the table gives no factor; the tool refuses all three. It is not the US rule, which converts the other way, from RVR to visibility. A dated reference, not legal advice.",
+    references: &[EASA_AMC10],
+    examples: &[Example {
+        id: "primary",
+        title: "1,500 m at night with high-intensity lights",
+        input: r#"{"visibility":"1500 m","lights":"hi","period":"night"}"#,
+        source: "AMC10 CAT.OP.MPA.110 Table 16: 1,500 m × 2.0 = 3,000 m",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "aviation.ifr.rvr-visibility",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.weather.metar-decode",
+            reason: "alternative",
+        },
+        Related {
+            id: "aviation.ifr.approach-category",
+            reason: "next",
+        },
+    ],
+    sentence: "The CMV is {cmv}. That is the reported value times {factor}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_visibility_to_cmv,
+    ..ToolDef::BLANK
+};
+
+fn run_visibility_to_cmv(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let m = unit(QT::Length, "m");
+    let vis = ctx.req_quantity("visibility")?.to(m);
+    if !(vis > 0.0 && vis <= 100_000.0) {
+        return Err(ToolError::invalid(
+            "/visibility",
+            "The reported visibility is more than 0 and at most 100 km.",
+        ));
+    }
+    let lights = ctx.choice("lights")?.expect("required");
+    let night = ctx.choice("period")?.expect("required") == "night";
+    let refuse = |field: &str, why: &str| {
+        Err(ToolError::new(gp_base::ErrorCode::OutOfDomain, why).at(field))
+    };
+    let id = match ctx.choice("purpose")?.unwrap_or("approach") {
+        "takeoff" => {
+            return refuse(
+                "/purpose",
+                "AMC10 CAT.OP.MPA.110 does not allow a CMV for take-off minima; take-off needs the reported RVR or visibility.",
+            );
+        }
+        "lvo-continuation" => {
+            return refuse(
+                "/purpose",
+                "AMC10 CAT.OP.MPA.110 does not allow a CMV to continue an approach in low-visibility operations; that needs the reported RVR.",
+            );
+        }
+        "planning" => "easa-cmv-planning",
+        _ => match (lights, night) {
+            ("hi", false) => "easa-cmv-hi-day",
+            ("hi", true) => "easa-cmv-hi-night",
+            ("other", false) => "easa-cmv-other-day",
+            ("other", true) => "easa-cmv-other-night",
+            ("none", false) => "easa-cmv-none-day",
+            _ => {
+                return refuse(
+                    "/lights",
+                    "AMC10 CAT.OP.MPA.110 Table 16 gives no factor at night with no lights: the conversion is not applicable.",
+                );
+            }
+        },
+    };
+    let r = rule(id);
+    Ok(obj(vec![
+        (
+            "cmv",
+            ctx.out(
+                "cmv",
+                gp_base::tool::Q {
+                    value: vis * r.value,
+                    unit: m,
+                },
+            ),
+        ),
+        ("factor", Json::Num(r.value)),
+        (
+            "applies",
+            Json::str(
+                "When the reported RVR is not available, or the approach's minimum RVR is more than the most the aerodrome assesses; not for take-off minima or to continue an approach in low-visibility operations.",
+            ),
+        ),
+        (
+            "rules",
+            Json::str(format!("{}, rules as of {}", r.citation, r.reviewed)),
+        ),
+    ]))
+}
+
 // ------------------------------------------------------------ circling radius
 
 const ORDER_8260_3G: Reference = Reference {
@@ -406,18 +607,16 @@ const IPH_CIRCLING: Reference = Reference {
     url: "https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/instrument_procedures_handbook",
 };
 
-/// Order 8260.3G Table 2-7-1 (category, KIAS, bank in degrees, straight
-/// segment in NM) and the radius before Change 21 (IPH Figure 4-2, NM).
-const CIRCLING: [(&str, f64, f64, f64, f64); 5] = [
-    ("A", 90.0, 25.0, 0.4, 1.3),
-    ("B", 120.0, 25.0, 0.4, 1.5),
-    ("C", 140.0, 20.0, 0.5, 1.7),
-    ("D", 165.0, 20.0, 0.6, 2.3),
-    ("E", 200.0, 22.0, 0.7, 4.5),
+/// The categories of Order 8260.3G Table 2-7-1, whose speed, bank, and
+/// straight segment are read from `data/regulations.json`, with the radius
+/// charted before Change 21 (IPH Figure 4-2, NM), which is not a rule.
+const CIRCLING: [(&str, &str, f64); 5] = [
+    ("A", "a", 1.3),
+    ("B", "b", 1.5),
+    ("C", "c", 1.7),
+    ("D", "d", 2.3),
+    ("E", "e", 4.5),
 ];
-
-/// The minimum circling approach radius, NM (Order 8260.3G 2-7-1.a(2)).
-const MIN_CAR: f64 = 1.30;
 
 const TPP_LEGEND: Reference = Reference {
     title: "Terminal Procedures Publication legend, Circling Approach Maneuvering Airspace Radius",
@@ -611,7 +810,10 @@ fn run_circling_radius(ctx: &mut Ctx) -> Result<Json, ToolError> {
         None => 1_000.0,
     };
     let col = CIRCLING.iter().position(|r| r.0 == cat).expect("choice");
-    let (_, ias, bank, s, legacy) = CIRCLING[col];
+    let (_, key, legacy) = CIRCLING[col];
+    let table = |what: &str| rule(&format!("faa-8260-3-t2-7-1-{key}-{what}")).value;
+    let (ias, bank, s) = (table("kias"), table("bank"), table("straight"));
+    let min_car = rule("faa-8260-3-car-min").value;
     let h = 0.00198 * (elev + k);
     let tas = ias * 171_233.0 * libm::sqrt(303.0 - h) / libm::pow(288.0 - h, 2.628);
     let formula = 2.0 * (tas + 25.0) * (tas + 25.0) / (libm::tan(bank.to_radians()) * 68_625.4) + s;
@@ -624,7 +826,7 @@ fn run_circling_radius(ctx: &mut Ctx) -> Result<Json, ToolError> {
         row.1[col]
     });
     let mut out = vec![
-        ("radius", ctx.out("radius", q(formula.max(MIN_CAR), nm_u))),
+        ("radius", ctx.out("radius", q(formula.max(min_car), nm_u))),
         (
             "radius_formula",
             ctx.out("radius_formula", q(formula, nm_u)),

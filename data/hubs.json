@@ -293,6 +293,12 @@
           ]
         },
         {
+          "want": "turn a reported visibility into a CMV under EASA rules",
+          "tools": [
+            "visibility-to-cmv"
+          ]
+        },
+        {
           "want": "convert an RVR minimum to visibility when RVR is not reported",
           "tools": [
             "rvr-visibility"

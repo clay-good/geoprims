@@ -215,6 +215,16 @@
       ]
     },
     {
+      "id": "cmv",
+      "term": "CMV",
+      "expansion": "converted meteorological visibility",
+      "definition": "Under EASA rules, a value that stands in for runway visual range when the RVR is not reported: the reported visibility multiplied by a factor that depends on the lights in use and day or night.",
+      "source": "easa-ear-air-ops",
+      "relatedTools": [
+        "aviation.ifr.visibility-to-cmv"
+      ]
+    },
+    {
       "id": "cpa",
       "term": "CPA",
       "expansion": "closest point of approach",

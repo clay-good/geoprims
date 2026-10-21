@@ -278,3 +278,54 @@ fn rvr_legend_table() {
     }
     assert_eq!(run(json!({"rvr": "2800 ft"}))["ok"], false);
 }
+
+#[test]
+fn visibility_to_cmv_table_16() {
+    let run = |input: Value| -> Value {
+        serde_json::from_str(&REGISTRY.invoke("aviation.ifr.visibility-to-cmv", &input.to_string()))
+            .unwrap()
+    };
+    // Every cell of AMC10 CAT.OP.MPA.110 Table 16 that has a factor.
+    for (lights, period, factor) in [
+        ("hi", "day", 1.5),
+        ("hi", "night", 2.0),
+        ("other", "day", 1.0),
+        ("other", "night", 1.5),
+        ("none", "day", 1.0),
+    ] {
+        let r = run(json!({"visibility": "1500 m", "lights": lights, "period": period}));
+        assert_eq!(r["ok"], true, "{r}");
+        assert_eq!(r["result"]["factor"], factor, "{lights} {period}");
+        assert!((r["result"]["cmv"]["value"].as_f64().unwrap() - 1500.0 * factor).abs() < 1e-9);
+        assert!(
+            r["result"]["rules"]
+                .as_str()
+                .unwrap()
+                .contains("AMC10 CAT.OP.MPA.110")
+        );
+    }
+    // The spec's scenario: at night with no lights the conversion is not applicable.
+    let none = run(json!({"visibility": "1500 m", "lights": "none", "period": "night"}));
+    assert_eq!(none["error"]["code"], "OUT_OF_DOMAIN");
+    assert!(
+        none["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("not applicable")
+    );
+    // Flight planning uses 1.0 whatever the lights.
+    let plan = run(
+        json!({"visibility": "1500 m", "lights": "hi", "period": "night", "purpose": "planning"}),
+    );
+    assert_eq!(plan["result"]["factor"], 1.0);
+    // Never for take-off minima or to continue an approach in LVOs.
+    for purpose in ["takeoff", "lvo-continuation"] {
+        let r = run(
+            json!({"visibility": "1500 m", "lights": "hi", "period": "day", "purpose": purpose}),
+        );
+        assert_eq!(r["error"]["code"], "OUT_OF_DOMAIN", "{purpose}");
+    }
+    // Statute miles convert: 1 SM at night with other lights is 1.5 SM.
+    let sm = run(json!({"visibility": "1 mi", "lights": "other", "period": "night"}));
+    assert!((sm["result"]["cmv"]["value"].as_f64().unwrap() - 1.5 * 1609.344).abs() < 1e-6);
+}

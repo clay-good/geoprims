@@ -35,9 +35,9 @@ test('practitioner operation counts match the implemented catalog cut', () => {
   ).length;
   assert.deepEqual(
     Object.fromEntries(Object.keys(groups).map((domain) => [domain, count(domain)])),
-    // aviation 15: the 12 practitioner tools plus approach-category,
-    // rvr-visibility, and circling-radius (add-aviation-practical-additions),
-    // which share the ifr group.
-    { time: 14, aviation: 15, survey: 11, drone: 5 },
+    // aviation 16: the 12 practitioner tools plus approach-category,
+    // rvr-visibility, visibility-to-cmv, and circling-radius
+    // (add-aviation-practical-additions), which share the ifr group.
+    { time: 14, aviation: 16, survey: 11, drone: 5 },
   );
 });

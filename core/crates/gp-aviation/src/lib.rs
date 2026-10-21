@@ -2602,6 +2602,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &weather::TAF,
     &approach::APPROACH_CATEGORY,
     &approach::RVR_VISIBILITY,
+    &approach::VISIBILITY_TO_CMV,
     &approach::CIRCLING_RADIUS,
     &physiology::OXYGEN_REQUIREMENT,
     &physiology::TIME_OF_USEFUL_CONSCIOUSNESS,

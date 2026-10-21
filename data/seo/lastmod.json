@@ -1,7 +1,7 @@
 {
   "/": {
-    "hash": "894ae6ee9b760c89",
-    "lastmod": "2026-10-20"
+    "hash": "2b6401d458a6165f",
+    "lastmod": "2026-10-21"
   },
   "/accuracy/": {
     "hash": "c114ed2bae28332d",
@@ -12,8 +12,8 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/": {
-    "hash": "a5b9dc9ad94b39b7",
-    "lastmod": "2026-10-20"
+    "hash": "4dcbefcaa54954ae",
+    "lastmod": "2026-10-21"
   },
   "/aviation/airspace/": {
     "hash": "4ccf472fb1dd20c9",
@@ -104,8 +104,8 @@
     "lastmod": "2026-10-19"
   },
   "/aviation/ifr/": {
-    "hash": "858442ee44960b58",
-    "lastmod": "2026-10-20"
+    "hash": "c79071d820a3ee8c",
+    "lastmod": "2026-10-21"
   },
   "/aviation/ifr/approach-category/": {
     "hash": "15e09019095f368d",
@@ -148,8 +148,12 @@
     "lastmod": "2026-10-21"
   },
   "/aviation/ifr/time-to-station/": {
-    "hash": "8ea35cf2b7acb238",
-    "lastmod": "2026-10-20"
+    "hash": "fc8fd4fb8b7faf3e",
+    "lastmod": "2026-10-21"
+  },
+  "/aviation/ifr/visibility-to-cmv/": {
+    "hash": "b3fc10bc4f905c5e",
+    "lastmod": "2026-10-21"
   },
   "/aviation/loading/": {
     "hash": "519132f7166b1fce",
@@ -1528,7 +1532,7 @@
     "lastmod": "2026-10-20"
   },
   "/methodology/": {
-    "hash": "bc4f6913dde409fa",
+    "hash": "a94df26ad3345219",
     "lastmod": "2026-10-21"
   },
   "/navigation/": {
@@ -1868,7 +1872,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "d42d0f17a6237e8a",
+    "hash": "eb3425edf4d37882",
     "lastmod": "2026-10-21"
   },
   "/survey/": {
@@ -2264,8 +2268,8 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "4d7c264a59f751ac",
-    "lastmod": "2026-10-20"
+    "hash": "ff238a85ff70f45d",
+    "lastmod": "2026-10-21"
   },
   "/units/": {
     "hash": "227e11d074c56226",
@@ -2528,7 +2532,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "920fee2ec473b70e",
+    "hash": "2230eff3806aeb19",
     "lastmod": "2026-10-21"
   },
   "/workflows/": {

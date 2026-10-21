@@ -1724,12 +1724,12 @@
     "lastmod": "2026-10-20"
   },
   "/navigation/sailing/plane/": {
-    "hash": "8fa5648d51ff2ad5",
+    "hash": "133231cb663232ac",
     "lastmod": "2026-10-21"
   },
   "/navigation/sailing/traverse/": {
-    "hash": "e29eff60b58a4c5f",
-    "lastmod": "2026-10-20"
+    "hash": "6d2fb5b3bd085006",
+    "lastmod": "2026-10-21"
   },
   "/navigation/tide/": {
     "hash": "cc5067824ea004e5",
@@ -2556,7 +2556,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "bb4d5c4d7668fd58",
+    "hash": "54bd6055e419989d",
     "lastmod": "2026-10-21"
   },
   "/workflows/": {

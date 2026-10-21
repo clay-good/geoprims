@@ -88,6 +88,8 @@ const DIAGRAMS = Object.fromEntries(
     'aviation.performance.climb-requirement',
     'aviation.altimetry.cabin-altitude',
     'navigation.tide.datums',
+    'navigation.sailing.plane',
+    'navigation.sailing.traverse',
     'drone.photogrammetry.photo-scale',
     'drone.photogrammetry.relief-displacement',
     'drone.photogrammetry.parallax-height',

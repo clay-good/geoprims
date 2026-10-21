@@ -301,6 +301,56 @@ function datumStack(args, result) {
   return { markup: svg(body.join(''), title), desc: title };
 }
 
+/**
+ * Plane sailing: the run as a right triangle, north up and to scale, with
+ * the difference of latitude along the meridian, the departure along the
+ * parallel, and the distance on the course as the long side.
+ */
+function sailingTriangle(args, result) {
+  const l = val(result, 'lat_difference');
+  const p = val(result, 'departure');
+  if (![l, p].every(Number.isFinite) || (l === 0 && p === 0)) return null;
+  const S = fit([[0, 0], [0, l], [p, l]], 200, 150);
+  const [o, c, e] = [S([0, 0]), S([0, l]), S([p, l])];
+  const body = [
+    `<text class="dg-muted-text" x="12" y="22">N ↑</text>`,
+    line('dg-muted dg-dash', o, c),
+    line('dg-muted dg-dash', c, e),
+    arrow(...o, ...e, 'dg-accent', `${disp(result, 'distance')} on ${disp(result, 'course')}`, 0.55, p >= 0 ? 1 : -1),
+    dot(...o),
+    text('dg-label', c[0] + (p >= 0 ? -8 : 8), (o[1] + c[1]) / 2 + 4, `l ${result.result.l_label}`, p >= 0 ? 'end' : 'start'),
+    text('dg-label', (c[0] + e[0]) / 2, c[1] + (l >= 0 ? -10 : 18), `p ${result.result.p_label}`, 'middle'),
+  ].join('');
+  const title = `Plane sailing: ${disp(result, 'distance')} on course ${disp(result, 'course')} is a difference of latitude of ${result.result.l_label} and a departure of ${result.result.p_label}. To scale.`;
+  return { markup: svg(body, title), desc: title };
+}
+
+/**
+ * Traverse sailing: each leg head to tail, north up and to scale, and the
+ * course and distance made good from the start to the end.
+ */
+function traverseLegs(args, result) {
+  const legs = Array.isArray(args.legs) ? args.legs : [];
+  const pts = [[0, 0]];
+  for (const leg of legs) {
+    const c = deg(leg.course);
+    const d = measure(leg.distance, LENGTH, 'nm');
+    if (c === null || d === null || !Number.isFinite(d)) return null;
+    const [x, y] = pts[pts.length - 1];
+    pts.push([x + (d / 1852) * Math.sin(c * R), y + (d / 1852) * Math.cos(c * R)]);
+  }
+  if (pts.length < 2) return null;
+  const S = fit(pts, 200, 150);
+  const q = pts.map(S);
+  const body = [`<text class="dg-muted-text" x="12" y="22">N ↑</text>`, `<path class="dg-muted" d="${path(q)}"/>`];
+  for (let k = 1; k < q.length; k++) body.push(dot(...q[k], 'dg-dot'));
+  // The legs can cross anywhere, so the made-good label sits in a key below.
+  body.push(arrow(...q[0], ...q[q.length - 1], 'dg-accent', '', 0.5), dot(...q[0]));
+  body.push(line('dg-accent', [12, 226], [36, 226]), text('dg-label', 44, 230, `Made good ${disp(result, 'distance')} on ${disp(result, 'course')}`));
+  const title = `Traverse sailing: ${legs.length} legs make good ${disp(result, 'distance')} on course ${disp(result, 'course')}. To scale.`;
+  return { markup: svg(body.join(''), title), desc: title };
+}
+
 export const DIAGRAMS = {
   'navigation.piloting.set-and-drift': currentTriangle,
   'navigation.route.cpa': cpa,
@@ -311,4 +361,6 @@ export const DIAGRAMS = {
   'navigation.los.fresnel': fresnelZone,
   'navigation.los.dip': horizonDip,
   'navigation.tide.datums': datumStack,
+  'navigation.sailing.plane': sailingTriangle,
+  'navigation.sailing.traverse': traverseLegs,
 };

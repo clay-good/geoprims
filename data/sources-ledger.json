@@ -4409,7 +4409,7 @@
       "name": "IERS Conventions (2010), IERS Technical Note 36",
       "issuer": "International Earth Rotation and Reference Systems Service (Petit and Luzum, eds.)",
       "currentEdition": "Technical Note 36, chapter 5 of 10 August 2012",
-      "verificationNote": "Read at iers-conventions.obspm.fr on 2026-10-20: chapter 5 (icc5.pdf, 10 August 2012) equations 5.14 and 5.15 (ERA), 5.32 (GMST), 5.40 (mean obliquity), 5.43 and 5.44 (fundamental arguments, with the note that SOFA uses MHB2000's rounded constants, a 2 µas difference); and the electronic Table 5.3a (IAU 2000A_R06 nutation in longitude, 1,320 + 38 terms) and Table 5.2e (the non-polynomial part of GST, 33 + 1 terms), kept in core/crates/gp-time/data/iers/.",
+      "verificationNote": "Read at iers-conventions.obspm.fr on 2026-10-20: chapter 5 (icc5.pdf, 10 August 2012) equations 5.14 and 5.15 (ERA), 5.32 (GMST), 5.40 (mean obliquity), 5.43 and 5.44 (fundamental arguments, with the note that SOFA uses MHB2000's rounded constants, a 2 µas difference); and the electronic Tables 5.3a (IAU 2000A_R06 nutation in longitude, 1,320 + 38 terms), 5.3b (nutation in obliquity, 1,037 + 19 terms; columns sine then cosine), and 5.2e (the non-polynomial part of GST, 33 + 1 terms), kept in core/crates/gp-astro/data/iers/.",
       "freeAccessUrl": "https://iers-conventions.obspm.fr/content/chapter5/icc5.pdf",
       "matchTerms": [
         "IERS Conventions (2010)"
@@ -4429,10 +4429,110 @@
       "name": "ERFA (Essential Routines for Fundamental Astronomy), via pyerfa",
       "issuer": "NumFOCUS (derived from the IAU SOFA library)",
       "currentEdition": "ERFA 2.0.1 (pyerfa 2.0.1.5)",
-      "verificationNote": "Used on 2026-10-20 as the test oracle only, not shipped: era00, gmst06, and gst06a, with UTC to TT by utctai and taitt and UT1 by utcut1, at 240 instants from 1972 to 2050 (core/crates/gp-time/tests/data/erfa_sidereal.json). Its nut00b.c also confirmed that the IAU 2000B series is the first 77 luni-solar terms of IAU 2000A. BSD-3-Clause.",
+      "verificationNote": "Used on 2026-10-20 as the test oracle only, not shipped: era00, gmst06, and gst06a, with UTC to TT by utctai and taitt and UT1 by utcut1, at 240 instants from 1972 to 2050 (core/crates/gp-time/tests/data/erfa_sidereal.json); and nut06a, obl06, and pfw06 at 40 TT instants from 1950 to 2050 (core/crates/gp-astro/tests/data/erfa_nutation.json); and pmsafe and atci13 for the navigational stars at 20 instants (erfa_stars.json). Its nut00b.c also confirmed that the IAU 2000B series is the first 77 luni-solar terms of IAU 2000A. BSD-3-Clause.",
       "freeAccessUrl": "https://github.com/liberfa/erfa",
       "matchTerms": [
         "ERFA"
+      ]
+    },
+    {
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-20",
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false,
+      "id": "vsop87",
+      "name": "VSOP87 planetary theories (Bretagnon and Francou 1988), VizieR catalog VI/81",
+      "issuer": "Bureau des Longitudes (now IMCCE), distributed by CDS Strasbourg",
+      "currentEdition": "VSOP87D (heliocentric ecliptic of date), VizieR VI/81 files VSOP87D.ear, .ven, .mar, .jup, .sat",
+      "verificationNote": "Downloaded from VizieR VI/81 on 2026-10-20. Version D series are the heliocentric spherical coordinates referred to the ecliptic and equinox of date (Bretagnon and Francou 1988, Astronomy and Astrophysics 202, 309). Truncated by amplitude at 3e-7 (1,989 of 18,832 terms) by tools/codegen/vsop_tables.py; the truncated series match JPL Horizons within 1.6 arcseconds from 1950 to 2050 (core/crates/gp-astro/tests/apparent.rs). Free to use with attribution.",
+      "freeAccessUrl": "https://cdsarc.cds.unistra.fr/viz-bin/cat/VI/81",
+      "matchTerms": [
+        "VSOP87"
+      ]
+    },
+    {
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-20",
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false,
+      "id": "jpl-horizons",
+      "name": "JPL Horizons ephemeris service",
+      "issuer": "NASA Jet Propulsion Laboratory, Solar System Dynamics Group",
+      "currentEdition": "Horizons API 1.2 with the DE441 planetary ephemeris",
+      "verificationNote": "Used on 2026-10-20 as the test oracle only, not shipped: observer tables of apparent right ascension and declination (quantity 2, true equator and equinox of date, airless) and range (quantity 20), geocentric (500@399), for the Sun, Venus, Mars, Jupiter, and Saturn at 40 TT instants from 1950 to 2050 plus four Venus inferior conjunctions (core/crates/gp-astro/tests/data/horizons_apparent.json), and the Moon (301) at 60 TT instants from 1950 to 2050 (horizons_moon.json). Its geocentric range is measured from the Earth at reception, so it differs from the geometric Moon distance by up to 39 km (the Earth's motion during the light time).",
+      "freeAccessUrl": "https://ssd.jpl.nasa.gov/horizons/",
+      "matchTerms": [
+        "JPL Horizons"
+      ]
+    },
+    {
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-20",
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false,
+      "id": "usno-aa-api",
+      "name": "USNO Astronomical Applications API (celestial navigation and sidereal time)",
+      "issuer": "US Naval Observatory, Astronomical Applications Department",
+      "currentEdition": "API 4.0.1 (celnav and siderealtime endpoints)",
+      "verificationNote": "Used on 2026-10-20 as a test oracle only, not shipped: celnav GHA and Dec (geocentric, times taken as UT1) for the Sun, Moon, Venus, Mars, Jupiter, and Saturn at 40 instants from 1995 to 2045, 239 body-instants (core/crates/gp-astro/tests/data/usno_celnav.json), and GHA and Dec of the 57 navigational stars and GHA Aries at the same instants (usno_stars.json), and siderealtime at 40 instants (core/crates/gp-time/tests/data/usno_sidereal.json). Celnav lists only the bodies above the observer's horizon, so each instant was asked at 0,0 and at 0,180. Its Venus GHA and Dec depart from JPL Horizons by up to 0.4 arcminutes within weeks of inferior conjunction, and its Moon GHA drifts from Horizons by about 0.005 arcminutes a year (0.18 arcminutes by 2041), likely from its predicted Delta T (72.8 s for 2024, reported by its eclipse service, where 69.2 s was observed). US Government work.",
+      "freeAccessUrl": "https://aa.usno.navy.mil/data/api",
+      "matchTerms": [
+        "USNO API"
+      ]
+    },
+    {
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-20",
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false,
+      "id": "elp-2000-82b",
+      "name": "ELP 2000-82B lunar solution (Chapront-Touze and Chapront 1983, 1988), VizieR catalog VI/79",
+      "issuer": "Bureau des Longitudes (now IMCCE), distributed by CDS Strasbourg",
+      "currentEdition": "ELP 2000-82B, constants fitted to DE200/LE200, VizieR VI/79 files ELP1 to ELP36 and subroutine elp82b.f (31 May 1995)",
+      "verificationNote": "Downloaded from VizieR VI/79 on 2026-10-20. The 36 series give longitude, latitude, and distance on the inertial mean ecliptic of date; the authors' subroutine ELP82B (elp82b.f) gives the arguments, the fitted corrections, the truncation rule, and the rotation to the mean ecliptic and equinox of J2000, all followed by tools/codegen/elp_tables.py. Truncated at 1e-7 rad (769 of 37,872 terms); the apparent Moon matches JPL Horizons within 0.7 arcseconds from 1950 to 2050 (core/crates/gp-astro/tests/apparent.rs). The mean longitude is counted from a fixed J2000 departure point, so precession to date is applied after the rotation, not added to the longitude. Free to use with attribution.",
+      "freeAccessUrl": "https://cdsarc.cds.unistra.fr/viz-bin/cat/VI/79",
+      "matchTerms": [
+        "ELP 2000-82B"
+      ]
+    },
+    {
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-20",
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false,
+      "id": "hipparcos-2007",
+      "name": "Hipparcos, the new reduction (van Leeuwen 2007), VizieR catalog I/311",
+      "issuer": "European Space Agency (F. van Leeuwen, Astronomy and Astrophysics 474, 653), distributed by CDS Strasbourg",
+      "currentEdition": "Hipparcos new reduction, I/311 (2007), ICRS at epoch J1991.25",
+      "verificationNote": "Read from VizieR I/311 on 2026-10-21 for the 57 navigational stars and Polaris (position, parallax, proper motions), by tools/codegen/star_tables.py. The HIP numbers came from HD numbers through the Hipparcos main catalog (I/239), starting from the FK5 (I/149A) entries whose positions agree with USNO's; FK5 Part I has no entry for Sabik (FK5 637), and its Rigil Kentaurus is 0.07 arcminutes from USNO's, so the stars use Hipparcos. Reduced to apparent places, they match ERFA within 0.015 arcseconds and USNO within 0.008 arcminutes (core/crates/gp-astro/tests/stars.rs). Free to use with acknowledgment.",
+      "freeAccessUrl": "https://cdsarc.cds.unistra.fr/viz-bin/cat/I/311",
+      "matchTerms": [
+        "Hipparcos"
       ]
     }
   ]

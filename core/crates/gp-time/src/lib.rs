@@ -7,7 +7,6 @@ pub mod boundary;
 pub mod calendar;
 pub mod civil;
 pub mod currency;
-mod iers_tables;
 pub mod sidereal;
 pub mod solar;
 pub mod spa;

@@ -95,6 +95,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "gp-astro"
+version = "0.1.0"
+dependencies = [
+ "libm",
+ "serde_json",
+]
+
+[[package]]
 name = "gp-aviation"
 version = "0.1.0"
 dependencies = [
@@ -220,6 +228,7 @@ dependencies = [
 name = "gp-time"
 version = "0.1.0"
 dependencies = [
+ "gp-astro",
  "gp-base",
  "gp-geo",
  "libm",

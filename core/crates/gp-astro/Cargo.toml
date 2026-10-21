@@ -1,0 +1,14 @@
+[package]
+name = "gp-astro"
+description = "Shared astronomy (IERS precession-nutation and sidereal time, VSOP87 sun and planets) linked into the time and navigation modules. Library only: not a Wasm module."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+libm.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

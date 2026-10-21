@@ -5,13 +5,20 @@
 //! beside for comparison.
 
 use crate::civil;
-use crate::iers_tables::{DPSI_0, DPSI_1, EECT_0, EECT_1};
+use gp_astro::sidereal::sidereal;
 use gp_base::ErrorCode;
 use gp_base::error::{ToolError, Warning};
 use gp_base::json::Json;
 use gp_base::tool::{Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, ToolDef};
 use gp_base::units::{self, Quantity as QT};
 use std::f64::consts::TAU;
+
+const J2000: f64 = 2_451_545.0;
+const JD_UNIX: f64 = 2_440_587.5;
+
+fn secs(q: Option<Q>) -> Option<f64> {
+    q.map(|q| q.to(units::by_symbol(QT::Time, "s").expect("s")))
+}
 
 const IERS_2010: Reference = Reference {
     title: "IERS Conventions (2010), IERS Technical Note 36, Chapter 5",
@@ -29,130 +36,6 @@ const MEEUS: Reference = Reference {
     locator: "Chapter 12, equation 12.4 (mean sidereal time at Greenwich, IAU 1982)",
     url: "https://www.willbell.com/math/mc1.htm",
 };
-
-const AS2R: f64 = std::f64::consts::PI / (180.0 * 3600.0);
-const J2000: f64 = 2_451_545.0;
-const JD_UNIX: f64 = 2_440_587.5;
-
-fn secs(q: Option<Q>) -> Option<f64> {
-    q.map(|q| q.to(units::by_symbol(QT::Time, "s").expect("s")))
-}
-
-/// Fundamental arguments (radians) at TT Julian centuries t: the five
-/// Delaunay arguments (IERS 2010 eq. 5.43) and the planetary longitudes and
-/// general precession (eq. 5.44).
-fn arguments(t: f64) -> [f64; 14] {
-    let poly = |c: [f64; 5]| ((((c[4] * t + c[3]) * t + c[2]) * t + c[1]) * t + c[0]) * AS2R;
-    let deg = |d: f64| d * 3600.0;
-    [
-        poly([
-            deg(134.963_402_51),
-            1_717_915_923.217_8,
-            31.879_2,
-            0.051_635,
-            -0.000_244_70,
-        ]),
-        poly([
-            deg(357.529_109_18),
-            129_596_581.048_1,
-            -0.553_2,
-            0.000_136,
-            -0.000_011_49,
-        ]),
-        poly([
-            deg(93.272_090_62),
-            1_739_527_262.847_8,
-            -12.751_2,
-            -0.001_037,
-            0.000_004_17,
-        ]),
-        poly([
-            deg(297.850_195_47),
-            1_602_961_601.209,
-            -6.370_6,
-            0.006_593,
-            -0.000_031_69,
-        ]),
-        poly([
-            deg(125.044_555_01),
-            -6_962_890.543_1,
-            7.472_2,
-            0.007_702,
-            -0.000_059_39,
-        ]),
-        4.402_608_842 + 2_608.790_314_157_4 * t,
-        3.176_146_697 + 1_021.328_554_621_1 * t,
-        1.753_470_314 + 628.307_584_999_1 * t,
-        6.203_480_913 + 334.061_242_670_0 * t,
-        0.599_546_497 + 52.969_096_264_1 * t,
-        0.874_016_757 + 21.329_910_496_0 * t,
-        5.481_293_872 + 7.478_159_856_7 * t,
-        5.311_886_287 + 3.813_303_563_8 * t,
-        (0.024_381_75 + 0.000_005_386_91 * t) * t,
-    ]
-}
-
-/// Σ (s sin a + c cos a) over a table's rows, in microarcseconds.
-fn sum(rows: &[([i8; 14], f64, f64)], f: &[f64; 14]) -> f64 {
-    rows.iter()
-        .map(|(m, s, c)| {
-            let a: f64 = m.iter().zip(f).map(|(k, x)| f64::from(*k) * x).sum();
-            s * libm::sin(a) + c * libm::cos(a)
-        })
-        .sum()
-}
-
-pub(crate) struct Sidereal {
-    /// Radians, each in [0, 2π).
-    pub era: f64,
-    pub gmst: f64,
-    pub gast: f64,
-    /// Equation of the equinoxes, radians.
-    pub ee: f64,
-    /// Meeus's IAU 1982 GMST, radians.
-    pub gmst82: f64,
-}
-
-/// Sidereal angles for a UT1 instant (Julian date split into a whole and a
-/// fraction for precision) and TT Julian centuries since J2000.0.
-pub(crate) fn sidereal(ut1_day: f64, ut1_frac: f64, t_tt: f64) -> Sidereal {
-    let tu = (ut1_day - J2000) + ut1_frac;
-    // IERS 2010 eq. 5.15: the day fraction kept apart from the rest.
-    let frac = ut1_day.fract() + ut1_frac;
-    let era = (TAU * (frac + 0.779_057_273_264_0 + 0.002_737_811_911_354_48 * tu)).rem_euclid(TAU);
-    let t = t_tt;
-    let poly = (((((-0.000_000_036_8 * t - 0.000_029_956) * t - 0.000_000_44) * t + 1.391_581_7)
-        * t
-        + 4_612.156_534)
-        * t
-        + 0.014_506)
-        * AS2R;
-    let gmst = (era + poly).rem_euclid(TAU);
-    let f = arguments(t);
-    let dpsi = (sum(DPSI_0, &f) + t * sum(DPSI_1, &f)) * 1e-6 * AS2R;
-    let eps = (((((-0.000_000_043_4 * t - 0.000_000_576) * t + 0.002_003_4) * t - 0.000_183_1)
-        * t
-        - 46.836_769)
-        * t
-        + 84_381.406)
-        * AS2R;
-    let ct = (sum(EECT_0, &f) + t * sum(EECT_1, &f)) * 1e-6 * AS2R;
-    let ee = dpsi * libm::cos(eps) + ct;
-    let gast = (gmst + ee).rem_euclid(TAU);
-    // Meeus 12.4, with T in UT1 Julian centuries.
-    let tu_c = tu / 36_525.0;
-    let gmst82 = (280.460_618_37 + 360.985_647_366_29 * tu + 0.000_387_933 * tu_c * tu_c
-        - tu_c * tu_c * tu_c / 38_710_000.0)
-        .to_radians()
-        .rem_euclid(TAU);
-    Sidereal {
-        era,
-        gmst,
-        gast,
-        ee,
-        gmst82,
-    }
-}
 
 /// An angle as hours, minutes, and seconds of time, to the millisecond.
 fn hms(rad: f64) -> String {

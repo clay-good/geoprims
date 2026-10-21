@@ -594,7 +594,8 @@
       "relatedTools": [
         "survey.gnss.dop",
         "time.scale.gps-to-utc",
-        "time.scale.gps-week"
+        "time.scale.gps-week",
+        "time.scale.unix-time"
       ]
     },
     {
@@ -808,6 +809,16 @@
         "aviation.altimetry.isa-temperature",
         "aviation.altimetry.true-altitude",
         "aviation.atmosphere.isa"
+      ]
+    },
+    {
+      "id": "iso",
+      "term": "ISO",
+      "expansion": "International Organization for Standardization",
+      "definition": "The body that publishes international standards, among them ISO 8601 for writing dates and times, including week dates like 2026-W53-5.",
+      "source": "iso-8601-1-2019",
+      "relatedTools": [
+        "time.scale.iso-week"
       ]
     },
     {
@@ -1798,6 +1809,7 @@
         "time.scale.gps-to-utc",
         "time.scale.gps-week",
         "time.scale.julian-date",
+        "time.scale.unix-time",
         "time.scale.utc-offset",
         "time.scale.zone-info",
         "time.sun.aviation-nights",

@@ -1268,6 +1268,14 @@
     {
       "query": "convert MLLW to NAVD88",
       "expect": "navigation.tide.datums"
+    },
+    {
+      "query": "unix timestamp 1760832000 to date",
+      "expect": "time.scale.unix-time"
+    },
+    {
+      "query": "what ISO week is 2027-01-01",
+      "expect": "time.scale.iso-week"
     }
   ]
 }

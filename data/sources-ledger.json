@@ -4354,6 +4354,46 @@
       "matchTerms": [
         "pytides2"
       ]
+    },
+    {
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-20",
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false,
+      "id": "posix-2024",
+      "name": "POSIX.1-2024 (IEEE Std 1003.1-2024)",
+      "issuer": "IEEE and The Open Group",
+      "currentEdition": "IEEE Std 1003.1-2024",
+      "verificationNote": "Read at pubs.opengroup.org on 2026-10-20: Base Definitions §4.19, Seconds Since the Epoch, the C expression from tm_sec, tm_min, tm_hour, tm_yday, and tm_year, with every day accounted for by exactly 86,400 seconds; the relationship is undefined before 1970 and for negative values.",
+      "freeAccessUrl": "https://pubs.opengroup.org/onlinepubs/9799919799/basedefs/V1_chap04.html",
+      "matchTerms": [
+        "POSIX.1-2024"
+      ]
+    },
+    {
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-20",
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false,
+      "id": "iso-8601-1-2019",
+      "name": "ISO 8601-1:2019, Date and time, Part 1: Basic rules",
+      "issuer": "International Organization for Standardization",
+      "currentEdition": "ISO 8601-1:2019 with Amd 1:2022",
+      "verificationNote": "Cited, not open (sold by ISO; iso.org refuses scripted requests). A web search on 2026-10-20 found ISO's page for the 2019 edition confirmed in its 2024 review, and ISO 8601-1:2019/Amd 1:2022, technical corrections approved 25 October 2022, listed as current by national standards stores. The week-date rule (Monday-first weeks, week 01 holding the first Thursday) is checked against Python's date.isocalendar and fromisocalendar, an independent implementation.",
+      "freeAccessUrl": "https://www.iso.org/standard/70907.html",
+      "matchTerms": [
+        "ISO 8601-1"
+      ]
     }
   ]
 }

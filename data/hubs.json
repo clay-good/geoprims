@@ -2470,6 +2470,18 @@
             "block-time",
             "decimal-hours"
           ]
+        },
+        {
+          "want": "convert a Unix timestamp to a date",
+          "tools": [
+            "unix-time"
+          ]
+        },
+        {
+          "want": "find the ISO week number of a date",
+          "tools": [
+            "iso-week"
+          ]
         }
       ]
     },

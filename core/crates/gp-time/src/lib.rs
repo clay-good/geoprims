@@ -4,6 +4,7 @@
 //! leap-second table is embedded and echoed in `meta.assets`.
 
 pub mod boundary;
+pub mod calendar;
 pub mod civil;
 pub mod currency;
 pub mod solar;
@@ -81,7 +82,12 @@ fn secs(v: f64) -> Q {
     }
 }
 
-const fn plain(name: &'static str, title: &'static str, help: &'static str, decimals: u8) -> Field {
+pub(crate) const fn plain(
+    name: &'static str,
+    title: &'static str,
+    help: &'static str,
+    decimals: u8,
+) -> Field {
     Field::new(
         name,
         title,
@@ -194,7 +200,7 @@ impl ZoneSpec {
 }
 
 /// GPS seconds since 1980-01-06 for a UTC day and seconds of day.
-fn gps_seconds(days: i64, s: f64) -> f64 {
+pub(crate) fn gps_seconds(days: i64, s: f64) -> f64 {
     let tai = civil::tai_minus_utc(days).expect("after 1980");
     (days - civil::gps_epoch()) as f64 * 86_400.0 + s + f64::from(tai - TAI_MINUS_GPS)
 }
@@ -1419,6 +1425,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &currency::NIGHT_CURRENCY,
     &solar::MAPPING_WINDOW,
     &solar::HOTSPOT,
+    &calendar::UNIX_TIME,
+    &calendar::ISO_WEEK,
 ];
 
 pub static REGISTRY: Registry = Registry {

@@ -24,7 +24,9 @@ The tool SHALL convert Unix seconds ↔ UTC by the POSIX.1-2024 §4.19 expressio
 
 #### Scenario: Milliseconds detected
 - **WHEN** 1760832000000 is entered
-- **THEN** it is read as milliseconds (2026-10-19T00:00:00Z) with `INPUT_NORMALIZED` naming the unit assumed
+- **THEN** it is read as milliseconds (2025-10-19T00:00:00Z) with `INPUT_NORMALIZED` naming the unit assumed
+
+Spec note (2026-10-20): the scenario first said 2026-10-19; 1,760,832,000 s is 20,380 days after the epoch, 2025-10-19, as Python's datetime agrees (2026-10-19 would be 1792368000).
 
 #### Scenario: Leap second instant
 - **WHEN** 2016-12-31T23:59:60Z is entered

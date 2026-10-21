@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "cb1501d6525ce273",
+    "hash": "9a894c37d088147d",
     "lastmod": "2026-10-21"
   },
   "/accuracy/": {
@@ -1544,7 +1544,7 @@
     "lastmod": "2026-10-20"
   },
   "/methodology/": {
-    "hash": "b29d7e0673a0d125",
+    "hash": "f837c1112dd515ca",
     "lastmod": "2026-10-21"
   },
   "/navigation/": {
@@ -1896,7 +1896,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "c1a16368db8651c3",
+    "hash": "453174b85b49a641",
     "lastmod": "2026-10-21"
   },
   "/survey/": {
@@ -2224,12 +2224,12 @@
     "lastmod": "2026-10-19"
   },
   "/time/": {
-    "hash": "b7a54c76347933e9",
-    "lastmod": "2026-10-13"
+    "hash": "ce034e70782b3c81",
+    "lastmod": "2026-10-21"
   },
   "/time/scale/": {
-    "hash": "5e1f0979d049f533",
-    "lastmod": "2026-10-13"
+    "hash": "9e6baaedc33f4feb",
+    "lastmod": "2026-10-21"
   },
   "/time/scale/block-time/": {
     "hash": "b045e3a222355d69",
@@ -2244,16 +2244,24 @@
     "lastmod": "2026-10-19"
   },
   "/time/scale/gps-week/": {
-    "hash": "04f9dd13d65648cc",
-    "lastmod": "2026-10-19"
+    "hash": "b74ea42afa255e0e",
+    "lastmod": "2026-10-21"
+  },
+  "/time/scale/iso-week/": {
+    "hash": "bf2b70f08ad19952",
+    "lastmod": "2026-10-21"
   },
   "/time/scale/julian-date/": {
-    "hash": "ac0a05f352b93eb8",
-    "lastmod": "2026-10-19"
+    "hash": "8843bda94ced247c",
+    "lastmod": "2026-10-21"
+  },
+  "/time/scale/unix-time/": {
+    "hash": "44cde6fbe52132b9",
+    "lastmod": "2026-10-21"
   },
   "/time/scale/utc-offset/": {
-    "hash": "096da513ce7d0745",
-    "lastmod": "2026-10-19"
+    "hash": "5072fdd61ad1c63c",
+    "lastmod": "2026-10-21"
   },
   "/time/scale/zone-from-location/": {
     "hash": "272ef18016fc6a95",
@@ -2292,7 +2300,7 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "d88a3f347f457b47",
+    "hash": "30cc6ce79dd5b5b4",
     "lastmod": "2026-10-21"
   },
   "/units/": {
@@ -2556,7 +2564,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "72595e0f6857255d",
+    "hash": "e3751375e6de7e53",
     "lastmod": "2026-10-21"
   },
   "/workflows/": {

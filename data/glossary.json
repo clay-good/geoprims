@@ -821,6 +821,9 @@
         "navigation.celestial.polaris-latitude",
         "navigation.celestial.sight-reduction",
         "navigation.celestial.sun-azimuth-check",
+        "time.moon.phase",
+        "time.moon.position",
+        "time.moon.rise-set",
         "time.scale.sidereal",
         "time.sun.position"
       ]
@@ -1842,6 +1845,9 @@
       "source": "espenak-meeus",
       "relatedTools": [
         "navigation.celestial.almanac",
+        "time.moon.phase",
+        "time.moon.position",
+        "time.moon.rise-set",
         "time.sun.position"
       ]
     },
@@ -1890,6 +1896,9 @@
         "navigation.celestial.polaris-latitude",
         "navigation.celestial.sight-reduction",
         "navigation.celestial.sun-azimuth-check",
+        "time.moon.phase",
+        "time.moon.position",
+        "time.moon.rise-set",
         "time.scale.sidereal",
         "time.sun.position"
       ]
@@ -1912,6 +1921,9 @@
         "navigation.route.time-speed-distance",
         "navigation.tide.predict",
         "survey.gnss.opus-plan",
+        "time.moon.phase",
+        "time.moon.position",
+        "time.moon.rise-set",
         "time.scale.gps-to-utc",
         "time.scale.gps-week",
         "time.scale.julian-date",

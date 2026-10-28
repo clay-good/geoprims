@@ -1,9 +1,9 @@
 {
-  "queries": 1830,
+  "queries": 1842,
   "top1": 99,
   "top3": 99.9,
-  "prefillPrecision": 97,
-  "prefillRecall": 32.5,
+  "prefillPrecision": 97.1,
+  "prefillRecall": 32.7,
   "misses": [
     "100 mph drone with 90 mph 15 mph"
   ],

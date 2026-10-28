@@ -3411,6 +3411,26 @@
       "editionCheck": false
     },
     {
+      "id": "usno-rst-defs",
+      "name": "Rise, Set, and Twilight Definitions",
+      "issuer": "US Naval Observatory, Astronomical Applications Department",
+      "currentEdition": "Current web edition",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-28",
+      "verificationNote": "Read at aa.usno.navy.mil/faq/RST_defs on 2026-10-28: moonrise and moonset occur when the geometric zenith distance of the moon's centre is 90.5666 degrees plus the moon's apparent angular radius less its horizontal parallax, so that the upper limb is tangent to a level horizon under normal conditions at sea level; the 34 arcminutes of horizon refraction and the 16 arcminute solar radius that make up the sun's 50 arcminute depression are on the same page. A living web page, so it carries no edition of its own.",
+      "freeAccessUrl": "https://aa.usno.navy.mil/faq/RST_defs",
+      "matchTerms": [
+        "Rise, Set, and Twilight Definitions"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "ussf-deprecation",
       "name": "Deprecation of the U.S. survey foot",
       "issuer": "NIST, NOAA",

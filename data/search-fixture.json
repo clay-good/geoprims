@@ -1300,6 +1300,18 @@
     {
       "query": "gyro error from the amplitude of the setting sun",
       "expect": "navigation.celestial.sun-azimuth-check"
+    },
+    {
+      "query": "what time does the moon rise tonight",
+      "expect": "time.moon.rise-set"
+    },
+    {
+      "query": "when is the next full moon",
+      "expect": "time.moon.phase"
+    },
+    {
+      "query": "moon azimuth and altitude at a place",
+      "expect": "time.moon.position"
     }
   ]
 }

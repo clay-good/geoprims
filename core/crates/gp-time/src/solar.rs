@@ -120,7 +120,7 @@ const TERMINATOR_POINT: &[Field] = &[
 ];
 
 /// The local date as a day number.
-fn local_date(ctx: &Ctx) -> Result<i64, ToolError> {
+pub(crate) fn local_date(ctx: &Ctx) -> Result<i64, ToolError> {
     let s = ctx.text("date")?.expect("required");
     if s.trim().len() != 10 {
         return Err(ToolError::invalid(
@@ -141,13 +141,13 @@ pub(crate) fn jd(days: i64, minutes: f64) -> f64 {
 }
 
 /// A UT Julian date rounded to the minute, as (day number, minutes of day).
-fn split(jd: f64) -> (i64, i64) {
+pub(crate) fn split(jd: f64) -> (i64, i64) {
     let total = ((jd - JD_UNIX) * 1440.0).round() as i64;
     (total.div_euclid(1440), total.rem_euclid(1440))
 }
 
 /// `2026-06-21 21:14 local (2026-06-22 0314Z)`.
-fn event_text(jd: f64, zone: &ZoneSpec) -> String {
+pub(crate) fn event_text(jd: f64, zone: &ZoneSpec) -> String {
     let (ud, um) = split(jd);
     let local = ud * 1440 + um + i64::from(zone.minutes_at((ud * 1440 + um) * 60));
     let (ld, lm) = (local.div_euclid(1440), local.rem_euclid(1440));
@@ -160,6 +160,11 @@ fn event_text(jd: f64, zone: &ZoneSpec) -> String {
         um / 60,
         um % 60
     )
+}
+
+/// Local clock `HH:MM` for an event.
+pub(crate) fn local_clock_of(jd: f64, zone: &ZoneSpec) -> String {
+    local_clock(jd, zone)
 }
 
 /// Local clock `HH:MM` for an event.

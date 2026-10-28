@@ -2,6 +2,17 @@
   "note": "User-facing changes, newest first. kind is result-change (a published result moved: every superseded golden vector must be listed here), added, fixed, or changed. A result change beyond tolerance also bumps the tool version. Rendered at /changelog/ and checked by tools/trust/changelog.test.mjs.",
   "entries": [
     {
+      "date": "2026-10-28",
+      "kind": "added",
+      "tools": [
+        "time.moon.position",
+        "time.moon.rise-set",
+        "time.moon.phase"
+      ],
+      "vectors": [],
+      "summary": "Three new experimental tools, a moon group in Time. Moonrise, moonset, and the moon's highest point for a place and local date, by the US Naval Observatory's own definition of the upper limb on the horizon, in local time and Zulu, with the dates the moon's daily retardation leaves without a rise or without a set named along with the times either side, and the polar days it never rises or sets at all. Where the moon is in the sky at an instant, as seen from the ground rather than from the centre of the Earth, with its distance, parallax, and apparent size. And how much of the disc is lit, how old the moon is, and when the next new moon, first quarter, full moon, and last quarter fall. Checked against USNO at 1,361 rise, set, and transit times over 500 places and dates and at all 208 of its published phase instants, every one within a minute."
+    },
+    {
       "date": "2026-10-27",
       "kind": "added",
       "tools": [

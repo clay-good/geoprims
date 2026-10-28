@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "fd4613a852c7a89a",
+    "hash": "b9e1b465403c7a7e",
     "lastmod": "2026-10-28"
   },
   "/accuracy/": {
@@ -316,7 +316,7 @@
     "lastmod": "2026-10-19"
   },
   "/changelog/": {
-    "hash": "ca0f16c8683d07ef",
+    "hash": "c41ad756cf101a5b",
     "lastmod": "2026-10-28"
   },
   "/disclaimer/": {
@@ -1544,7 +1544,7 @@
     "lastmod": "2026-10-20"
   },
   "/methodology/": {
-    "hash": "daca7cfc91c9d4e2",
+    "hash": "e85d618ebbd1ba15",
     "lastmod": "2026-10-28"
   },
   "/navigation/": {
@@ -1792,7 +1792,7 @@
     "lastmod": "2026-10-20"
   },
   "/quality/": {
-    "hash": "58c747ccb124ef30",
+    "hash": "75f13780b3c67b25",
     "lastmod": "2026-10-28"
   },
   "/raster/": {
@@ -1920,7 +1920,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "489f7cb1bb87e1b5",
+    "hash": "67f7695f944f967d",
     "lastmod": "2026-10-28"
   },
   "/survey/": {
@@ -2248,8 +2248,24 @@
     "lastmod": "2026-10-19"
   },
   "/time/": {
-    "hash": "4c7eb3dc91a929c7",
-    "lastmod": "2026-10-21"
+    "hash": "f2c2464b545ea0af",
+    "lastmod": "2026-10-28"
+  },
+  "/time/moon/": {
+    "hash": "b36495b52183a302",
+    "lastmod": "2026-10-28"
+  },
+  "/time/moon/phase/": {
+    "hash": "e280490f7484a419",
+    "lastmod": "2026-10-28"
+  },
+  "/time/moon/position/": {
+    "hash": "077ac084a4e12062",
+    "lastmod": "2026-10-28"
+  },
+  "/time/moon/rise-set/": {
+    "hash": "4fac83e002d11e04",
+    "lastmod": "2026-10-28"
   },
   "/time/scale/": {
     "hash": "24b3d20bf0d74e26",
@@ -2328,7 +2344,7 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "c8ec534bf69e724a",
+    "hash": "db37ce809d8a3352",
     "lastmod": "2026-10-28"
   },
   "/units/": {
@@ -2592,7 +2608,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "aacce69f072346bc",
+    "hash": "d41a12ea3500c2f3",
     "lastmod": "2026-10-28"
   },
   "/workflows/": {

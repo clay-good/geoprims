@@ -2527,6 +2527,30 @@
         }
       ]
     },
+    "time.moon": {
+      "summary": "Where the moon is, when it rises and sets, and how much of it is lit.",
+      "intro": "Moon tools answer the three questions night work asks of the moon: where it is, when it comes and goes, and how much light it gives. The rise and set times follow the US Naval Observatory's own definition, so they match the tables a watch officer or a survey crew already works from, and they say when a date has no moonrise at all. The position tool gives the bearing and height in the sky as seen from the ground, parallax included. The phase tool gives the lit fraction of the disc and the next four quarters. Start with moonrise and moonset. One pitfall: the moon comes up about 50 minutes later each day, so a calendar date can hold two moonrises or none.",
+      "tasks": [
+        {
+          "want": "know when the moon rises and sets",
+          "tools": [
+            "rise-set"
+          ]
+        },
+        {
+          "want": "find where the moon is in the sky now",
+          "tools": [
+            "position"
+          ]
+        },
+        {
+          "want": "know how much moonlight there will be, or when the next full moon is",
+          "tools": [
+            "phase"
+          ]
+        }
+      ]
+    },
     "time.sun": {
       "summary": "Where the sun is and when it rises and sets.",
       "intro": "Sun tools find where the sun is and when it rises, sets, and passes through civil, nautical, and astronomical twilight, for any place and date, in local time and Zulu. Pilots use them for the four US aviation nights and night passenger currency. Drone operators use them for Part 107 civil twilight, mapping light, and the sun's hotspot in photos. Start with sunrise, sunset, and twilight. One pitfall: aviation rules define night in different ways, so a landing can be logged as night and still not count toward passenger currency.",

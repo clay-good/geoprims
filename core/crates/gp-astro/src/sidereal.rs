@@ -19,7 +19,10 @@ pub struct Sidereal {
 
 /// Sidereal angles for a UT1 instant (a Julian day number and a fraction,
 /// kept apart for precision) and TT Julian centuries since J2000.0.
-pub fn sidereal(ut1_day: f64, ut1_frac: f64, t_tt: f64) -> Sidereal {
+/// Earth rotation angle and Greenwich mean sidereal time, in radians. Both
+/// are cheap polynomials: no nutation series, so a solver that needs the
+/// hour angle at many instants can call this instead of [`sidereal`].
+pub fn era_gmst(ut1_day: f64, ut1_frac: f64, t_tt: f64) -> (f64, f64) {
     let tu = (ut1_day - J2000) + ut1_frac;
     // IERS 2010 eq. 5.15: the day fraction kept apart from the rest.
     let frac = ut1_day.fract() + ut1_frac;
@@ -31,7 +34,13 @@ pub fn sidereal(ut1_day: f64, ut1_frac: f64, t_tt: f64) -> Sidereal {
         * t
         + 0.014_506)
         * AS2R;
-    let gmst = (era + poly).rem_euclid(TAU);
+    (era, (era + poly).rem_euclid(TAU))
+}
+
+pub fn sidereal(ut1_day: f64, ut1_frac: f64, t_tt: f64) -> Sidereal {
+    let tu = (ut1_day - J2000) + ut1_frac;
+    let (era, gmst) = era_gmst(ut1_day, ut1_frac, t_tt);
+    let t = t_tt;
     let ee = nutation_longitude(t) * libm::cos(mean_obliquity(t)) + equinox_complement(t);
     let gast = (gmst + ee).rem_euclid(TAU);
     // Meeus 12.4, with T in UT1 Julian centuries.

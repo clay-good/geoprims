@@ -112,6 +112,7 @@
       "title": "Time",
       "groups": [
         "sun",
+        "moon",
         "scale"
       ]
     },

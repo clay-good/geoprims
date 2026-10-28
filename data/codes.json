@@ -318,6 +318,10 @@
       "severity": "accuracy",
       "message": "Planar math was applied to geographic coordinates."
     },
+    "POLAR_MOON": {
+      "severity": "info",
+      "message": "The moon does not rise or set on this date at this place: it stays up, stays down, or its daily retardation skips the event."
+    },
     "POLE_ENCLOSED": {
       "severity": "info",
       "message": "The polygon circles a pole."

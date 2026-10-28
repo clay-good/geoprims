@@ -7,6 +7,7 @@ pub mod boundary;
 pub mod calendar;
 pub mod civil;
 pub mod currency;
+pub mod moon;
 pub mod sidereal;
 pub mod solar;
 pub mod spa;
@@ -1429,6 +1430,9 @@ pub static TOOLS: &[&ToolDef] = &[
     &calendar::UNIX_TIME,
     &calendar::ISO_WEEK,
     &sidereal::SIDEREAL,
+    &moon::POSITION,
+    &moon::RISE_SET,
+    &moon::PHASE,
 ];
 
 pub static REGISTRY: Registry = Registry {

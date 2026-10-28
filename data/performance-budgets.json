@@ -46,6 +46,8 @@
     "navigation.celestial.almanac": { "kind": "iterative", "p95Ms": 10 },
     "navigation.celestial.sight-reduction": { "kind": "iterative", "p95Ms": 10 },
     "navigation.celestial.altitude-correction": { "kind": "iterative", "p95Ms": 10 },
+    "navigation.celestial.polaris-latitude": { "kind": "iterative", "p95Ms": 10 },
+    "navigation.celestial.sun-azimuth-check": { "kind": "iterative", "p95Ms": 10 },
     "navigation.piloting.compass-conversion": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "deviation table rows" },
     "navigation.sailing.traverse": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "legs" },
     "navigation.tide.predict": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "constituents, datum_sheet, and days" },

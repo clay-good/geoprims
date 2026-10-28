@@ -345,7 +345,9 @@
       "relatedTools": [
         "navigation.celestial.almanac",
         "navigation.celestial.altitude-correction",
+        "navigation.celestial.polaris-latitude",
         "navigation.celestial.sight-reduction",
+        "navigation.celestial.sun-azimuth-check",
         "time.scale.sidereal",
         "time.sun.position"
       ]
@@ -607,6 +609,7 @@
       "source": "bowditch",
       "relatedTools": [
         "navigation.celestial.almanac",
+        "navigation.celestial.polaris-latitude",
         "navigation.celestial.sight-reduction"
       ]
     },
@@ -815,7 +818,9 @@
         "geodesy.datum.helmert",
         "navigation.celestial.almanac",
         "navigation.celestial.altitude-correction",
+        "navigation.celestial.polaris-latitude",
         "navigation.celestial.sight-reduction",
+        "navigation.celestial.sun-azimuth-check",
         "time.scale.sidereal",
         "time.sun.position"
       ]
@@ -960,7 +965,9 @@
       "definition": "How far west of your own meridian a body is, from 0 to 360 degrees: the Greenwich hour angle plus your longitude east, or minus it west.",
       "source": "bowditch",
       "relatedTools": [
-        "navigation.celestial.sight-reduction"
+        "navigation.celestial.polaris-latitude",
+        "navigation.celestial.sight-reduction",
+        "navigation.celestial.sun-azimuth-check"
       ]
     },
     {
@@ -1880,7 +1887,9 @@
       "relatedTools": [
         "navigation.celestial.almanac",
         "navigation.celestial.altitude-correction",
+        "navigation.celestial.polaris-latitude",
         "navigation.celestial.sight-reduction",
+        "navigation.celestial.sun-azimuth-check",
         "time.scale.sidereal",
         "time.sun.position"
       ]
@@ -1896,7 +1905,9 @@
         "aviation.weather.taf-decode",
         "navigation.celestial.almanac",
         "navigation.celestial.altitude-correction",
+        "navigation.celestial.polaris-latitude",
         "navigation.celestial.sight-reduction",
+        "navigation.celestial.sun-azimuth-check",
         "navigation.route.legs",
         "navigation.route.time-speed-distance",
         "navigation.tide.predict",

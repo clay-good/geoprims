@@ -1120,7 +1120,9 @@ pub static TOOLS: &[&ToolDef] = &[
     &tide::DATUMS,
     &celestial::ALMANAC,
     &celestial::ALTITUDE_CORRECTION,
+    &celestial::POLARIS_LATITUDE,
     &celestial::SIGHT_REDUCTION,
+    &celestial::SUN_AZIMUTH_CHECK,
 ];
 
 pub static REGISTRY: Registry = Registry {

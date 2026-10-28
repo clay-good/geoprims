@@ -70,6 +70,15 @@ pub fn lat_angle(ctx: &mut Ctx, name: &str) -> Result<f64, ToolError> {
     gp_base::angle::check_lat(la, &format!("/{name}"))
 }
 
+/// Reads one longitude in degrees, from a number, a unit-tagged angle, or
+/// DMS/DDM with a hemisphere letter.
+pub fn lon_angle(ctx: &mut Ctx, name: &str) -> Result<f64, ToolError> {
+    let lo = angle(ctx, name, Axis::Lon)?;
+    let (lo, w) = gp_base::angle::accept_lon(lo, &format!("/{name}"))?;
+    ctx.warnings.extend(w);
+    Ok(lo)
+}
+
 /// Reads a (lat, lon) pair in degrees.
 pub fn read(ctx: &mut Ctx, lat: &str, lon: &str) -> Result<(f64, f64), ToolError> {
     let la = angle(ctx, lat, Axis::Lat)?;

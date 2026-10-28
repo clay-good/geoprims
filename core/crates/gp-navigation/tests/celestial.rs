@@ -624,3 +624,245 @@ fn correcting_then_reducing_one_sight() {
     let a = num(&r, "intercept");
     assert!((a - 3.0).abs() < 0.2, "intercept {a} NM");
 }
+
+fn polaris(input: Value) -> Value {
+    call("navigation.celestial.polaris-latitude", input)
+}
+
+fn check(input: Value) -> Value {
+    call("navigation.celestial.sun-azimuth-check", input)
+}
+
+/// Bowditch 2024 §2015's worked Polaris sight: Ho 16°11.3' at longitude
+/// 110°07.3'W on 2024-06-02 at 12h25m12s UT gives latitude 16°03.2'N and an
+/// azimuth of 000.8°. The three table corrections are each rounded to 0.1'
+/// and the azimuth is read from a table printed to 0.1°, so the table cannot
+/// be read closer than that.
+#[test]
+fn bowditch_polaris_sight() {
+    let r = polaris(json!({
+        "ho": "16 11.3",
+        "utc": "2024-06-02T12:25:12Z",
+        "dut1": "0 s",
+        "lon": "110 07.3 W",
+    }));
+    let lat = num(&r, "lat");
+    assert!(
+        off(lat, dm(16.0, 3.2)) < 0.2,
+        "latitude {lat} is {:.3}' from Bowditch's 16 03.2 N",
+        off(lat, dm(16.0, 3.2))
+    );
+    // The example's own GHA Aries, 71°26.9' + 6°19.0'. Its printed LHA
+    // Aries, 327°38.8', is 0.2' off that figure less the longitude.
+    assert!(
+        off(num(&r, "gha_aries"), dm(77.0, 45.9)) < 0.1,
+        "GHA Aries {} is not the example's 77 45.9",
+        num(&r, "gha_aries")
+    );
+    assert!(
+        (num(&r, "zn") - 0.8).abs() < 0.2,
+        "azimuth {} is not 000.8 degrees",
+        num(&r, "zn")
+    );
+    // The sum of the Almanac's a0, a1, a2 less 1° is -8.1'.
+    assert!(
+        (num(&r, "correction") + 8.1).abs() < 0.2,
+        "correction {} is not -8.1 minutes",
+        num(&r, "correction")
+    );
+    assert_eq!(r["lat_text"], "16°03.2'N");
+}
+
+/// The latitude the solver returns is the latitude that would see the sight:
+/// reducing a Polaris sight from it must return the altitude observed.
+#[test]
+fn the_polaris_latitude_reproduces_the_sight() {
+    for (ho, lon) in [(16.188, -110.12), (45.0, 0.0), (62.5, 174.3), (8.0, 73.9)] {
+        let r = polaris(json!({
+            "ho": format!("{ho} deg"), "utc": "2024-06-02T12:25:12Z",
+            "dut1": "0 s", "lon": format!("{lon} deg"),
+        }));
+        let back = reduce(json!({
+            "body": "Polaris", "utc": "2024-06-02T12:25:12Z", "dut1": "0 s",
+            "lat": format!("{} deg", num(&r, "lat")),
+            "lon": format!("{lon} deg"), "ho": format!("{ho} deg"),
+        }));
+        assert!(
+            num(&back, "intercept").abs() < 0.01,
+            "ho {ho} at {lon}: intercept {} NM is not zero",
+            num(&back, "intercept")
+        );
+        assert!(
+            (num(&back, "zn") - num(&r, "zn")).abs() < 0.001,
+            "ho {ho} at {lon}: azimuths disagree"
+        );
+    }
+}
+
+/// Bowditch 2024 §2016, Examples 1 and 2: the same declination and local hour
+/// angle at a latitude of the same name and then a contrary one. The tool
+/// takes a time and a place rather than an hour angle, so these check the
+/// azimuth formula itself through a sight reduction at Bowditch's arguments,
+/// where Hc is the altitude and Zn the azimuth of the same triangle.
+#[test]
+fn bowditch_azimuth_by_tables() {
+    // The tool takes a time and a place, not an hour angle, so this checks
+    // the azimuth formula itself at Bowditch's own arguments.
+    for (lat, want) in [(dm(33.0, 24.0), 97.7), (-dm(33.0, 24.0), 44.1)] {
+        let (dec, lha) = (dm(20.0, 13.8), dm(316.0, 41.2));
+        let (phi, d, h) = (lat.to_radians(), dec.to_radians(), lha.to_radians());
+        let zn = (-d.cos() * h.sin())
+            .atan2(phi.cos() * d.sin() - phi.sin() * d.cos() * h.cos())
+            .to_degrees()
+            .rem_euclid(360.0);
+        assert!(
+            (zn - want).abs() < 0.05,
+            "lat {lat}: azimuth {zn:.2} is not Bowditch's {want}"
+        );
+    }
+}
+
+/// Bowditch 2024 §2018: at latitude 51°24.6'N with the Sun's declination
+/// N 19°40.4', the amplitude is W 32.6°N by double interpolation of Table 22,
+/// a true bearing of 302.6°, so a gyro reading 303.0° is 0.4° W in error. The
+/// Sun holds that declination on 2024-07-24 at 14h30m UT, and is setting then
+/// at longitude 80°44.4'E, so the example is reproduced end to end. The
+/// closed form gives 32.67°, which the table's 0.1° steps cannot resolve.
+#[test]
+fn bowditch_amplitude_and_gyro_error() {
+    let r = check(json!({
+        "utc": "2024-07-24T14:30:00Z", "dut1": "0 s",
+        "lat": "51 24.6 N", "lon": "80 44.4 E",
+        "bearing": "303 deg", "compass": "gyro",
+    }));
+    let dec = num(&r, "dec");
+    assert!(
+        off(dec, dm(19.0, 40.4)) < 0.1,
+        "declination {dec} is {:.3}' from the example's N 19 40.4",
+        off(dec, dm(19.0, 40.4))
+    );
+    let a = num(&r, "amplitude");
+    assert!(
+        (a - 32.6).abs() < 0.1,
+        "amplitude {a:.3} is over 0.1 degrees from Bowditch's 32.6"
+    );
+    assert_eq!(r["amplitude_label"], "W 32.7 N");
+    assert!(
+        (num(&r, "amplitude_azimuth") - 302.6).abs() < 0.1,
+        "true bearing {:.3} is not 302.6",
+        num(&r, "amplitude_azimuth")
+    );
+    assert!(
+        (num(&r, "error") + 0.4).abs() < 0.1,
+        "gyro error {:.3} is not 0.4 W",
+        num(&r, "error")
+    );
+    assert_eq!(r["error_text"], "0.3 W");
+    // The Sun's center is on the celestial horizon at this instant, so the
+    // amplitude and the computed azimuth are the same bearing.
+    assert!(num(&r, "altitude").abs() < 0.05, "{}", num(&r, "altitude"));
+    // The altitude is a hundredth of a degree rather than exactly zero, and
+    // the azimuth moves about a degree for each degree of altitude here.
+    assert!(
+        (num(&r, "zn") - num(&r, "amplitude_azimuth")).abs() < 0.05,
+        "on the horizon Zn {} and the amplitude bearing {} must agree",
+        num(&r, "zn"),
+        num(&r, "amplitude_azimuth")
+    );
+    // The exact amplitude for the example's own latitude and declination.
+    let exact = (dm(19.0, 40.4).to_radians().sin() / dm(51.0, 24.6).to_radians().cos())
+        .asin()
+        .to_degrees();
+    assert!(
+        (exact - 32.6).abs() < 0.1,
+        "the closed form gives {exact:.3}, over 0.1 degrees from the table"
+    );
+}
+
+/// The sign of a compass error: east when the compass reads low, west when it
+/// reads high (Bowditch §2016, where Zn 044.1° against a gyro reading 042.5°
+/// is 1.6° east).
+#[test]
+fn the_compass_error_takes_its_name_from_the_compass() {
+    let at = |bearing: f64| {
+        check(json!({
+            "utc": "2024-06-02T18:40:00Z", "dut1": "0 s",
+            "lat": "51 24.6 N", "lon": "0 00.0 E",
+            "bearing": format!("{bearing} deg"), "compass": "gyro",
+        }))
+    };
+    let truth = num(&at(300.0), "zn");
+    let low = at(truth - 1.6);
+    assert!(
+        (num(&low, "error") - 1.6).abs() < 0.01,
+        "{}",
+        num(&low, "error")
+    );
+    assert_eq!(low["error_text"], "1.6 E");
+    let high = at(truth + 1.6);
+    assert!(
+        (num(&high, "error") + 1.6).abs() < 0.01,
+        "{}",
+        num(&high, "error")
+    );
+    assert_eq!(high["error_text"], "1.6 W");
+    // Across north, where the two bearings sit either side of 360°.
+    let r = check(json!({
+        "utc": "2024-06-02T05:10:00Z", "dut1": "0 s",
+        "lat": "51 24.6 N", "lon": "0 00.0 E",
+        "bearing": "1 deg", "compass": "gyro",
+    }));
+    assert!(num(&r, "error").abs() <= 180.0);
+}
+
+/// A magnetic compass splits its error into the variation supplied and the
+/// deviation left over, and will not be checked without a variation.
+#[test]
+fn a_magnetic_compass_needs_its_variation() {
+    let base = |extra: Value| {
+        let mut v = json!({
+            "utc": "2024-06-02T18:40:00Z", "dut1": "0 s",
+            "lat": "51 24.6 N", "lon": "0 00.0 E", "bearing": "303 deg",
+        });
+        for (k, x) in extra.as_object().unwrap() {
+            v[k] = x.clone();
+        }
+        v
+    };
+    let r = envelope(
+        "navigation.celestial.sun-azimuth-check",
+        base(json!({"compass": "magnetic"})),
+    );
+    assert_eq!(r["ok"], false);
+    assert_eq!(r["error"]["code"], "INVALID_INPUT");
+    assert_eq!(r["error"]["field"], "/variation");
+    let gyro = check(base(json!({"compass": "gyro"})));
+    let mag = check(base(
+        json!({"compass": "magnetic", "variation": "-1.5 deg"}),
+    ));
+    assert!((num(&mag, "error") - num(&gyro, "error")).abs() < 1e-9);
+    assert!(
+        (num(&mag, "deviation") - (num(&gyro, "error") + 1.5)).abs() < 1e-9,
+        "deviation {} is not the error less the variation",
+        num(&mag, "deviation")
+    );
+}
+
+/// Without a bearing the tool still answers with the azimuth and amplitude,
+/// and a latitude where the Sun never reaches the celestial horizon is
+/// refused rather than answered.
+#[test]
+fn the_amplitude_has_a_domain() {
+    let r = check(json!({
+        "utc": "2024-06-02T18:40:00Z", "dut1": "0 s",
+        "lat": "51 24.6 N", "lon": "0 00.0 E",
+    }));
+    assert!(r.get("error").is_none(), "{r}");
+    assert!(r["answer"].as_str().unwrap().contains("amplitude"));
+    let r = envelope(
+        "navigation.celestial.sun-azimuth-check",
+        json!({"utc": "2024-06-02T18:40:00Z", "dut1": "0 s", "lat": "80 N", "lon": "0 E"}),
+    );
+    assert_eq!(r["ok"], false, "{r}");
+    assert_eq!(r["error"]["code"], "OUT_OF_DOMAIN");
+}

@@ -1376,3 +1376,553 @@ fn run_altitude_correction(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ),
     ]))
 }
+
+// ------------------------------------------------------- latitude by Polaris
+
+const BOWDITCH_POLARIS: Reference = Reference {
+    locator: "Chapter 20, Sight Reduction (§2015, Latitude by Polaris, with the formula Latitude - Ho = -p cos h + (1/2) p sin p sin squared h tan(latitude) and its worked example)",
+    ..BOWDITCH_ALMANACS
+};
+const BOWDITCH_AZIMUTH: Reference = Reference {
+    locator: "Chapter 20, Sight Reduction (§2016, Azimuth by Tables, Examples 1 to 3 and Tables 2016a and 2016b); §2017 to §2019, Amplitudes, sin A = sin Dec / cos Lat with the visible-horizon rules and the worked example of §2018",
+    ..BOWDITCH_ALMANACS
+};
+
+/// The latitude that would see `ho` with the body at this declination and
+/// local hour angle, solved from sin Ho = sin L sin d + cos L cos d cos LHA
+/// as R sin(L + phi) = sin Ho. Returns the branch nearest `near`.
+fn latitude_from_altitude(ho: f64, dec: f64, lha: f64, near: f64) -> f64 {
+    let (d, h) = (dec.to_radians(), lha.to_radians());
+    let (a, b) = (d.sin(), d.cos() * h.cos());
+    let r = a.hypot(b);
+    let phi = libm::atan2(b, a);
+    let k = (ho.to_radians().sin() / r).clamp(-1.0, 1.0);
+    let first = (k.asin() - phi).to_degrees();
+    let second = (std::f64::consts::PI - k.asin() - phi).to_degrees();
+    let pick = |v: f64| (v - near).abs();
+    if pick(first) <= pick(second) {
+        first
+    } else {
+        second
+    }
+}
+
+/// The true azimuth of a body at this latitude, declination, and local hour
+/// angle (Bowditch Appendix B).
+fn azimuth(lat: f64, dec: f64, lha: f64) -> f64 {
+    let (phi, d, h) = (lat.to_radians(), dec.to_radians(), lha.to_radians());
+    libm::atan2(
+        -d.cos() * h.sin(),
+        phi.cos() * d.sin() - phi.sin() * d.cos() * h.cos(),
+    )
+    .to_degrees()
+    .rem_euclid(360.0)
+}
+
+/// The azimuth angle from the elevated pole and the way a work form writes
+/// it, as Bowditch prints "N 97.7 E".
+fn azimuth_angle(zn: f64, lat: f64, lha: f64) -> (f64, String) {
+    let north = lat >= 0.0;
+    let z = if north {
+        if zn <= 180.0 { zn } else { 360.0 - zn }
+    } else {
+        (180.0 - zn).abs()
+    };
+    let label = format!(
+        "{} {z:.1} {}",
+        if north { "N" } else { "S" },
+        if lha > 180.0 { "E" } else { "W" }
+    );
+    (z, label)
+}
+
+/// A signed east-positive compass error written the way a navigator says it.
+fn error_label(e: f64) -> String {
+    format!("{:.1} {}", e.abs(), if e >= 0.0 { "E" } else { "W" })
+}
+
+pub static POLARIS_LATITUDE: ToolDef = ToolDef {
+    id: "navigation.celestial.polaris-latitude",
+    title: "Latitude by Polaris",
+    summary: "Turns one observed altitude of Polaris into a latitude, from the computed polar distance and hour angle rather than the Almanac's a0, a1, and a2 tables, and gives Polaris's true azimuth for the line of position",
+    aliases: &[
+        "latitude from the North Star",
+        "Polaris sight",
+        "latitude by the pole star",
+        "North Star altitude to latitude",
+    ],
+    keywords: &[
+        "polaris",
+        "latitude",
+        "north",
+        "star",
+        "altitude",
+        "celestial",
+        "sight",
+    ],
+    inputs: &[
+        Field::new(
+            "ho",
+            "Observed altitude",
+            "The corrected sextant altitude of Polaris, like 16 deg 11.3 min",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .angle_range("[0,90]"),
+        Field::new(
+            "utc",
+            "UTC time",
+            "The second of the sight, like 2024-06-02T12:25:12Z",
+            Kind::Text { max_len: 40 },
+        )
+        .required()
+        .core(),
+        point::lon_field("lon", "Longitude"),
+        Field::new(
+            "dut1",
+            "DUT1 (UT1 - UTC)",
+            "From IERS Bulletin A, like 0.05 s",
+            Kind::Quantity {
+                q: QT::Time,
+                unit: "s",
+            },
+        ),
+    ],
+    outputs: &[
+        Field::new(
+            "answer",
+            "Latitude",
+            "The latitude the sight gives, and where Polaris bore",
+            Kind::Text { max_len: 140 },
+        ),
+        Field::new(
+            "lat",
+            "Latitude",
+            "North positive",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(6)),
+        Field::new(
+            "lat_text",
+            "Latitude written out",
+            "The way a work form prints it, like 16 03.2 N",
+            Kind::Text { max_len: 24 },
+        ),
+        arcmin(
+            "correction",
+            "Correction to the altitude",
+            "Latitude minus the observed altitude",
+        ),
+        arcmin(
+            "polar_distance",
+            "Polar distance",
+            "How far Polaris sits from the celestial pole",
+        ),
+        deg1("zn", "Azimuth of Polaris", "From true north, clockwise").angle_range("[0,360)"),
+        deg("gha", "GHA", "Greenwich hour angle of Polaris").angle_range("[0,360)"),
+        deg("dec", "Declination", "North positive").angle_range("[-90,90]"),
+        deg("lha", "LHA", "Local hour angle of Polaris").angle_range("[0,360)"),
+        deg(
+            "gha_aries",
+            "GHA Aries",
+            "Greenwich hour angle of the first point of Aries",
+        )
+        .angle_range("[0,360)"),
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &[
+        "INPUT_NORMALIZED",
+        "UT1_APPROXIMATED",
+        "LEAP_SECOND_TABLE_EXPIRED",
+    ],
+    assets: &["leap-seconds"],
+    model: "Polaris's apparent place from the same series as the almanac tool; LHA = GHA + longitude east; the latitude solved exactly from sin Ho = sin L sin d + cos L cos d cos LHA, written as R sin(L + phi) = sin Ho with R = hypot(sin d, cos d cos LHA) and phi = atan2(cos d cos LHA, sin d), taking the root nearest the observed altitude; the azimuth from Bowditch Appendix B",
+    accuracy: "Within 0.2′ of the latitude and 0.2° of the azimuth in Bowditch's own worked Polaris sight, whose three tabulated corrections are each rounded to a tenth of a minute and whose azimuth is read from a table printed to a tenth of a degree. Polaris's own place is within 0.008′ of the US Naval Observatory",
+    when_to_use: "Use this at morning or evening twilight in the northern hemisphere, when you have corrected an altitude of Polaris and want a latitude from it without the Almanac's Polaris tables. Enter the observed altitude, the second of the sight, and your longitude. The tool returns the latitude, how far it sits from the altitude you observed, and Polaris's true azimuth.",
+    limitations: "Polaris is only observable from the northern hemisphere, and in practice not much beyond 65° north, where it rides too high for a clean horizon. The latitude depends on your longitude through the hour angle, so plot any other sights first and work this one from the longitude they give. One sight gives a latitude, not a fix; for a line of position, draw it square to the azimuth returned here. Nothing here corrects a sextant altitude; do that first.",
+    references: &[BOWDITCH_POLARIS, IERS_2010, HIPPARCOS, USNO_API],
+    examples: &[Example {
+        id: "primary",
+        title: "Bowditch's morning Polaris sight, 2024-06-02 at 12h25m12s UT",
+        input: r#"{"ho":"16 11.3","utc":"2024-06-02T12:25:12Z","dut1":"0 s","lon":"110 07.3 W"}"#,
+        source: "Bowditch 2024 §2015: LHA Aries 327°38.8', a0 51.2' + a1 0.4' + a2 0.3' - 1° = -8.1', Ho 16°11.3', latitude 16°03.2'N, azimuth 000.8°",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "navigation.celestial.altitude-correction",
+            reason: "parent",
+        },
+        Related {
+            id: "navigation.celestial.sight-reduction",
+            reason: "alternative",
+        },
+    ],
+    sentence: "{answer}.",
+    limits: &[("batchRows", 5_000)],
+    run: run_polaris_latitude,
+    ..ToolDef::BLANK
+};
+
+fn run_polaris_latitude(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let amin = units::by_symbol(QT::Angle, "arcmin").expect("arcmin");
+    let ho = point::plain_angle(ctx, "ho")?.expect("required");
+    if !(0.0..=90.0).contains(&ho) {
+        return Err(ToolError::invalid(
+            "/ho",
+            "An observed altitude of Polaris runs from 0 to 90 degrees.",
+        ));
+    }
+    let lon = point::lon_angle(ctx, "lon")?;
+    let inst = instant(ctx)?;
+    let b = resolve("Polaris", &inst)?;
+    let lha = (b.gha + lon).rem_euclid(360.0);
+    // Polaris sits under a degree from the pole, so the latitude is within a
+    // degree of the altitude: that is the root to take.
+    let lat = latitude_from_altitude(ho, b.dec, lha, ho);
+    let zn = azimuth(lat, b.dec, lha);
+    let p = (90.0 - b.dec) * 60.0;
+    let correction = (lat - ho) * 60.0;
+    let lat_text = dms::format(lat, Axis::Lat, Style::Ddm, 1, true);
+    let aries = wrap360(inst.gast.to_degrees());
+    let answer =
+        format!("your latitude is {lat_text}, and Polaris bore {zn:.1} degrees true at the sight");
+    if ctx.explaining() {
+        ctx.step(
+            "Almanac data",
+            "Polaris's apparent place for that second",
+            format!("GHA Aries {}", gha_dm(aries)),
+            format!("GHA {}, Dec {}", gha_dm(b.gha), dec_dm(b.dec)),
+        );
+        ctx.step(
+            "Local hour angle",
+            "LHA = GHA + longitude east",
+            format!("{} + {}", gha_dm(b.gha), alt_dm(lon)),
+            format!("LHA {}", gha_dm(lha)),
+        );
+        ctx.step(
+            "Correction to the altitude",
+            "Latitude - Ho, the quantity the Almanac's a0, a1, and a2 add up to",
+            format!("polar distance {p:.1} minutes at LHA {}", gha_dm(lha)),
+            format!("{correction:+.1} minutes"),
+        );
+        ctx.step(
+            "Latitude and azimuth",
+            "sin Ho = sin L sin d + cos L cos d cos LHA, solved for L",
+            format!("Ho {}, polar distance {p:.1} minutes", alt_dm(ho)),
+            answer.clone(),
+        );
+    }
+    let mq = |v: f64| Q {
+        value: v,
+        unit: amin,
+    };
+    Ok(Json::obj([
+        ("answer", Json::str(answer)),
+        ("lat", ctx.out("lat", deg_q(lat))),
+        ("lat_text", Json::str(lat_text)),
+        ("correction", ctx.out("correction", mq(correction))),
+        ("polar_distance", ctx.out("polar_distance", mq(p))),
+        ("zn", ctx.out("zn", deg_q(zn))),
+        ("gha", ctx.out("gha", deg_q(b.gha))),
+        ("dec", ctx.out("dec", deg_q(b.dec))),
+        ("lha", ctx.out("lha", deg_q(lha))),
+        ("gha_aries", ctx.out("gha_aries", deg_q(aries))),
+    ]))
+}
+
+// -------------------------------------------------- sun azimuth and amplitude
+
+pub static SUN_AZIMUTH_CHECK: ToolDef = ToolDef {
+    id: "navigation.celestial.sun-azimuth-check",
+    title: "Compass check by the Sun",
+    summary: "The Sun's true azimuth at a time and place, its amplitude at rising or setting, and the gyro or compass error against a bearing you observed",
+    aliases: &[
+        "gyro error by the Sun",
+        "compass error by azimuth of the Sun",
+        "amplitude of the Sun",
+        "azimuth check",
+        "sun amplitude compass check",
+    ],
+    keywords: &[
+        "azimuth",
+        "amplitude",
+        "compass",
+        "gyro",
+        "error",
+        "sun",
+        "deviation",
+        "celestial",
+    ],
+    inputs: &[
+        Field::new(
+            "utc",
+            "UTC time",
+            "The second of the observation, like 2024-06-02T18:40:00Z",
+            Kind::Text { max_len: 40 },
+        )
+        .required()
+        .core(),
+        point::lat_field("lat", "Latitude"),
+        point::lon_field("lon", "Longitude"),
+        deg1(
+            "bearing",
+            "Observed bearing",
+            "What the compass read on the Sun, like 303 deg",
+        )
+        .angle_range("[0,360)"),
+        Field::new(
+            "compass",
+            "Compass",
+            "gyro compares with true north; magnetic also needs the variation, and splits the error into variation and deviation",
+            Kind::Choice(&["gyro", "magnetic"]),
+        ),
+        deg1(
+            "variation",
+            "Magnetic variation",
+            "East positive, like -1.5 deg, from the magnetic declination tool",
+        )
+        .angle_range("[-180,180]"),
+        Field::new(
+            "dut1",
+            "DUT1 (UT1 - UTC)",
+            "From IERS Bulletin A, like 0.05 s",
+            Kind::Quantity {
+                q: QT::Time,
+                unit: "s",
+            },
+        ),
+    ],
+    outputs: &[
+        Field::new(
+            "answer",
+            "Compass check",
+            "Where the Sun bore and what the compass is reading off",
+            Kind::Text { max_len: 160 },
+        ),
+        deg1("zn", "True azimuth", "From true north, clockwise").angle_range("[0,360)"),
+        deg1("z", "Azimuth angle", "From the elevated pole, 0 to 180").angle_range("[0,180]"),
+        Field::new(
+            "z_label",
+            "Azimuth angle written out",
+            "The way a work form prints it, like N 97.7 E",
+            Kind::Text { max_len: 16 },
+        ),
+        deg1(
+            "altitude",
+            "Computed altitude",
+            "How high the Sun's center was",
+        )
+        .angle_range("[-90,90]"),
+        deg1(
+            "amplitude",
+            "Amplitude",
+            "The arc from the prime vertical when the Sun's center is on the celestial horizon",
+        )
+        .angle_range("[0,90]"),
+        Field::new(
+            "amplitude_label",
+            "Amplitude written out",
+            "The way a work form prints it, like W 32.7 N",
+            Kind::Text { max_len: 16 },
+        ),
+        deg1(
+            "amplitude_azimuth",
+            "True bearing from the amplitude",
+            "What the amplitude says the Sun bore on the celestial horizon",
+        )
+        .angle_range("[0,360)"),
+        Field::new(
+            "horizon_note",
+            "When to take the amplitude",
+            "Where the Sun sits against the visible horizon at that moment",
+            Kind::Text { max_len: 200 },
+        ),
+        deg("dec", "Declination", "North positive").angle_range("[-90,90]"),
+        deg("lha", "LHA", "Local hour angle of the Sun").angle_range("[0,360)"),
+        deg1("error", "Compass error", "East positive").angle_range("[-180,180]"),
+        Field::new(
+            "error_text",
+            "Compass error written out",
+            "The way a navigator says it, like 1.2 E",
+            Kind::Text { max_len: 16 },
+        ),
+        deg1(
+            "deviation",
+            "Deviation",
+            "What is left after the variation, east positive",
+        )
+        .angle_range("[-180,180]"),
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &[
+        "INPUT_NORMALIZED",
+        "UT1_APPROXIMATED",
+        "LEAP_SECOND_TABLE_EXPIRED",
+    ],
+    assets: &["leap-seconds"],
+    model: "The Sun's apparent place from the same series as the almanac tool; Zn = atan2(-cos d sin LHA, cos L sin d - sin L cos d cos LHA) (Bowditch Appendix B); the amplitude from sin A = sin Dec / cos Lat, prefixed E rising or W setting and suffixed to agree with the declination (Bowditch §2017); the error as the true azimuth less the observed bearing, east positive, and the deviation as that error less the variation",
+    accuracy: "Reproduces both worked gyro-error examples of Bowditch §2016 to the printed 0.1° of azimuth, and the amplitude of §2018 within 0.1° of the value its table interpolation gives. The Sun's own place is within 0.018′ of the US Naval Observatory",
+    when_to_use: "Use this to check a gyro or magnetic compass against the Sun. Enter the second of the observation, your position, and the bearing you read. The tool returns the Sun's true azimuth, the amplitude for an observation taken at rising or setting, and the compass error, split into variation and deviation when you are checking a magnetic compass.",
+    limitations: "The amplitude holds only at the moment the Sun's center is on the celestial horizon, which is not the moment it looks to be on the visible horizon; the note returned here says where to find it. Near the poles, and whenever the Sun is high, a small error in time or position moves the azimuth a long way, so take the sight low. The deviation returned is the error left after the variation you supply, so it is only as good as that variation. This does not correct a sextant altitude or give a position.",
+    references: &[BOWDITCH_AZIMUTH, IERS_2010, VSOP87, USNO_API],
+    examples: &[Example {
+        id: "primary",
+        title: "Bowditch's setting Sun checked against a gyro reading of 303 degrees",
+        input: r#"{"utc":"2024-07-24T14:30:00Z","lat":"51 24.6 N","lon":"80 44.4 E","bearing":"303 deg","compass":"gyro","dut1":"0 s"}"#,
+        source: "Bowditch 2024 §2018: at latitude 51°24.6'N with the Sun's declination N 19°40.4', the amplitude is W 32.6°N, a true bearing of 302.6°, so a gyro reading 303.0° is 0.4° W in error. The Sun holds that declination on 2024-07-24 at 14h30m UT and is setting then at longitude 80°44.4'E",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "navigation.celestial.almanac",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.magnetic.declination",
+            reason: "alternative",
+        },
+    ],
+    sentence: "{answer}.",
+    limits: &[("batchRows", 5_000)],
+    run: run_sun_azimuth_check,
+    ..ToolDef::BLANK
+};
+
+fn run_sun_azimuth_check(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let compass = ctx.choice("compass")?.unwrap_or("gyro");
+    let bearing = point::plain_angle(ctx, "bearing")?;
+    let variation = point::plain_angle(ctx, "variation")?;
+    if compass == "magnetic" && variation.is_none() {
+        return Err(ToolError::invalid(
+            "/variation",
+            "Checking a magnetic compass needs the magnetic variation here, so that the error can be split into variation and deviation. The magnetic declination tool gives it.",
+        ));
+    }
+    let inst = instant(ctx)?;
+    let b = resolve("Sun", &inst)?;
+    let lha = (b.gha + lon).rem_euclid(360.0);
+    let zn = azimuth(lat, b.dec, lha);
+    let (z, z_label) = azimuth_angle(zn, lat, lha);
+    let (phi, d, h) = (lat.to_radians(), b.dec.to_radians(), lha.to_radians());
+    let altitude = (phi.sin() * d.sin() + phi.cos() * d.cos() * h.cos())
+        .asin()
+        .to_degrees();
+    // sin A = sin Dec / cos Lat: the Sun never rises at a latitude whose
+    // cosine is smaller than its declination's sine.
+    let ratio = d.sin() / phi.cos();
+    if ratio.abs() > 1.0 {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "At this latitude the Sun does not cross the celestial horizon on this date, so it has no amplitude. Check a compass here against a body that rises and sets, or against the Sun's azimuth at altitude.",
+        ));
+    }
+    let amplitude = ratio.asin().to_degrees().abs();
+    let rising = lha > 180.0;
+    let north = b.dec >= 0.0;
+    let amplitude_label = format!(
+        "{} {amplitude:.1} {}",
+        if rising { "E" } else { "W" },
+        if north { "N" } else { "S" }
+    );
+    let amplitude_azimuth = match (rising, north) {
+        (true, true) => 90.0 - amplitude,
+        (true, false) => 90.0 + amplitude,
+        (false, true) => 270.0 + amplitude,
+        (false, false) => 270.0 - amplitude,
+    };
+    let horizon_note = "The Sun's center is on the celestial horizon when its lower limb sits about two thirds of its own diameter above the visible horizon (Bowditch §2017).".to_string();
+    let mut out = vec![
+        ("zn", ctx.out("zn", deg_q(zn))),
+        ("z", ctx.out("z", deg_q(z))),
+        ("z_label", Json::str(z_label.clone())),
+        ("altitude", ctx.out("altitude", deg_q(altitude))),
+        ("amplitude", ctx.out("amplitude", deg_q(amplitude))),
+        ("amplitude_label", Json::str(amplitude_label.clone())),
+        (
+            "amplitude_azimuth",
+            ctx.out("amplitude_azimuth", deg_q(amplitude_azimuth)),
+        ),
+        ("horizon_note", Json::str(horizon_note)),
+        ("dec", ctx.out("dec", deg_q(b.dec))),
+        ("lha", ctx.out("lha", deg_q(lha))),
+    ];
+    let answer = match bearing {
+        Some(seen) => {
+            // Bowditch §2016: the error is the true azimuth less what the
+            // compass read, named east when the compass reads low.
+            let e = wrap_azimuth(zn - seen + 180.0) - 180.0;
+            let text = error_label(e);
+            out.push(("error", ctx.out("error", deg_q(e))));
+            out.push(("error_text", Json::str(text.clone())));
+            let kind = if compass == "magnetic" {
+                let v = variation.expect("checked");
+                let dev = wrap_azimuth(e - v + 180.0) - 180.0;
+                out.push(("deviation", ctx.out("deviation", deg_q(dev))));
+                format!(
+                    "compass error is {text} degrees, leaving {} degrees of deviation",
+                    error_label(dev)
+                )
+            } else {
+                format!("gyro error is {text} degrees")
+            };
+            format!("the Sun bore {zn:.1} degrees true, so the {kind}")
+        }
+        None => {
+            format!("the Sun bore {zn:.1} degrees true, and its amplitude is {amplitude_label}")
+        }
+    };
+    if ctx.explaining() {
+        ctx.step(
+            "Almanac data",
+            "The Sun's apparent place for that second",
+            format!("at {}", ctx.text("utc")?.unwrap_or_default()),
+            format!("GHA {}, Dec {}", gha_dm(b.gha), dec_dm(b.dec)),
+        );
+        ctx.step(
+            "True azimuth",
+            "Zn = atan2(-cos d sin LHA, cos L sin d - sin L cos d cos LHA)",
+            format!("LHA {}, Lat {}", gha_dm(lha), alt_dm(lat)),
+            format!("Z {z_label}, Zn {zn:.1} degrees"),
+        );
+        ctx.step(
+            "Amplitude",
+            "sin A = sin Dec / cos Lat, on the celestial horizon",
+            format!("Dec {}, Lat {}", dec_dm(b.dec), alt_dm(lat)),
+            format!("{amplitude_label} ({amplitude_azimuth:.1} degrees true)"),
+        );
+        if let Some(seen) = bearing {
+            ctx.step(
+                "Compass error",
+                "The true azimuth less the bearing observed",
+                format!("{zn:.1} - {seen:.1} degrees"),
+                answer.clone(),
+            );
+        } else {
+            ctx.step(
+                "Compass check",
+                "Without a bearing to compare, the azimuth and amplitude stand alone",
+                format!("Zn {zn:.1} degrees, amplitude {amplitude_label}"),
+                answer.clone(),
+            );
+        }
+    }
+    out.insert(0, ("answer", Json::str(answer)));
+    Ok(Json::obj(out))
+}

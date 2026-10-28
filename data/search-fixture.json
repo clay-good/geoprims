@@ -1292,6 +1292,14 @@
     {
       "query": "correct a sextant altitude for dip and refraction",
       "expect": "navigation.celestial.altitude-correction"
+    },
+    {
+      "query": "latitude from an altitude of Polaris",
+      "expect": "navigation.celestial.polaris-latitude"
+    },
+    {
+      "query": "gyro error from the amplitude of the setting sun",
+      "expect": "navigation.celestial.sun-azimuth-check"
     }
   ]
 }

@@ -70,6 +70,7 @@ fn catalog_lint() {
         "survey.cogo.traverse-closure",
         "aviation.wind.heading-chain",
         "geodesy.magnetic.true-to-magnetic",
+        "geodesy.magnetic.declination",
     ];
     let errs = manifest::lint(TOOLS, &taxonomy, &known);
     assert!(errs.is_empty(), "{}", errs.join("\n"));

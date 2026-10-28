@@ -5,6 +5,16 @@
       "date": "2026-10-27",
       "kind": "added",
       "tools": [
+        "navigation.celestial.polaris-latitude",
+        "navigation.celestial.sun-azimuth-check"
+      ],
+      "vectors": [],
+      "summary": "New, both experimental: latitude by Polaris, and a compass check by the Sun. The first turns one corrected altitude of Polaris into a latitude, and it solves the navigational triangle for Polaris's own place at the second of the sight rather than reading the Almanac's a0, a1, and a2 tables, so it holds at any latitude and will not drift as Polaris moves. It reports the correction it applied, which is the same quantity those three tables add up to, and Polaris's true azimuth for the line of position. The second gives the Sun's true azimuth at a time and place, its amplitude for an observation taken as the Sun's centre crosses the celestial horizon, and the error of the compass against a bearing you read, split into variation and deviation for a magnetic compass. Bowditch's own worked Polaris sight, its two gyro errors by Pub. No. 229, and its worked amplitude are all reproduced, and both tools are checked against the US Naval Observatory's own data at 60 instants and places from 1995 to 2045. The Nautical Almanac still governs."
+    },
+    {
+      "date": "2026-10-27",
+      "kind": "added",
+      "tools": [
         "navigation.celestial.altitude-correction",
         "navigation.celestial.sight-reduction"
       ],

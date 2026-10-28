@@ -1895,8 +1895,8 @@
       ]
     },
     "navigation.celestial": {
-      "summary": "Celestial navigation end to end: the almanac data for the second of a sight, the sextant altitude corrections, and the reduction to a line of position.",
-      "intro": "These tools take a sextant sight from the arc to the chart. The almanac tool gives the numbers a navigator reads from the Nautical Almanac's daily pages: GHA and declination of the Sun, Moon, and four planets, GHA Aries, and the SHA and declination of the 57 navigational stars and Polaris. The correction tool turns the altitude you read into the observed altitude, showing the index correction, dip, refraction, semidiameter, and parallax one line at a time. The reduction tool then gives the computed altitude, the true azimuth, and how far to shift the line of position toward or away from the body. Check the result against the printed almanac, which governs. Start with the corrections, then the reduction. The pitfall is time: a sight's GHA moves 15 minutes of arc for every minute of clock error.",
+      "summary": "Celestial navigation end to end: the almanac data for the second of a sight, the sextant altitude corrections, the reduction to a line of position, latitude by Polaris, and a compass check by the Sun.",
+      "intro": "These tools take a sextant sight from the arc to the chart. The almanac tool gives the numbers a navigator reads from the Nautical Almanac's daily pages: hour angle and declination for the Sun, Moon, four planets, Aries, and the 58 listed stars. The correction tool turns the altitude you read into the observed altitude, showing dip, refraction, semidiameter, and parallax one line at a time. The reduction tool then gives the computed altitude, the true azimuth, and how far to shift the line of position. Two shortcuts sit beside them: a latitude straight from an altitude of Polaris, and a compass check against the Sun's azimuth or amplitude. Start with the corrections. The pitfall is time: a sight's hour angle moves 15 minutes of arc for every minute of clock error.",
       "tasks": [
         {
           "want": "find a body's GHA and declination for a sight",
@@ -1914,6 +1914,18 @@
           "want": "reduce a sight to a line of position",
           "tools": [
             "sight-reduction"
+          ]
+        },
+        {
+          "want": "find a latitude from an altitude of Polaris",
+          "tools": [
+            "polaris-latitude"
+          ]
+        },
+        {
+          "want": "check a gyro or magnetic compass against the Sun",
+          "tools": [
+            "sun-azimuth-check"
           ]
         }
       ]

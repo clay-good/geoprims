@@ -219,6 +219,7 @@ dependencies = [
 name = "gp-survey"
 version = "0.1.0"
 dependencies = [
+ "gp-astro",
  "gp-base",
  "gp-geo",
  "libm",

@@ -46,6 +46,10 @@
       "severity": "info",
       "message": "The input was ambiguous; one reading was chosen."
     },
+    "ASTRONOMIC_AZIMUTH": {
+      "severity": "accuracy",
+      "message": "This is an astronomic azimuth, referred to the local vertical. It differs from geodetic azimuth by the Laplace correction at the station."
+    },
     "AZIMUTH_NOT_UNIQUE": {
       "severity": "info",
       "message": "The azimuth is not unique."

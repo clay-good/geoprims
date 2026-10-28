@@ -450,6 +450,26 @@
       "editionCheck": false
     },
     {
+      "id": "cgs-sp237",
+      "name": "Manual of Geodetic Astronomy: Determination of Longitude, Latitude, and Azimuth",
+      "issuer": "US Coast and Geodetic Survey (Hoskinson, A. J., and Duerksen, J. A.)",
+      "currentEdition": "Special Publication No. 237",
+      "currentReleaseDate": "1947-01-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-28",
+      "verificationNote": "Read from the NGS library PDF on 2026-10-28 (geodesy.noaa.gov/library/pdfs/Special_Publication_No_237.pdf): title page gives Special Publication No. 237, Hoskinson and Duerksen, Coast and Geodetic Survey, Government Printing Office 1947. The azimuth determination chapter gives tan A = -sin t / (cos phi tan d - sin phi cos t) with A from north clockwise and t the hour angle westward from upper culmination, and the Laplace azimuth specifications reject any observation 5 seconds of arc or more from the mean and want at least 24 of them over two nights. A historical publication, not revised; the method is unchanged.",
+      "freeAccessUrl": "https://geodesy.noaa.gov/library/pdfs/Special_Publication_No_237.pdf",
+      "matchTerms": [
+        "Manual of Geodetic Astronomy"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "cnatra-p-765",
       "name": "Primary Instrument Navigation, T-6B",
       "issuer": "Chief of Naval Air Training",

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "b9e1b465403c7a7e",
+    "hash": "2d817219d0d32162",
     "lastmod": "2026-10-28"
   },
   "/accuracy/": {
@@ -316,7 +316,7 @@
     "lastmod": "2026-10-19"
   },
   "/changelog/": {
-    "hash": "c41ad756cf101a5b",
+    "hash": "17ee9343e67b6e02",
     "lastmod": "2026-10-28"
   },
   "/disclaimer/": {
@@ -1544,7 +1544,7 @@
     "lastmod": "2026-10-20"
   },
   "/methodology/": {
-    "hash": "e85d618ebbd1ba15",
+    "hash": "4d38518ff8b25a3d",
     "lastmod": "2026-10-28"
   },
   "/navigation/": {
@@ -1792,7 +1792,7 @@
     "lastmod": "2026-10-20"
   },
   "/quality/": {
-    "hash": "75f13780b3c67b25",
+    "hash": "31d2882dc1166698",
     "lastmod": "2026-10-28"
   },
   "/raster/": {
@@ -1920,12 +1920,24 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "67f7695f944f967d",
+    "hash": "9c5c97818381a3eb",
     "lastmod": "2026-10-28"
   },
   "/survey/": {
-    "hash": "d5659caf628c8d5f",
-    "lastmod": "2026-10-20"
+    "hash": "3ec77c55d5c6b549",
+    "lastmod": "2026-10-28"
+  },
+  "/survey/astro/": {
+    "hash": "00f185aa28299c26",
+    "lastmod": "2026-10-28"
+  },
+  "/survey/astro/polaris-azimuth/": {
+    "hash": "3737dc7a3e98b2c4",
+    "lastmod": "2026-10-28"
+  },
+  "/survey/astro/solar-azimuth/": {
+    "hash": "3decc8a7b261d191",
+    "lastmod": "2026-10-28"
   },
   "/survey/cogo/": {
     "hash": "11f49be3ce0c3337",
@@ -2344,7 +2356,7 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "db37ce809d8a3352",
+    "hash": "2b06658cfd72c062",
     "lastmod": "2026-10-28"
   },
   "/units/": {
@@ -2608,7 +2620,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "d41a12ea3500c2f3",
+    "hash": "8cec8a3869fc91a7",
     "lastmod": "2026-10-28"
   },
   "/workflows/": {

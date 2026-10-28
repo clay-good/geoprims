@@ -260,6 +260,11 @@
       "tool": "survey.reduction.level-run",
       "source": "Indiana Department of Transportation",
       "reason": "The procedures manual prints rod readings and elevations to a hundredth of a foot, so the tolerance is half of that."
+    },
+    {
+      "tool": "survey.astro.solar-azimuth",
+      "source": "USNO celnav API 4.0.1",
+      "reason": "The limb correction is the sun's semidiameter over the cosine of its altitude, and the oracle is USNO's own published semidiameter and geocentric altitude for the instant. This core's semidiameter comes from VSOP87D rather than USNO's series, and the altitude it uses is its own, so the derived correction can only be matched to about a second of arc out of 1,328."
     }
   ]
 }

@@ -46,7 +46,7 @@ Text zoom is checked at 200% at 375 px wide.
 | Cumulative layout shift | 0.1 | 0.05 |
 | Shell JavaScript | 90 KB | |
 | Self-hosted fonts | 80 KB | |
-| Offline precache | 12 MB compressed | |
+| Offline precache | 14 MB compressed | Raised from 12 MB on 2026-10-28: the catalog outgrew it at 695 pages. The install is the shell, the catalog, the search index, the Wasm modules, every tool page, and the calculation data that is not an optional pack |
 
 The pre-rendered answer is the largest contentful paint element, or appears
 before it. WebAssembly compiles in the background after first paint, and every

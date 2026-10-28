@@ -7,6 +7,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import vm from 'node:vm';
 import { brotliCompressSync } from 'node:zlib';
+import { PRECACHE_BUDGET } from '../scripts/pwa.mjs';
 
 const web = new URL('..', import.meta.url).pathname;
 const dist = join(web, 'dist');
@@ -112,7 +113,7 @@ test('the web app manifest is installable', () => {
   assert.match(home, /<link rel="apple-touch-icon" href="\/icons\/apple-touch-icon.png"/);
 });
 
-test('the precache holds every page, module, and calculation asset, within 12 MB compressed', () => {
+test('the precache holds every page, module, and calculation asset, within the profile budget', () => {
   const precache = vm.runInNewContext(`${readFileSync(join(dist, 'sw.js'), 'utf8').split('\n\n')[0]}; PRECACHE`);
   const set = new Set(precache);
   for (const t of catalog.tools) assert.ok(set.has(route(t.id)), `${t.id} page`);
@@ -134,7 +135,9 @@ test('the precache holds every page, module, and calculation asset, within 12 MB
     assert.ok(body, `${u} is not in the build`);
     bytes += brotliCompressSync(body).length;
   }
-  assert.ok(bytes <= 12_000_000, `${bytes} bytes`);
+  // The budget lives in data/reference-profile.json, so one file holds every
+  // number a gate reports against.
+  assert.ok(bytes <= PRECACHE_BUDGET, `${bytes} bytes, over the ${PRECACHE_BUDGET} budget`);
 });
 
 test('airplane mode: after one visit, tool pages, modules, and assets load offline', async () => {

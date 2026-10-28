@@ -93,7 +93,7 @@
       "documentedAs": "Self-hosted fonts"
     },
     "precacheBytes": {
-      "hard": 12000000,
+      "hard": 14000000,
       "documentedAs": "Offline precache"
     }
   }

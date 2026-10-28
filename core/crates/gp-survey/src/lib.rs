@@ -2,6 +2,7 @@
 //! horizontal and vertical curves, earthwork volumes, and the combined scale
 //! factor (add-survey-suite). Results keep the linear unit the surveyor entered.
 
+pub mod astro;
 pub mod borrow;
 pub mod closure;
 pub mod direction;
@@ -3590,6 +3591,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &land::DEED_PLOT,
     &land::PLSS_PARSE,
     &land::BASIS_ROTATION,
+    &astro::POLARIS_AZIMUTH,
+    &astro::SOLAR_AZIMUTH,
 ];
 
 pub static REGISTRY: Registry = Registry {

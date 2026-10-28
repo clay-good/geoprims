@@ -5,7 +5,7 @@
 // Optional packs stay out of the install and are cached after use.
 // Downloads (test vectors), share cards, crawler files, and docs pages (cached
 // when visited) are left out. Fails the build if
-// the precache exceeds 12 MB of Brotli-compressed transfer.
+// the precache exceeds the profile's Brotli-compressed transfer budget.
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';

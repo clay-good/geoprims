@@ -5,6 +5,16 @@
       "date": "2026-10-28",
       "kind": "added",
       "tools": [
+        "survey.astro.polaris-azimuth",
+        "survey.astro.solar-azimuth"
+      ],
+      "vectors": [],
+      "summary": "Two new experimental tools, an astro group in Survey: the azimuth of a survey line from a timed observation of Polaris or of the sun, by the hour-angle method of Coast and Geodetic Survey Special Publication 237. Enter the station, then each pointing's instant in UTC and the horizontal angle from the reference mark to the body, and the limb you sighted if it was the sun. Each pointing's azimuth comes back with the mean of the set, the scatter, and a flag on any pointing that sits more than three times the others' scatter away from them, with the mean recomputed without it. A pointing on a limb is carried to the centre by the semidiameter over the cosine of the altitude. The result says plainly that the azimuth is astronomic, referred to the local vertical, and reports the geodetic azimuth beside it when you supply the Laplace correction for the station. The body's place is the same series the celestial almanac publishes, and its azimuth agrees with the US Naval Observatory within 0.0002 degrees at 54 places and instants from 1995 to 2045."
+    },
+    {
+      "date": "2026-10-28",
+      "kind": "added",
+      "tools": [
         "time.moon.position",
         "time.moon.rise-set",
         "time.moon.phase"

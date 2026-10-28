@@ -101,6 +101,8 @@
     "survey.cogo.least-squares-2d": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "control, unknowns, distances, angles, and directions" },
     "survey.cogo.helmert-3d-fit": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "points" },
     "survey.reduction.level-network": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "fixed benchmarks and leveling runs" },
+    "survey.astro.polaris-azimuth": { "kind": "data-proportional", "p95Ms": 20, "scalesWith": "pointings" },
+    "survey.astro.solar-azimuth": { "kind": "data-proportional", "p95Ms": 20, "scalesWith": "pointings" },
     "survey.cogo.area-partition": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "corners of the figure" },
     "survey.cogo.radial-sideshots": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "shots" },
     "survey.cogo.resection": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "control" },

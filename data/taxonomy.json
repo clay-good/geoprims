@@ -86,7 +86,8 @@
         "curves",
         "land",
         "gnss"
-      ]
+      ,
+      "astro"]
     },
     "indexing": {
       "title": "Spatial indexing",

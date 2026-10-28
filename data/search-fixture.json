@@ -1312,6 +1312,14 @@
     {
       "query": "moon azimuth and altitude at a place",
       "expect": "time.moon.position"
+    },
+    {
+      "query": "astronomic azimuth from a Polaris observation",
+      "expect": "survey.astro.polaris-azimuth"
+    },
+    {
+      "query": "azimuth of a line from a solar observation",
+      "expect": "survey.astro.solar-azimuth"
     }
   ]
 }

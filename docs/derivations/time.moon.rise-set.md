@@ -18,6 +18,7 @@ The second is settled by sampling. The moon's apparent place comes from the same
 3. The rise-and-set criterion is evaluated every ten minutes across the window and every sign change is bisected. Every crossing is kept, not just the first: the moon rises about 50 minutes later each day, so a local date can hold two of one kind or none at all.
 4. Upper transit is found the same way, from the zeros of the local hour angle where it is increasing.
 5. When a date has no rise or no set, the window is widened by a day and a half either side to find the ones on each side of it, and both are named in the result.
+6. Both the moon's and the sun's paths are sampled every twenty minutes of the local day for the sky plot, the sun from its own two-hourly ephemeris so that drawing it costs almost nothing.
 
 Greenwich apparent sidereal time is the cheap rotation polynomials of IERS 2010 plus an equation of the equinoxes held fixed across the window. That term changes by under a thousandth of an arcsecond in a day, so holding it fixed costs nothing and saves a full nutation series at every step of the solver.
 
@@ -42,6 +43,7 @@ Any place; a local date; a zone as a fixed offset or a tzdb name. Inside the pol
 - **The equation of the equinoxes held fixed** across the window, which is under a thousandth of an arcsecond of sidereal time.
 - **The zone offset at local noon** sets the window. On the two days a year a zone changes its clocks, the window can be an hour out at one end; each event is still converted to local time with the offset in force at that instant.
 - **A level horizon at sea level.** No height of eye, no terrain, and the 34′ is the standard horizon refraction, which the weather moves by minutes of arc. This is the same assumption USNO's tables make.
+- **The path samples are twenty minutes apart**, which is close enough to draw but not to read a time off: the rise and set times in the result come from the bisected criterion, not from the path.
 - **The geocentric semidiameter** stands in for USNO's "apparent angular radius". The two differ by the augmentation, which is about 0.3′ at the zenith and nil at the horizon, so at a rise or set they agree.
 
 ## Worked example

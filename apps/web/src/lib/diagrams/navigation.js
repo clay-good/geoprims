@@ -351,6 +351,57 @@ function traverseLegs(args, result) {
   return { markup: svg(body.join(''), title), desc: title };
 }
 
+/**
+ * The sextant altitude corrections as a work form: the names and signed values
+ * in two columns down the left, the way a navigator writes them in the margin,
+ * and beside them the altitude stepping left or right by each one to scale, so
+ * the big corrections look big. The observed altitude is where it lands.
+ */
+function correctionStack(args, result) {
+  const rows = (result.result.corrections ?? []).map((r) => [r.step, r.value?.value ?? r.value]);
+  const total = val(result, 'total');
+  if (rows.length < 2 || rows.length > 6 || !Number.isFinite(total) || rows.some((r) => !Number.isFinite(r[1]))) return null;
+  // Cumulative minutes of arc from the sextant altitude, so each step starts
+  // where the one above it ended.
+  let run = 0;
+  const steps = rows.map(([name, v]) => {
+    const from = run;
+    run += v;
+    return [name, v, from, run];
+  });
+  const signed = (v) => `${v >= 0 ? '+' : '\u2212'}${Math.abs(v).toFixed(1)}\u2032`;
+  const reach = Math.max(...steps.flatMap((s) => [Math.abs(s[2]), Math.abs(s[3])]), Math.abs(total), 1) * 1.15;
+  // The drawing sits to the right of the two text columns.
+  const X = (m) => 236 + (m / reach) * 72;
+  const Y = (i) => 60 + i * 24;
+  const foot = Y(steps.length) + 14;
+  const body = [
+    // The zero line is the sextant altitude every correction is measured from.
+    line('dg-grid dg-dash', [X(0), 44], [X(0), foot]),
+    text('dg-muted-text', 12, 36, `hs ${args.hs ?? ''}`.trim()),
+    text('dg-muted-text', X(0), 36, '0', 'middle'),
+    ...steps.flatMap(([name, v, from, to], i) => {
+      const y = Y(i);
+      const cls = v >= 0 ? 'dg-accent' : 'dg-muted';
+      return [
+        text('dg-label', 12, y + 4, name),
+        text('dg-label', 160, y + 4, signed(v), 'end'),
+        line('dg-grid', [X(0), y], [X(from), y]),
+        v === 0 ? dot(X(from), y, 'dg-dot') : arrow(X(from), y, X(to), y, cls, '', 0.5, -1),
+      ];
+    }),
+    // Where the ladder lands: the observed altitude.
+    text('dg-label', 12, foot + 4, 'Observed altitude'),
+    text('dg-label', 160, foot + 4, signed(total), 'end'),
+    line('dg-grid', [X(0), foot], [X(total), foot]),
+    dot(X(total), foot, 'dg-dot-now'),
+    text('dg-muted-text', 12, foot + 26, `Ho ${disp(result, 'ho')} \u00b7 apparent altitude ${disp(result, 'ha')}`),
+  ].join('');
+  const named = steps.map(([name, v]) => `${name.toLowerCase()} ${signed(v)}`).join(', ');
+  const title = `Sextant altitude corrections: ${named}, ${total >= 0 ? 'adding' : 'taking off'} ${Math.abs(total).toFixed(1)} minutes of arc in all to give an observed altitude of ${disp(result, 'ho')}.`;
+  return { markup: svg(body, title), desc: title };
+}
+
 export const DIAGRAMS = {
   'navigation.piloting.set-and-drift': currentTriangle,
   'navigation.route.cpa': cpa,
@@ -363,4 +414,5 @@ export const DIAGRAMS = {
   'navigation.tide.datums': datumStack,
   'navigation.sailing.plane': sailingTriangle,
   'navigation.sailing.traverse': traverseLegs,
+  'navigation.celestial.altitude-correction': correctionStack,
 };

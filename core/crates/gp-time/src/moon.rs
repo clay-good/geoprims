@@ -124,6 +124,12 @@ impl Eph {
     /// Samples the window [`from`, `to`] (UT1 Julian dates) every two hours,
     /// with a sample either side so the interpolation never extrapolates.
     fn build(from: f64, to: f64, dt: f64) -> Eph {
+        Eph::of(Body::Moon, from, to, dt)
+    }
+
+    /// The same, for any body: the sun moves a degree a day, so two-hourly
+    /// samples interpolate it even better than they do the moon.
+    fn of(body: Body, from: f64, to: f64, dt: f64) -> Eph {
         let step = 2.0 / 24.0;
         let jd0 = from - step;
         // Four samples are the fewest the cubic interpolation can use.
@@ -132,7 +138,7 @@ impl Eph {
         let mut dec = Vec::with_capacity(n);
         let mut dist = Vec::with_capacity(n);
         for i in 0..n {
-            let p = apparent(Body::Moon, jd0 + i as f64 * step + dt / 86_400.0);
+            let p = apparent(body, jd0 + i as f64 * step + dt / 86_400.0);
             // Right ascension is unwrapped so the interpolation stays smooth
             // across the 24-hour seam.
             let mut a = p.ra;
@@ -653,6 +659,37 @@ fn utc_text(jd: f64) -> String {
 
 // ---------------------------------------------------------------- rise and set
 
+/// A point of the day's path for the sky plot, as the diagram reads it.
+const SKY_PATH_ROW: &[Field] = &[
+    Field::new(
+        "time",
+        "UTC time",
+        "Clock time, like 18:40",
+        Kind::Text { max_len: 5 },
+    ),
+    Field::new("body", "Body", "moon or sun", Kind::Text { max_len: 8 }),
+    Field::new(
+        "azimuth",
+        "Azimuth",
+        "Clockwise from north, like 132.0 deg",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(2)),
+    Field::new(
+        "elevation",
+        "Elevation",
+        "Above the horizon, negative below, like 34.9 deg",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .precision(Precision::Decimals(2)),
+];
+
 const MOON_WORDS: &[(&str, &str)] = &[
     ("normal", "The moon rises and sets on this date"),
     (
@@ -723,8 +760,8 @@ pub static RISE_SET: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "vector-diagram",
+        map: &[("track", "path")],
     }],
     related: &[
         Related {
@@ -747,7 +784,7 @@ pub static RISE_SET: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
-static MOON_EVENT_OUT: [Field; 11] = [
+static MOON_EVENT_OUT: [Field; 12] = [
     Field::new(
         "answer",
         "The moon's day",
@@ -826,6 +863,16 @@ static MOON_EVENT_OUT: [Field; 11] = [
         "A second rise or set",
         "When the local day holds two of one kind",
         Kind::Text { max_len: 80 },
+    ),
+    Field::new(
+        "path",
+        "Paths through the day",
+        "Where the moon and the sun stand through the local day, every 20 minutes",
+        Kind::List {
+            items: SKY_PATH_ROW,
+            min: 0,
+            max: 146,
+        },
     ),
 ];
 
@@ -1024,6 +1071,27 @@ fn run_rise_set(ctx: &mut Ctx) -> Result<Json, ToolError> {
     if !second.is_empty() {
         out.push(("second_event", Json::str(second)));
     }
+    // Both paths for the sky plot, every 20 minutes of the local day. The sun
+    // is sampled the same way the moon is, so drawing it costs almost nothing.
+    let sun = Eph::of(Body::Sun, start, end, dt);
+    let clock = |t: f64| {
+        let (_, m) = split(t);
+        format!("{:02}:{:02}", m / 60, m % 60)
+    };
+    let mut path = Vec::with_capacity(146);
+    for (name, e) in [("moon", &eph), ("sun", &sun)] {
+        for k in 0..=72 {
+            let t = start + f64::from(k) / 72.0;
+            let (az, _, alt, _, _, _) = e.topocentric(lat, lon, 0.0, t);
+            path.push(Json::obj([
+                ("time", Json::str(clock(t))),
+                ("body", Json::str(name)),
+                ("azimuth", deg_q(az).to_json()),
+                ("elevation", deg_q(alt).to_json()),
+            ]));
+        }
+    }
+    out.push(("path", Json::Arr(path)));
     Ok(Json::obj(out))
 }
 

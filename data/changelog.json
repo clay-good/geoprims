@@ -3,6 +3,16 @@
   "entries": [
     {
       "date": "2026-10-28",
+      "kind": "changed",
+      "tools": [
+        "navigation.celestial.altitude-correction",
+        "time.moon.rise-set"
+      ],
+      "vectors": [],
+      "summary": "Two drawings and two explainers for the celestial and moon tools. The sextant altitude corrections now draw as the work form a navigator writes down the margin: the altitude read off the arc at the top, each correction stepping it left or right by its own size to scale, and the observed altitude at the bottom. Moonrise and moonset now draw a sky plot with the moon's path and the sun's behind it, north up and the horizon at the rim, with rise and set marked where the moon crosses it; the tool returns both paths for the day to make that possible. Two new explainers: how a sextant sight becomes a line of position, and how much light the moon will give you, which covers why a half moon is far dimmer than half as bright and why a calendar date can hold two moonrises or none."
+    },
+    {
+      "date": "2026-10-28",
       "kind": "added",
       "tools": [
         "survey.astro.polaris-azimuth",

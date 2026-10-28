@@ -1204,8 +1204,8 @@ pub static ALTITUDE_CORRECTION: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "vector-diagram",
+        map: &[("steps", "corrections")],
     }],
     related: &[
         Related {

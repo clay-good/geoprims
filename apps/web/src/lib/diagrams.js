@@ -45,6 +45,8 @@ const DIAGRAMS = Object.fromEntries(
     'geodesy.height.convert',
     'aviation.ifr.hold-entry',
     'time.sun.mapping-window',
+    'navigation.celestial.altitude-correction',
+    'time.moon.rise-set',
     'survey.curves.circular-curve',
     'aviation.performance.climb-gradient',
     'aviation.performance.climb-plan',

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "2d817219d0d32162",
+    "hash": "d66c92e9f15cdfe1",
     "lastmod": "2026-10-28"
   },
   "/accuracy/": {
@@ -316,7 +316,7 @@
     "lastmod": "2026-10-19"
   },
   "/changelog/": {
-    "hash": "17ee9343e67b6e02",
+    "hash": "2a99e98a75a3bc1e",
     "lastmod": "2026-10-28"
   },
   "/disclaimer/": {
@@ -1380,8 +1380,8 @@
     "lastmod": "2026-09-19"
   },
   "/learn/": {
-    "hash": "639bf554615ac136",
-    "lastmod": "2026-10-21"
+    "hash": "f1d1891f9bd2033a",
+    "lastmod": "2026-10-28"
   },
   "/learn/crosswind-components/": {
     "hash": "754fb39b841311bb",
@@ -1451,6 +1451,10 @@
     "hash": "38410acd04dd2dc6",
     "lastmod": "2026-10-09"
   },
+  "/learn/moonlight-for-night-work/": {
+    "hash": "7683c1ff5c7f34c8",
+    "lastmod": "2026-10-28"
+  },
   "/learn/nad83-vs-wgs84/": {
     "hash": "60ee8ffd9e944eed",
     "lastmod": "2026-10-09"
@@ -1482,6 +1486,10 @@
   "/learn/set-and-drift/": {
     "hash": "a4581fdbd5f62bb8",
     "lastmod": "2026-10-21"
+  },
+  "/learn/sight-reduction/": {
+    "hash": "21d79665068571e6",
+    "lastmod": "2026-10-28"
   },
   "/learn/state-plane-coordinates/": {
     "hash": "1ea1f7afb98f6287",
@@ -1556,11 +1564,11 @@
     "lastmod": "2026-10-28"
   },
   "/navigation/celestial/almanac/": {
-    "hash": "750a07be73847076",
-    "lastmod": "2026-10-27"
+    "hash": "dae3635aa7cbfb00",
+    "lastmod": "2026-10-28"
   },
   "/navigation/celestial/altitude-correction/": {
-    "hash": "324aba740fd8cdf3",
+    "hash": "d32d7abcfd9b427a",
     "lastmod": "2026-10-28"
   },
   "/navigation/celestial/polaris-latitude/": {
@@ -1568,7 +1576,7 @@
     "lastmod": "2026-10-28"
   },
   "/navigation/celestial/sight-reduction/": {
-    "hash": "a62ada2b92c0e496",
+    "hash": "4f922fa21b942430",
     "lastmod": "2026-10-28"
   },
   "/navigation/celestial/sun-azimuth-check/": {
@@ -2268,15 +2276,15 @@
     "lastmod": "2026-10-28"
   },
   "/time/moon/phase/": {
-    "hash": "e280490f7484a419",
+    "hash": "5ae548fc21192ddb",
     "lastmod": "2026-10-28"
   },
   "/time/moon/position/": {
-    "hash": "077ac084a4e12062",
+    "hash": "5178ad12c764a2f3",
     "lastmod": "2026-10-28"
   },
   "/time/moon/rise-set/": {
-    "hash": "4fac83e002d11e04",
+    "hash": "9a8da1732be37750",
     "lastmod": "2026-10-28"
   },
   "/time/scale/": {
@@ -2620,7 +2628,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "8cec8a3869fc91a7",
+    "hash": "0056b051d6946a03",
     "lastmod": "2026-10-28"
   },
   "/workflows/": {

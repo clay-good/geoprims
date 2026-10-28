@@ -79,10 +79,16 @@ def photo_scale():
 
 def relief():
     out = []
-    # Wolf, Dewitt & Wilkinson (2014) example 6-7: about 122.7 m.
+    # EM 1110-1-1000 eq. 10-7, h_t = d(H - h_base) / r_top, read at the open
+    # Arizona copy: 54.1 * (535 - 259) / 121.7 = 122.69 m. Wolf, Dewitt &
+    # Wilkinson's example 6-7 carries the same case and prints about 122.7 m,
+    # but that book is not open, so the equation is the authority here and the
+    # book's rounded figure is only the agreement check.
     out.append(({"displacement": "54.1 mm", "radial_distance": "121.7 mm", "flying_height": "535 m", "base_elevation": "259 m"},
                 {"result.object_height.value": 54.1 * (535 - 259) / 121.7},
-                "Wolf, Dewitt & Wilkinson (2014), example 6-7 (h about 122.7 m)", "4th edition",
+                "EM 1110-1-1000 (31 Mar 93) eq. 10-7, h_t = d(H - h_base) / r_top: "
+                "54.1 * (535 - 259) / 121.7 = 122.69 m, which agrees with the about 122.7 m "
+                "of Wolf, Dewitt & Wilkinson example 6-7", "31 March 1993",
                 {"result.object_height.value": {"abs": 0.05}}))
     cases = [(54.1, 121.7, 535.0, 259.0), (3.2, 88.0, 1200.0, 0.0), (12.5, 140.0, 2500.0, 400.0), (0.8, 45.0, 600.0, 20.0),
              (20.0, 110.0, 900.0, 150.0), (6.4, 95.5, 1500.0, 300.0), (1.75, 60.2, 450.0, 10.0)]
@@ -106,15 +112,22 @@ def relief():
 
 def parallax():
     out = []
-    # Wolf, Dewitt & Wilkinson (2014) example 8-3: about 13.3 m.
+    # EM 1110-1-1000 eq. 10-15, h_A = h_C + dp(H - h_C) / P_a with
+    # P_a = P_c + dp: 1.3 * 915 / 89.5 = 13.29 m. Wolf, Dewitt & Wilkinson's
+    # example 8-3 prints about 13.3 m for the same case; again the equation is
+    # the authority and the book is the check.
     out.append(({"flying_height": "915 m", "control_parallax": "88.2 mm", "parallax_difference": "1.3 mm", "control_elevation": "0 m"},
                 {"result.elevation.value": 1.3 * 915 / 89.5},
-                "Wolf, Dewitt & Wilkinson (2014), example 8-3 (h about 13.3 m)", "4th edition",
+                "EM 1110-1-1000 (31 Mar 93) eq. 10-15, h_A = h_C + dp(H - h_C) / P_a with "
+                "P_a = P_c + dp: 1.3 * 915 / 89.5 = 13.29 m, which agrees with the about 13.3 m "
+                "of Wolf, Dewitt & Wilkinson example 8-3", "31 March 1993",
                 {"result.elevation.value": {"abs": 0.05}}))
-    # The Washington Monument example: H 4,600 ft, dp 0.6 in, p 4.4 in -> 552 ft.
+    # The same equation in feet and inches: 0.6 * 4600 / 5.0 = 552 ft, the
+    # Washington Monument case that is worked in many photogrammetry courses.
     out.append(({"flying_height": "4600 ft", "control_parallax": "4.4 in", "parallax_difference": "0.6 in"},
                 {"result.elevation.value": 0.6 * 4600 / 5.0 * FT},
-                "Parallax-difference example, Washington Monument (h = 552 ft)", "classroom example",
+                "EM 1110-1-1000 (31 Mar 93) eq. 10-15 in feet and inches: 0.6 * 4600 / 5.0 = 552 ft, "
+                "the Washington Monument case", "31 March 1993",
                 {"result.elevation.value": {"abs": 0.01}}))
     for H, hc, pc, dp in [(915.0, 0.0, 88.2, 1.3), (1500.0, 210.0, 92.4, 2.15), (2400.0, 650.0, 101.7, -1.4), (760.0, 35.0, 70.0, 0.0),
                           (3000.0, 1200.0, 84.3, 3.9), (1200.0, 100.0, 95.0, -0.6), (600.0, 0.0, 66.6, 4.4),

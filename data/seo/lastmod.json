@@ -472,16 +472,16 @@
     "lastmod": "2026-10-19"
   },
   "/drone/photogrammetry/parallax-height/": {
-    "hash": "b74694c990d7daa9",
-    "lastmod": "2026-10-20"
+    "hash": "4fcd5f11a1882d5c",
+    "lastmod": "2026-10-28"
   },
   "/drone/photogrammetry/photo-scale/": {
     "hash": "2245020d027a49e6",
     "lastmod": "2026-10-20"
   },
   "/drone/photogrammetry/relief-displacement/": {
-    "hash": "65786231330c9f69",
-    "lastmod": "2026-10-20"
+    "hash": "d2755862d0cf5f0e",
+    "lastmod": "2026-10-28"
   },
   "/drone/photogrammetry/stereo-base/": {
     "hash": "5a9a9c89931663b9",
@@ -1928,7 +1928,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "9c5c97818381a3eb",
+    "hash": "2510642b4cae91b2",
     "lastmod": "2026-10-28"
   },
   "/survey/": {
@@ -2628,7 +2628,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "0056b051d6946a03",
+    "hash": "2dae5b621212965d",
     "lastmod": "2026-10-28"
   },
   "/workflows/": {

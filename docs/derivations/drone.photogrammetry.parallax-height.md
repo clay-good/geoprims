@@ -26,16 +26,20 @@ Exact for truly vertical photos from equal flying heights with parallax measured
 
 ## Worked example
 
-- sourcePublisher: McGraw-Hill
-- sourceTitle: Elements of Photogrammetry with Applications in GIS (Wolf, Dewitt, and Wilkinson)
-- sourceEdition: 4th edition (2014)
-- sourceLocator: Example 8-3 (height of a tree by parallax difference), as cited in the add-photogrammetry-classics design; not read at the source, which is not open
-- independent: no
+- sourcePublisher: U.S. Army Corps of Engineers
+- sourceTitle: EM 1110-1-1000, Photogrammetric Mapping
+- sourceEdition: 31 March 1993
+- sourceLocator: Chapter 10, equation 10-15, h_A = h_C + Δp(H − h_C) / P_a, read in the open copy the University of Arizona hosts
+- independent: yes
 - inputs: H = 915 m, control point on the ground (0 m) with parallax 88.2 mm, Δp = 1.3 mm
-- outputs: 13.3 m (13.29 m unrounded); with 88.2 mm read as the point's own parallax the equation would give 13.5 m, so 88.2 mm is the control point's
-- tolerance: 0.05 m (the printed precision)
-- verifiedBy: golden vector v001 and `parallax_height_invariants`
-- verifiedOn: 2026-10-19
+- outputs: 13.29 m, from 1.3 × 915 / 89.5, the divisor being the unknown point's own parallax P_a = P_c + Δp. Read with 88.2 mm as the unknown point's parallax instead, the equation gives 13.5 m, so 88.2 mm is the control point's. Wolf, Dewitt, and Wilkinson's example 8-3 is the same case and prints about 13.3 m.
+- tolerance: 0.05 m
+- verifiedBy: golden vector v001 and `parallax_height_invariants`, with the same equation in feet and inches as v002 (0.6 × 4600 / 5.0 = 552 ft)
+- verifiedOn: 2026-10-28
+
+The equation is the authority for this vector's digits, and it was read at an open source. Wolf's example is the agreement check only: that book is copyrighted and not open, and its example was never read here.
+
+The manual prints Δp as P_c − P_a, which is a sign slip against its own equation 10-14: a point higher than the control has the **greater** parallax, so Δp must be P_a − P_c for equation 10-15 to raise the elevation rather than lower it. This tool takes Δp with that sign, which is what makes both worked cases come out right.
 
 ## Differential tests
 

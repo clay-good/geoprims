@@ -25,16 +25,18 @@ Exact for a truly vertical photo and an object standing straight up. Tilt moves 
 
 ## Worked example
 
-- sourcePublisher: McGraw-Hill
-- sourceTitle: Elements of Photogrammetry with Applications in GIS (Wolf, Dewitt, and Wilkinson)
-- sourceEdition: 4th edition (2014)
-- sourceLocator: Example 6-7 (relief displacement of a tower), as cited in the add-photogrammetry-classics design; not read at the source, which is not open
-- independent: no
+- sourcePublisher: U.S. Army Corps of Engineers
+- sourceTitle: EM 1110-1-1000, Photogrammetric Mapping
+- sourceEdition: 31 March 1993
+- sourceLocator: Chapter 10, equation 10-7, h_t = d(H − h_base) / r_top, read in the open copy the University of Arizona hosts
+- independent: yes
 - inputs: H = 535 m above datum, base elevation 259 m, d = 54.1 mm, r = 121.7 mm
-- outputs: h = 122.7 m (122.69 m unrounded), matching EM 1110-1-1000 eq. 10-7
-- tolerance: 0.05 m (the printed precision)
+- outputs: h = 122.69 m, from 54.1 × (535 − 259) / 121.7. Wolf, Dewitt, and Wilkinson's example 6-7 is the same case and prints about 122.7 m.
+- tolerance: 0.05 m
 - verifiedBy: golden vector v001 and `relief_displacement_invariants`
-- verifiedOn: 2026-10-19
+- verifiedOn: 2026-10-28
+
+The equation is the authority for this vector's digits, and it was read at an open source. Wolf's example is the agreement check only: that book is copyrighted and not open, its example was never read here, and its printed value is rounded to a tenth of a metre.
 
 ## Differential tests
 

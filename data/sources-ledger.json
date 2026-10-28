@@ -186,6 +186,26 @@
       "editionCheck": true
     },
     {
+      "id": "bennett-1982",
+      "name": "The Calculation of Astronomical Refraction in Marine Navigation (Bennett)",
+      "issuer": "Bennett, G. G., The Journal of Navigation (Royal Institute of Navigation)",
+      "currentEdition": "Vol. 35, No. 2",
+      "currentReleaseDate": "1982-05-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-10-27",
+      "verificationNote": "Verified at the DOI registry on 2026-10-27: title, journal, volume 35, issue 2, pages 255-259, and the year 1982 as cited. A published article, not revised.",
+      "freeAccessUrl": "https://doi.org/10.1017/S0373463300022037",
+      "matchTerms": [
+        "Calculation of Astronomical Refraction in Marine Navigation"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "bing-tiles",
       "name": "Bing Maps Tile System",
       "issuer": "Microsoft",

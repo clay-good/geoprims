@@ -1895,13 +1895,25 @@
       ]
     },
     "navigation.celestial": {
-      "summary": "Almanac data for celestial navigation: GHA and declination of the Sun, Moon, planets, and stars, computed for the second of a sight.",
-      "intro": "These tools give the numbers a navigator takes from the Nautical Almanac before reducing a sextant sight. Enter the time of the sight in UTC and get the GHA and declination of the Sun, Moon, Venus, Mars, Jupiter, and Saturn, GHA Aries, and the SHA and declination of the 57 navigational stars and Polaris. Mariners, sailing students, and aviators who still practice celestial use them to check their almanac work. Start with the almanac tool and compare it with your printed almanac, which governs. The pitfall is time: a sight's GHA moves 15 minutes of arc for every minute of clock error.",
+      "summary": "Celestial navigation end to end: the almanac data for the second of a sight, the sextant altitude corrections, and the reduction to a line of position.",
+      "intro": "These tools take a sextant sight from the arc to the chart. The almanac tool gives the numbers a navigator reads from the Nautical Almanac's daily pages: GHA and declination of the Sun, Moon, and four planets, GHA Aries, and the SHA and declination of the 57 navigational stars and Polaris. The correction tool turns the altitude you read into the observed altitude, showing the index correction, dip, refraction, semidiameter, and parallax one line at a time. The reduction tool then gives the computed altitude, the true azimuth, and how far to shift the line of position toward or away from the body. Check the result against the printed almanac, which governs. Start with the corrections, then the reduction. The pitfall is time: a sight's GHA moves 15 minutes of arc for every minute of clock error.",
       "tasks": [
         {
           "want": "find a body's GHA and declination for a sight",
           "tools": [
             "almanac"
+          ]
+        },
+        {
+          "want": "correct a sextant altitude",
+          "tools": [
+            "altitude-correction"
+          ]
+        },
+        {
+          "want": "reduce a sight to a line of position",
+          "tools": [
+            "sight-reduction"
           ]
         }
       ]

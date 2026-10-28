@@ -31,7 +31,7 @@ test('navigation and geometry catalog progress is counted by the operation/endpo
   };
   // 31 from add-navigation-and-geometry, plus the add-marine-navigation and
   // add-celestial-and-moon tools.
-  assert.deepEqual(count('navigation'), { operations: 46, endpoints: 46 });
+  assert.deepEqual(count('navigation'), { operations: 48, endpoints: 48 });
   // 15 from add-navigation-and-geometry, plus the add-sampling-and-grids tools.
   assert.deepEqual(count('geometry'), { operations: 22, endpoints: 22 });
 });

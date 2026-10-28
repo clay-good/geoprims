@@ -344,6 +344,8 @@
       "source": "iers-bulletin-c",
       "relatedTools": [
         "navigation.celestial.almanac",
+        "navigation.celestial.altitude-correction",
+        "navigation.celestial.sight-reduction",
         "time.scale.sidereal",
         "time.sun.position"
       ]
@@ -604,7 +606,8 @@
       "definition": "How far west of the Greenwich meridian a body is, measured along the celestial equator from 0° to 360°; it grows about 15° an hour as the Earth turns.",
       "source": "bowditch",
       "relatedTools": [
-        "navigation.celestial.almanac"
+        "navigation.celestial.almanac",
+        "navigation.celestial.sight-reduction"
       ]
     },
     {
@@ -749,6 +752,16 @@
       ]
     },
     {
+      "id": "hp",
+      "term": "HP",
+      "expansion": "horizontal parallax",
+      "definition": "The angle the Earth's radius covers as seen from a body with that body on the horizon; the Moon's is about a degree, so a sight of it must be corrected for where you stand.",
+      "source": "bowditch",
+      "relatedTools": [
+        "navigation.celestial.altitude-correction"
+      ]
+    },
+    {
       "id": "hr",
       "term": "HR",
       "expansion": "height of rod (target height)",
@@ -801,6 +814,8 @@
       "relatedTools": [
         "geodesy.datum.helmert",
         "navigation.celestial.almanac",
+        "navigation.celestial.altitude-correction",
+        "navigation.celestial.sight-reduction",
         "time.scale.sidereal",
         "time.sun.position"
       ]
@@ -936,6 +951,16 @@
       "source": "faa-wbh",
       "relatedTools": [
         "aviation.loading.weight-balance"
+      ]
+    },
+    {
+      "id": "lha",
+      "term": "LHA",
+      "expansion": "local hour angle",
+      "definition": "How far west of your own meridian a body is, from 0 to 360 degrees: the Greenwich hour angle plus your longitude east, or minus it west.",
+      "source": "bowditch",
+      "relatedTools": [
+        "navigation.celestial.sight-reduction"
       ]
     },
     {
@@ -1197,6 +1222,16 @@
       "definition": "The US agency whose quality guidance, EPA QA/G-5S, describes the standard sampling designs: simple random, stratified, and systematic.",
       "source": "epa-qa-g5s",
       "relatedTools": []
+    },
+    {
+      "id": "sd",
+      "term": "SD",
+      "expansion": "semidiameter",
+      "definition": "Half the apparent width of the Sun or Moon, about 16 minutes of arc; a sextant touches a limb, so this correction takes the sight to the center.",
+      "source": "bowditch",
+      "relatedTools": [
+        "navigation.celestial.altitude-correction"
+      ]
     },
     {
       "id": "sha",
@@ -1844,6 +1879,8 @@
       "source": "iers-bulletin-c",
       "relatedTools": [
         "navigation.celestial.almanac",
+        "navigation.celestial.altitude-correction",
+        "navigation.celestial.sight-reduction",
         "time.scale.sidereal",
         "time.sun.position"
       ]
@@ -1858,6 +1895,8 @@
         "aviation.weather.metar-decode",
         "aviation.weather.taf-decode",
         "navigation.celestial.almanac",
+        "navigation.celestial.altitude-correction",
+        "navigation.celestial.sight-reduction",
         "navigation.route.legs",
         "navigation.route.time-speed-distance",
         "navigation.tide.predict",

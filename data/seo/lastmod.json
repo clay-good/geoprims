@@ -1,7 +1,7 @@
 {
   "/": {
-    "hash": "921c09d977b9ad55",
-    "lastmod": "2026-10-21"
+    "hash": "1e9026b0a3e8ae60",
+    "lastmod": "2026-10-27"
   },
   "/accuracy/": {
     "hash": "c114ed2bae28332d",
@@ -316,8 +316,8 @@
     "lastmod": "2026-10-19"
   },
   "/changelog/": {
-    "hash": "a57ee17c8c03acae",
-    "lastmod": "2026-10-21"
+    "hash": "13e09a195c27fad7",
+    "lastmod": "2026-10-27"
   },
   "/disclaimer/": {
     "hash": "e80b39ff27cd55c5",
@@ -1544,20 +1544,28 @@
     "lastmod": "2026-10-20"
   },
   "/methodology/": {
-    "hash": "334b43aca536fa12",
-    "lastmod": "2026-10-21"
+    "hash": "e7479b802d30d414",
+    "lastmod": "2026-10-27"
   },
   "/navigation/": {
-    "hash": "536cf87ceb41a762",
-    "lastmod": "2026-10-21"
+    "hash": "8a469ed836f6a845",
+    "lastmod": "2026-10-27"
   },
   "/navigation/celestial/": {
-    "hash": "53b6ea147c5958aa",
-    "lastmod": "2026-10-21"
+    "hash": "687b76802fa2a24f",
+    "lastmod": "2026-10-28"
   },
   "/navigation/celestial/almanac/": {
-    "hash": "f3be1affbf741af4",
-    "lastmod": "2026-10-21"
+    "hash": "750a07be73847076",
+    "lastmod": "2026-10-27"
+  },
+  "/navigation/celestial/altitude-correction/": {
+    "hash": "fff9a2b7bb41b5f1",
+    "lastmod": "2026-10-28"
+  },
+  "/navigation/celestial/sight-reduction/": {
+    "hash": "46a9ee28de2e0c2d",
+    "lastmod": "2026-10-27"
   },
   "/navigation/geodesic/": {
     "hash": "927429e8c69ee6c2",
@@ -1776,8 +1784,8 @@
     "lastmod": "2026-10-20"
   },
   "/quality/": {
-    "hash": "7666270d9c7fb2a2",
-    "lastmod": "2026-10-19"
+    "hash": "c93f820846c250cf",
+    "lastmod": "2026-10-27"
   },
   "/raster/": {
     "hash": "986dc66df9693519",
@@ -1904,8 +1912,8 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "9ed9c6d93d085e3d",
-    "lastmod": "2026-10-21"
+    "hash": "32c561b2737e202c",
+    "lastmod": "2026-10-28"
   },
   "/survey/": {
     "hash": "d5659caf628c8d5f",
@@ -2312,8 +2320,8 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "5f26bf6ff6547dad",
-    "lastmod": "2026-10-21"
+    "hash": "46031b3652926ce4",
+    "lastmod": "2026-10-27"
   },
   "/units/": {
     "hash": "227e11d074c56226",
@@ -2576,8 +2584,8 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "fd6b956334104382",
-    "lastmod": "2026-10-21"
+    "hash": "04e512b5645c9381",
+    "lastmod": "2026-10-28"
   },
   "/workflows/": {
     "hash": "ae01dae8923fdd1d",

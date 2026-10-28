@@ -2,6 +2,16 @@
   "note": "User-facing changes, newest first. kind is result-change (a published result moved: every superseded golden vector must be listed here), added, fixed, or changed. A result change beyond tolerance also bumps the tool version. Rendered at /changelog/ and checked by tools/trust/changelog.test.mjs.",
   "entries": [
     {
+      "date": "2026-10-27",
+      "kind": "added",
+      "tools": [
+        "navigation.celestial.altitude-correction",
+        "navigation.celestial.sight-reduction"
+      ],
+      "vectors": [],
+      "summary": "New, both experimental: sextant altitude corrections and sight reduction. The first turns the altitude you read off the arc into the observed altitude, showing the index correction, the dip of the horizon, refraction for the air you measured, the semidiameter of the limb you touched, and parallax, one line at a time. The second reduces that sight to a line of position by the intercept method: the body's hour angle and declination for the second of the sight, the computed altitude and true azimuth at your assumed position with the quadrant rule stated, and how far to shift the line toward or away from the body, with the line itself drawn on the chart. The Pub. No. 229 assumed-position rule is one click away. Every worked example in Bowditch chapter 16 and three columns of its chapter 20 four-star fix are reproduced, and both tools are checked against the US Naval Observatory's own data at 148 body-instants from 1995 to 2045. The Nautical Almanac still governs."
+    },
+    {
       "date": "2026-10-20",
       "kind": "changed",
       "tools": [

@@ -4,11 +4,42 @@ use gp_navigation::REGISTRY;
 use serde_json::{Value, json};
 
 fn run(input: Value) -> Value {
-    let r: Value =
-        serde_json::from_str(&REGISTRY.invoke("navigation.celestial.almanac", &input.to_string()))
-            .unwrap();
+    call("navigation.celestial.almanac", input)
+}
+
+fn envelope(id: &str, input: Value) -> Value {
+    serde_json::from_str(&REGISTRY.invoke(id, &input.to_string())).unwrap()
+}
+
+fn call(id: &str, input: Value) -> Value {
+    let r = envelope(id, input.clone());
     assert_eq!(r["ok"], true, "{input}: {r}");
     r["result"].clone()
+}
+
+fn reduce(input: Value) -> Value {
+    call("navigation.celestial.sight-reduction", input)
+}
+
+fn correct(input: Value) -> Value {
+    call("navigation.celestial.altitude-correction", input)
+}
+
+fn num(v: &Value, key: &str) -> f64 {
+    v[key]["value"]
+        .as_f64()
+        .unwrap_or_else(|| panic!("{key} missing in {v}"))
+}
+
+fn codes(r: &Value) -> Vec<String> {
+    r["meta"]["warnings"]
+        .as_array()
+        .map(|a| {
+            a.iter()
+                .map(|w| w["code"].as_str().unwrap().to_string())
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
 fn dm(d: f64, m: f64) -> f64 {
@@ -217,4 +248,379 @@ fn out_of_range_and_warnings() {
     let r = run(json!({"utc": "1850-06-01T00:00:00Z", "dut1": "0 s"}));
     let dt = r["delta_t"]["value"].as_f64().unwrap();
     assert!((5.0..10.0).contains(&dt), "{dt}");
+}
+
+// -- Sight reduction (add-celestial-and-moon task 3) ------------------------
+
+/// Bowditch 2024 §2010, Table 2010b: the four-star fix worked right through,
+/// at the assumed positions the table chose. Three of its four columns hold:
+/// the table's Hc comes from Pub. No. 229 with its own interpolation and each
+/// of its inputs is rounded to 0.1', so 0.2' is as close as it can be read.
+/// Procyon's column is left out: its increment for 35m59s is printed as
+/// 8°56.2' where 9°01.2' is right, so its GHA, LHA, and Hc are all 5' adrift
+/// (USNO gives GHA 265°09.9' for that second, not the table's 265°04.8'), and
+/// Table 2010b also repeats its GHA in the SHA row.
+#[test]
+fn bowditch_star_fix_reduced() {
+    for (body, utc, lat, lon, ho, lha, dec, hc, zn, a, z_label) in [
+        (
+            "Spica",
+            "08:24:03",
+            "41 00.0 S",
+            "128 18.7 E",
+            "32 53.4",
+            304.0,
+            -dm(11.0, 17.4),
+            dm(32.0, 50.4),
+            75.4,
+            3.0,
+            "S 104.6 E",
+        ),
+        (
+            "Regulus",
+            "08:29:58",
+            "41 00.0 S",
+            "127 37.3 E",
+            "37 05.6",
+            354.0,
+            dm(11.0, 50.9),
+            dm(36.0, 51.6),
+            7.3,
+            14.0,
+            "S 172.7 E",
+        ),
+        (
+            "Canopus",
+            "08:41:55",
+            "41 00.0 S",
+            "128 19.4 E",
+            "52 11.7",
+            54.0,
+            -dm(52.0, 42.6),
+            dm(52.0, 15.0),
+            233.2,
+            -3.3,
+            "S 53.2 W",
+        ),
+    ] {
+        let r = reduce(json!({
+            "body": body,
+            "utc": format!("2024-06-02T{utc}Z"),
+            "dut1": "0 s",
+            "lat": lat,
+            "lon": lon,
+            "ho": ho,
+        }));
+        let d_lha = off(num(&r, "lha"), lha);
+        let d_dec = off(num(&r, "dec"), dec);
+        let d_hc = off(num(&r, "hc"), hc);
+        let d_zn = (num(&r, "zn") - zn).abs();
+        let d_a = (num(&r, "intercept") - a).abs();
+        assert!(
+            d_lha <= 0.2 && d_dec <= 0.1 && d_hc <= 0.2 && d_zn <= 0.1 && d_a <= 0.2,
+            "{body}: LHA {d_lha}', Dec {d_dec}', Hc {d_hc}', Zn {d_zn} deg, a {d_a} NM"
+        );
+        assert_eq!(r["z_label"], z_label, "{body}");
+        assert_eq!(
+            r["direction"],
+            if a >= 0.0 { "Toward" } else { "Away" },
+            "{body}"
+        );
+        assert_eq!(r["lop"].as_array().unwrap().len(), 2);
+    }
+}
+
+/// The same four sights through the assumed-position rule: the navigator
+/// gives the dead-reckoning position and the tool rounds it the way Pub. No.
+/// 229 needs, which is how Table 2010b's assumed longitudes arose.
+#[test]
+fn assumed_position_rule_matches_the_table() {
+    for (body, utc, lon) in [
+        ("Spica", "08:24:03", dm(128.0, 18.7)),
+        ("Regulus", "08:29:58", dm(127.0, 37.3)),
+        ("Canopus", "08:41:55", dm(128.0, 19.4)),
+    ] {
+        let r = reduce(json!({
+            "body": body,
+            "utc": format!("2024-06-02T{utc}Z"),
+            "dut1": "0 s",
+            "lat": "41 10.0 S",
+            "lon": "128 00.0 E",
+            "ho": "32 53.4",
+            "position_rule": "pub229",
+        }));
+        let lha = num(&r, "lha");
+        assert!(
+            (lha - lha.round()).abs() * 60.0 < 0.01,
+            "{body}: LHA {lha} is not a whole degree"
+        );
+        assert!((num(&r, "ap_lat") + 41.0).abs() < 1e-9, "{body}");
+        let d_lon = off(num(&r, "ap_lon"), lon);
+        assert!(d_lon <= 0.2, "{body}: assumed longitude off by {d_lon}'");
+    }
+}
+
+/// The spec's parity check: USNO's own computed altitude and azimuth at the
+/// assumed position, for twelve bodies at 24 instants and places 1995 to 2045.
+#[test]
+fn sight_reduction_matches_usno() {
+    let path = format!(
+        "{}/tests/data/usno_sight_reduction.json",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let data: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+    let (mut worst_hc, mut worst_zn) = (0.0_f64, 0.0_f64);
+    let mut worst_odd = std::collections::BTreeMap::new();
+    for row in data["rows"].as_array().unwrap() {
+        let body = row["body"].as_str().unwrap();
+        let r = reduce(json!({
+            "body": body,
+            "utc": format!("{}Z", row["ut1"].as_str().unwrap().replace(' ', "T")),
+            "dut1": "0 s",
+            "lat": row["lat"],
+            "lon": row["lon"],
+            "ho": 0.0,
+        }));
+        let hc = row["hc"].as_f64().unwrap();
+        let d_hc = off(num(&r, "hc"), hc);
+        // USNO's Venus and Moon depart from JPL where the gp-astro tests
+        // record it; the almanac test explains the same two bounds.
+        let limit = match body {
+            "Venus" | "Moon" => {
+                let w = worst_odd.entry(body.to_string()).or_insert(0.0_f64);
+                *w = w.max(d_hc);
+                if body == "Venus" { 0.5 } else { 0.25 }
+            }
+            _ => {
+                worst_hc = worst_hc.max(d_hc);
+                0.1
+            }
+        };
+        assert!(d_hc < limit, "{body} Hc at {}: {d_hc}'", row["ut1"]);
+        // Azimuth loses meaning near the zenith, where a tenth of a minute of
+        // altitude swings it degrees.
+        if hc < 85.0 {
+            let d_zn = ((num(&r, "zn") - row["zn"].as_f64().unwrap() + 180.0).rem_euclid(360.0)
+                - 180.0)
+                .abs();
+            if !matches!(body, "Venus" | "Moon") {
+                worst_zn = worst_zn.max(d_zn);
+            }
+            assert!(d_zn < 0.05, "{body} Zn at {}: {d_zn} deg", row["ut1"]);
+        }
+    }
+    eprintln!("worst against USNO: Hc {worst_hc}', Zn {worst_zn} deg; {worst_odd:?}");
+}
+
+/// Standing at the body's geographic position, the body is overhead: the
+/// computed altitude is 90 degrees and a true sight has no intercept.
+#[test]
+fn at_the_geographic_position_the_intercept_vanishes() {
+    let utc = "2024-06-02T08:24:03Z";
+    let a = run(json!({"utc": utc, "dut1": "0 s"}));
+    let (gha, dec) = (
+        a["sun_gha"]["value"].as_f64().unwrap(),
+        a["sun_dec"]["value"].as_f64().unwrap(),
+    );
+    let lon = ((-gha + 180.0).rem_euclid(360.0)) - 180.0;
+    let r = reduce(json!({
+        "body": "Sun", "utc": utc, "dut1": "0 s",
+        "lat": dec, "lon": lon, "ho": 90.0,
+    }));
+    assert!((num(&r, "hc") - 90.0).abs() * 60.0 < 0.01, "{}", r["hc"]);
+    assert!(num(&r, "intercept").abs() < 0.01, "{}", r["intercept"]);
+    assert_eq!(r["direction"], "Toward");
+}
+
+#[test]
+fn below_the_horizon_still_answers() {
+    // Midnight at Greenwich in June: the Sun is well below the horizon.
+    let r = envelope(
+        "navigation.celestial.sight-reduction",
+        json!({"body": "Sun", "utc": "2024-06-02T00:00:00Z", "dut1": "0 s",
+               "lat": 51.48, "lon": 0.0, "ho": "-5 00.0"}),
+    );
+    assert_eq!(r["ok"], true, "{r}");
+    assert!(codes(&r).contains(&"BODY_BELOW_HORIZON".into()), "{r}");
+    let result = r["result"].clone();
+    assert!(num(&result, "hc") < 0.0, "{}", result["hc"]);
+    assert!(num(&result, "zn") >= 0.0);
+}
+
+#[test]
+fn an_unknown_body_is_refused() {
+    let r = envelope(
+        "navigation.celestial.sight-reduction",
+        json!({"body": "Betelgeuse-ish", "utc": "2024-06-02T08:24:03Z",
+               "lat": 0.0, "lon": 0.0, "ho": 10.0}),
+    );
+    assert_eq!(r["error"]["code"], "INVALID_INPUT", "{r}");
+    assert_eq!(r["error"]["field"], "/body", "{r}");
+}
+
+// -- Altitude corrections (add-celestial-and-moon task 3) ------------------
+
+/// The worked examples of Bowditch 2024 chapter 16, §1618 to §1622, every one
+/// of them: the Sun's two limbs, the Moon's two, a planet, a star, and the
+/// two low-altitude sights of §1622, which the chapter itself calls variable.
+#[test]
+fn bowditch_chapter_16_examples() {
+    struct Case<'a> {
+        name: &'a str,
+        input: Value,
+        ha: f64,
+        ho: f64,
+        limit: f64,
+    }
+    let cases = [
+        Case {
+            name: "§1618 Example 1, the Sun's lower limb",
+            input: json!({"hs": "51 28.4", "body": "Sun", "limb": "lower",
+                          "height_of_eye": "38 ft", "utc": "2024-06-02T11:00:00Z",
+                          "index_correction": "-2.0 arcmin", "dut1": "0 s"}),
+            ha: dm(51.0, 20.4),
+            ho: dm(51.0, 35.6),
+            limit: 0.15,
+        },
+        Case {
+            name: "§1618 Example 2, the Sun's upper limb",
+            input: json!({"hs": "32 47.9", "body": "Sun", "limb": "upper",
+                          "height_of_eye": "45 ft", "utc": "2024-06-02T11:00:00Z",
+                          "index_correction": "1.0 arcmin", "dut1": "0 s"}),
+            ha: dm(32.0, 42.4),
+            ho: dm(32.0, 25.1),
+            limit: 0.15,
+        },
+        Case {
+            name: "§1619 Example 1, the Moon's lower limb",
+            input: json!({"hs": "18 04.6", "body": "Moon", "limb": "lower",
+                          "height_of_eye": "32 ft", "utc": "2024-06-02T11:00:00Z",
+                          "index_correction": "3.2 arcmin", "hp": "59.6 arcmin",
+                          "dut1": "0 s"}),
+            ha: dm(18.0, 2.3),
+            ho: dm(19.0, 12.2),
+            limit: 0.1,
+        },
+        Case {
+            name: "§1619 Example 2, the Moon's upper limb",
+            input: json!({"hs": "66 47.3", "body": "Moon", "limb": "upper",
+                          "height_of_eye": "70 ft", "utc": "2024-06-02T09:00:00Z",
+                          "index_correction": "-1.6 arcmin", "hp": "59.6 arcmin",
+                          "dut1": "0 s"}),
+            ha: dm(66.0, 37.6),
+            ho: dm(66.0, 44.5),
+            limit: 0.1,
+        },
+        Case {
+            name: "§1620, Venus",
+            input: json!({"hs": "44 21.3", "body": "Venus", "limb": "center",
+                          "height_of_eye": "28 ft", "utc": "2024-12-19T18:00:00Z",
+                          "dut1": "0 s"}),
+            ha: dm(44.0, 16.2),
+            ho: dm(44.0, 15.3),
+            limit: 0.1,
+        },
+        Case {
+            name: "§1621, the star Miaplacidus",
+            input: json!({"hs": "27 54.0", "body": "Miaplacidus", "limb": "center",
+                          "height_of_eye": "50 ft", "utc": "2024-06-02T11:00:00Z",
+                          "index_correction": "1.0 arcmin", "dut1": "0 s"}),
+            ha: dm(27.0, 48.1),
+            ho: dm(27.0, 46.3),
+            limit: 0.1,
+        },
+        Case {
+            name: "§1622 Example 1, the Sun low down at 88 degrees Fahrenheit",
+            input: json!({"hs": "1 24.4", "body": "Sun", "limb": "lower",
+                          "height_of_eye": "45 ft", "utc": "2024-06-02T11:00:00Z",
+                          "index_correction": "1.8 arcmin", "temperature": "88 degF",
+                          "pressure": "29.78 inHg", "dut1": "0 s"}),
+            ha: dm(1.0, 19.7),
+            ho: dm(1.0, 15.4),
+            limit: 0.25,
+        },
+        Case {
+            name: "§1622 Example 3, the Moon's upper limb low down",
+            input: json!({"hs": "2 35.4", "body": "Moon", "limb": "upper",
+                          "height_of_eye": "33 ft", "utc": "2024-06-02T17:14:27Z",
+                          "temperature": "63 degF", "pressure": "29.81 inHg",
+                          "hp": "59.6 arcmin", "dut1": "0 s"}),
+            ha: dm(2.0, 29.8),
+            ho: dm(2.0, 57.4),
+            limit: 0.25,
+        },
+    ];
+    for c in cases {
+        let r = correct(c.input.clone());
+        let d_ha = off(num(&r, "ha"), c.ha);
+        let d_ho = off(num(&r, "ho"), c.ho);
+        assert!(
+            d_ha <= 0.05 && d_ho <= c.limit,
+            "{}: ha off {d_ha}', Ho off {d_ho}' (limit {})",
+            c.name,
+            c.limit
+        );
+        assert_eq!(r["corrections"].as_array().unwrap().len(), 5, "{}", c.name);
+    }
+}
+
+/// The corrections add up to the total, and the total takes hs to Ho.
+#[test]
+fn the_corrections_add_up() {
+    let r = correct(json!({"hs": "51 28.4", "body": "Sun", "limb": "lower",
+                           "height_of_eye": "38 ft", "utc": "2024-06-02T11:00:00Z",
+                           "index_correction": "-2.0 arcmin", "dut1": "0 s"}));
+    let sum: f64 = r["corrections"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|row| row["value"]["value"].as_f64().unwrap())
+        .sum();
+    let total = num(&r, "total");
+    assert!((sum - total).abs() < 1e-9, "{sum} vs {total}");
+    let (hs, ho) = (dm(51.0, 28.4), num(&r, "ho"));
+    assert!((hs + total / 60.0 - ho).abs() * 60.0 < 1e-6, "{ho}");
+    // The dip of a 38-foot height of eye is 6.0'; refraction and dip subtract.
+    assert!((num(&r, "dip") + 6.0).abs() < 0.05, "{}", r["dip"]);
+    assert!(num(&r, "refraction") < 0.0);
+    assert!(num(&r, "semidiameter") > 15.0);
+}
+
+#[test]
+fn a_low_sight_says_so_and_a_star_has_no_limb() {
+    let r = envelope(
+        "navigation.celestial.altitude-correction",
+        json!({"hs": "1 24.4", "body": "Sun", "limb": "lower", "height_of_eye": "45 ft",
+               "utc": "2024-06-02T11:00:00Z", "dut1": "0 s"}),
+    );
+    assert_eq!(r["ok"], true, "{r}");
+    assert!(codes(&r).contains(&"LOW_ALTITUDE_REFRACTION".into()), "{r}");
+    let r = envelope(
+        "navigation.celestial.altitude-correction",
+        json!({"hs": "27 54.0", "body": "Spica", "limb": "lower",
+               "height_of_eye": "50 ft", "utc": "2024-06-02T11:00:00Z", "dut1": "0 s"}),
+    );
+    assert_eq!(r["error"]["code"], "INVALID_INPUT", "{r}");
+    assert_eq!(r["error"]["field"], "/limb", "{r}");
+}
+
+/// A sight corrected and then reduced: the two tools chain, and the second
+/// one's observed altitude is the first one's answer.
+#[test]
+fn correcting_then_reducing_one_sight() {
+    // Bowditch's §2010 example: a height of eye of 31 feet and an index
+    // correction of 1.0' on the arc, and Table 2010a's sextant altitude for
+    // Spica, 33°01.3'. Its Ho is the 32°53.4' Table 2010b reduces.
+    let c = correct(json!({"hs": "33 01.3", "body": "Spica", "limb": "center",
+                           "height_of_eye": "31 ft", "utc": "2024-06-02T08:24:03Z",
+                           "index_correction": "-1.0 arcmin", "dut1": "0 s"}));
+    let ho = num(&c, "ho");
+    let d = off(ho, dm(32.0, 53.4));
+    assert!(d <= 0.1, "Ho {ho} is {d}' from Bowditch's 32 53.4");
+    let r = reduce(
+        json!({"body": "Spica", "utc": "2024-06-02T08:24:03Z", "dut1": "0 s",
+                          "lat": "41 00.0 S", "lon": "128 18.7 E", "ho": ho}),
+    );
+    let a = num(&r, "intercept");
+    assert!((a - 3.0).abs() < 0.2, "intercept {a} NM");
 }

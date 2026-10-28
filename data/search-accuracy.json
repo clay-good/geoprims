@@ -1,9 +1,9 @@
 {
-  "queries": 1658,
+  "queries": 1822,
   "top1": 99,
   "top3": 99.9,
   "prefillPrecision": 97,
-  "prefillRecall": 31.8,
+  "prefillRecall": 32.5,
   "misses": [
     "100 mph drone with 90 mph 15 mph"
   ],
@@ -23,6 +23,10 @@
     "Albers projection with 35 -75 29.5 45.5 23 -96: lon = \"45.5 deg\"",
     "lat long to Albers with 35 -75 29.5 45.5 23 -96: lat = \"29.5 deg\"",
     "lat long to Albers with 35 -75 29.5 45.5 23 -96: lon = \"45.5 deg\"",
+    "Sextant altitude corrections, step by step with 51 28.4 38 ft 2024-06-02T11:00:00Z -2.0 arcmin 0 s: hs = \"-2.0 arcmin\"",
+    "sextant altitude correction with 51 28.4 38 ft 2024-06-02T11:00:00Z -2.0 arcmin 0 s: hs = \"-2.0 arcmin\"",
+    "dip and refraction with 51 28.4 38 ft 2024-06-02T11:00:00Z -2.0 arcmin 0 s: hs = \"-2.0 arcmin\"",
+    "observed altitude from sextant altitude with 51 28.4 38 ft 2024-06-02T11:00:00Z -2.0 arcmin 0 s: hs = \"-2.0 arcmin\"",
     "Great-circle destination (spherical) with 40 -74 45 deg 1000 km: lat1 = \"45 deg\"",
     "great circle destination with 40 -74 45 deg 1000 km: lat1 = \"45 deg\"",
     "destination point on a sphere with 40 -74 45 deg 1000 km: lat1 = \"45 deg\"",

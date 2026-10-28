@@ -78,6 +78,10 @@
       "severity": "caution",
       "message": "A waypoint is farther from the pilot than the visual range."
     },
+    "BODY_BELOW_HORIZON": {
+      "severity": "caution",
+      "message": "The assumed position puts the body below the horizon, so the sight cannot be of it."
+    },
     "BUFFER_ACCURACY": {
       "severity": "caution",
       "message": "The buffer's boundary strays from the distance by more than its tolerance."
@@ -241,6 +245,10 @@
     "LOW_ACCURACY_TRANSFORM": {
       "severity": "accuracy",
       "message": "The chosen transformation has low accuracy."
+    },
+    "LOW_ALTITUDE_REFRACTION": {
+      "severity": "accuracy",
+      "message": "Below 10 degrees of apparent altitude refraction grows fast and varies with the air itself."
     },
     "MEAN_ERROR_HIGH": {
       "severity": "caution",

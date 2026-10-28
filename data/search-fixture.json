@@ -1284,6 +1284,14 @@
     {
       "query": "GHA and declination of the sun for a sextant sight",
       "expect": "navigation.celestial.almanac"
+    },
+    {
+      "query": "reduce a star sight to a line of position",
+      "expect": "navigation.celestial.sight-reduction"
+    },
+    {
+      "query": "correct a sextant altitude for dip and refraction",
+      "expect": "navigation.celestial.altitude-correction"
     }
   ]
 }

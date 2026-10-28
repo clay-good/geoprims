@@ -1119,6 +1119,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &tide::PREDICT,
     &tide::DATUMS,
     &celestial::ALMANAC,
+    &celestial::ALTITUDE_CORRECTION,
+    &celestial::SIGHT_REDUCTION,
 ];
 
 pub static REGISTRY: Registry = Registry {

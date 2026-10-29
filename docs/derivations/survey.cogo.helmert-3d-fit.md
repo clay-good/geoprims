@@ -43,7 +43,7 @@ The rotation matrix is the small-angle form, as in the Helmert tool, so the fit 
 - sourceTitle: Five common points 2 km apart, a sub-meter shift
 - sourceEdition: 2026-10-20
 - sourceLocator: The tool's primary example. Points transformed by known parameters are fitted back to those parameters.
-- independent: no (the 3D conformal example in Ghilani, Adjustment Computations, is not open and is not yet reproduced)
+- independent: no for this example. The textbook's 3D conformal example is not open and is not reproduced here; what stands in for it is the differential test below, an independent numpy Gauss-Newton on the same model that agrees to 2.1e-9 m over 40 seeded fits in both conventions.
 - inputs: five ECEF points and their transformed coordinates
 - outputs: the generating parameters, with residuals at the noise level
 - tolerance: 1e-5 m, arc-second, and ppm at ECEF magnitudes; 1e-9 in local coordinates
@@ -54,6 +54,7 @@ The rotation matrix is the small-angle form, as in the Helmert tool, so the fit 
 
 - `tools/vectors/gen_helmert_fit.py`: target points made in Python from source points with known parameters by the same linearized model, at ECEF and local magnitudes, with both rotation conventions. The fit must recover the parameters that made them.
 - `core/vectors/survey.cogo.helmert-3d-fit.jsonl`: 26 vectors from it, run through the core on every build.
+- `tools/diff/adjustment.test.mjs` runs the tool against an independent Gauss-Newton on the same linearized model in numpy: 40 seeded fits of 4 to 9 points, both conventions, agree to 2.1e-9 m in the translations, 2.1e-11 seconds of arc in the rotations, and 2.3e-10 ppm in the scale. The textbook this tool was specified from is not open, so this is what stands in for it: a second implementation of the same mathematics, written from the equations rather than from this code.
 
 ## Invariants
 

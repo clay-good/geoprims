@@ -43,7 +43,7 @@ The height differences are adjusted as given: no rod, curvature and refraction, 
 - sourceTitle: One run between two fixed benchmarks equals the proportional adjustment
 - sourceEdition: 2026-10-20
 - sourceLocator: BM A 250.000 m to BM B 247.975 m through TP 1 and TP 2, lengths 120, 95, 150 m. The least-squares elevations equal those of `survey.reduction.level-adjust`, which spreads the misclosure in proportion to distance.
-- independent: no (the leveling-network examples in Ghilani, Adjustment Computations, are not open and are not yet reproduced)
+- independent: no for this example, which is an equivalence against another tool of this repository. The textbook's leveling-network examples are not open and are not reproduced here; what stands in for them is the differential test below, an independent numpy least squares that agrees to double precision over 60 seeded networks.
 - inputs: the three runs, weighted by length
 - outputs: the same turning-point elevations as the level-adjust tool
 - tolerance: 6e-5 m (the level-adjust display precision)
@@ -54,6 +54,7 @@ The height differences are adjusted as given: no rod, curvature and refraction, 
 
 - `tools/vectors/gen_level_network.py`: NumPy's `lstsq` on the weighted design matrix, separate from the core's Cholesky. It covers 18 random networks with loops, weighted by length, setups, or standard deviation, with one or two fixed benchmarks. Elevations agree to the displayed 0.1 mm, and the reference variance within 1e-6 relative.
 - `core/vectors/survey.reduction.level-network.jsonl`: those vectors plus the disconnected-network and all-fixed refusals, run through the core on every build.
+- `tools/diff/adjustment.test.mjs` runs the tool against an independent weighted least squares in numpy: 60 seeded networks of 3 to 9 marks, over all three weighting modes, agree on every adjusted elevation to the tenth of a millimetre the tool prints and on the reference variance to 2.2e-16 relative, which is double precision. The textbook this tool was specified from is not open, so this is what stands in for it: a second implementation of the same mathematics, written from the equations rather than from this code.
 
 ## Invariants
 

@@ -5,6 +5,15 @@
       "date": "2026-10-28",
       "kind": "changed",
       "tools": [
+        "survey.cogo.helmert-3d-fit"
+      ],
+      "vectors": [],
+      "summary": "The three-dimensional Helmert fit now draws its residuals and reports them as numbers. Residuals in three dimensions have no one plane to live in, so the points are drawn in plan with each horizontal residual as an arrow and each vertical residual as a bar beside it, both at an exaggeration the caption states, because the residuals are millimetres against hundreds of metres. What it is for is telling scatter, which is noise, from a pattern, which means something the seven parameters do not model. Each residual row also carries its X, Y, and Z components as numbers now, beside the printed line, so a machine reader does not have to parse that line. The partition, Helmert-fit, and levelling-network tools also gained an independent check: the same mathematics solved again in numpy, which agrees to double precision on the levelling network, to a nanometre on the fit's translations, and to two parts per billion of the parcel on the partition."
+    },
+    {
+      "date": "2026-10-28",
+      "kind": "changed",
+      "tools": [
         "navigation.celestial.altitude-correction",
         "time.moon.rise-set"
       ],

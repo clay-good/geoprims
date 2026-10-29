@@ -316,7 +316,7 @@
     "lastmod": "2026-10-19"
   },
   "/changelog/": {
-    "hash": "2a99e98a75a3bc1e",
+    "hash": "98cd2abe5976753d",
     "lastmod": "2026-10-28"
   },
   "/disclaimer/": {
@@ -2000,8 +2000,8 @@
     "lastmod": "2026-10-20"
   },
   "/survey/cogo/helmert-3d-fit/": {
-    "hash": "4c838c261d795411",
-    "lastmod": "2026-10-20"
+    "hash": "71fc6139a85a36a8",
+    "lastmod": "2026-10-28"
   },
   "/survey/cogo/intersection/": {
     "hash": "db36bd23f5fdf0a8",
@@ -2628,7 +2628,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "2dae5b621212965d",
+    "hash": "de61295dae2c780b",
     "lastmod": "2026-10-28"
   },
   "/workflows/": {

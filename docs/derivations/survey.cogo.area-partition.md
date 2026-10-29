@@ -41,7 +41,7 @@ None on the plane beyond the 1e-7 stopping width. Areas are grid areas. For grou
 - sourceTitle: A 100 ft square cut parallel to its south side
 - sourceEdition: 2026-10-20
 - sourceLocator: Base 100 ft, sides at 90°: A(d) = 100·d, so 2,000 ft² gives d = 20 ft and a line 100 ft long
-- independent: no (the textbook partition examples in Ghilani & Wolf, ch. 12, are not open and are not yet reproduced)
+- independent: no for this example. The textbook's partition examples are not open and are not reproduced here; what stands in for them is the differential test below, which closes and measures the piece the tool cut with the shoelace formula in numpy and finds it within 0.002 parts per million of the area asked for over 45 seeded parcels.
 - inputs: corners (0, 0), (0, 100), (100, 100), (100, 0) as northing, easting in ft; area 2,000 ft²; parallel to side 1
 - outputs: offset 20 ft, length 100 ft, cut 2,000 ft², rest 8,000 ft²
 - tolerance: 1e-7 ft
@@ -52,6 +52,7 @@ None on the plane beyond the 1e-7 stopping width. Areas are grid areas. For grou
 
 - `tools/vectors/gen_area_partition.py`: a separate solution with Shapely (GEOS) half-plane intersections and line substrings, solved with SciPy's brentq. It covers 18 random star-shaped figures with 3 to 8 corners, all three cases, on state-plane-sized coordinates. Lengths and offsets agree within 1e-5 ft, and areas within 5e-4 ft².
 - `core/vectors/survey.cogo.area-partition.jsonl`: those vectors plus four refusals (area too large, curve call, self-crossing figure, missing bearing), run through the core on every build.
+- `tools/diff/adjustment.test.mjs` runs the tool against an independent measurement of the piece it cut: the returned cut line and the corners it names are closed into a polygon and measured by the shoelace formula in numpy, which checks the property rather than redoing the solve. 45 seeded parcels over all three methods cut the area asked for to 0.002 parts per million of the parcel. The textbook this tool was specified from is not open, so this is what stands in for it: a second implementation of the same mathematics, written from the equations rather than from this code.
 
 ## Invariants
 

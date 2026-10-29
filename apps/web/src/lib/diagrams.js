@@ -47,6 +47,7 @@ const DIAGRAMS = Object.fromEntries(
     'time.sun.mapping-window',
     'navigation.celestial.altitude-correction',
     'time.moon.rise-set',
+    'survey.cogo.helmert-3d-fit',
     'survey.curves.circular-curve',
     'aviation.performance.climb-gradient',
     'aviation.performance.climb-plan',

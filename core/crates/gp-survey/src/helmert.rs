@@ -59,6 +59,11 @@ const OUT_RESIDUAL: &[Field] = &[
         "Fitted − target, in mm",
         Kind::Text { max_len: 60 },
     ),
+    // The same three numbers for a machine and for the sketch, which should
+    // not have to read them back out of the printed line.
+    qout("dx", "Residual X", "Fitted − target", QT::Length, "mm", 2),
+    qout("dy", "Residual Y", "Fitted − target", QT::Length, "mm", 2),
+    qout("dz", "Residual Z", "Fitted − target", QT::Length, "mm", 2),
 ];
 
 const fn qout(
@@ -196,8 +201,8 @@ pub static HELMERT_3D_FIT: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
-        map: &[],
+        kind: "vector-diagram",
+        map: &[("residuals", "residuals")],
     }],
     related: &[
         Related {
@@ -395,12 +400,22 @@ fn run_helmert_3d_fit(ctx: &mut Ctx) -> Result<Json, ToolError> {
         let d: V3 = [0, 1, 2].map(|k| t[k] + (1.0 + p[3]) * rv[k] - w[k]);
         vtv += d.iter().map(|x| x * x).sum::<f64>();
         let mm = |x: f64| display::number(x * 1000.0, Precision::Decimals(1), ctx.options.format);
+        let mmq = |x: f64| {
+            Q {
+                value: x * 1000.0,
+                unit: units::by_symbol(QT::Length, "mm").expect("mm"),
+            }
+            .to_json()
+        };
         residuals.push(Json::obj([
             ("name", Json::str(names[i].clone())),
             (
                 "residual",
                 Json::str(format!("{}, {}, {} mm", mm(d[0]), mm(d[1]), mm(d[2]))),
             ),
+            ("dx", mmq(d[0])),
+            ("dy", mmq(d[1])),
+            ("dz", mmq(d[2])),
         ]));
     }
     let dof = 3 * n - 7;

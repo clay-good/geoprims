@@ -654,6 +654,53 @@ export function planProfile(planArgs, plan, profArgs, prof) {
 
 const group = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
+/**
+ * A three-dimensional fit's residuals, which have no one plane to live in. The
+ * points go in plan, each with its horizontal residual drawn as an arrow at a
+ * stated exaggeration and its vertical residual as a bar beside it. What the
+ * reader is looking for is the difference between scatter, which is noise, and
+ * a pattern, which means something the seven parameters do not model. The
+ * points are not named here: the table beside the drawing names them, and at
+ * this scale a cluster of labels would cover the arrows they belong to.
+ */
+function helmertResiduals(args, result) {
+  const rows = result.result.residuals ?? [];
+  const pts = (args.points ?? []).map((p) => [Number.parseFloat(String(p.x)), Number.parseFloat(String(p.y))]);
+  if (rows.length < 3 || pts.length !== rows.length || pts.some((p) => p.some((c) => !Number.isFinite(c)))) return null;
+  const res = rows.map((r) => [val({ result: r }, 'dx'), val({ result: r }, 'dy'), val({ result: r }, 'dz')]);
+  if (res.some((r) => r.some((c) => !Number.isFinite(c)))) return null;
+  // Plan extent of the points, fitted into a box that leaves the caption room.
+  const xs = pts.map((p) => p[0]);
+  const ys = pts.map((p) => p[1]);
+  const span = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), 1);
+  const k = 130 / span;
+  const cx = (Math.max(...xs) + Math.min(...xs)) / 2;
+  const cy = (Math.max(...ys) + Math.min(...ys)) / 2;
+  const at = ([x, y]) => [160 + (x - cx) * k, 110 - (y - cy) * k];
+  // The residuals are millimetres against hundreds of metres, so they are
+  // drawn at an exaggeration the caption states.
+  const worst = Math.max(...res.map((r) => Math.hypot(r[0], r[1])), 1e-9);
+  const f = exaggeration(worst, 30);
+  const body = [
+    ...pts.flatMap((p, i) => {
+      const [px, py] = at(p);
+      const [dx, dy, dz] = res[i];
+      const bar = Math.max(-16, Math.min(16, dz * f));
+      return [
+        dot(px, py),
+        Math.hypot(dx, dy) * f > 1.5 ? arrow(px, py, px + dx * f, py - dy * f, 'dg-accent', '', 0.5, -1) : '',
+        // The vertical residual, as a bar just to the right of the point.
+        line(Math.abs(bar) > 0.5 ? 'dg-muted' : 'dg-grid', [px + 7, py], [px + 7, py - bar]),
+      ];
+    }),
+    // Two short lines: a caption much past 40 characters runs off the frame.
+    text('dg-muted-text', 12, 214, 'Arrow horizontal, bar vertical'),
+    text('dg-muted-text', 12, 228, `${f}\u00d7 \u00b7 RMS ${disp(result, 'rms')} \u00b7 ${rows.length} pts \u00b7 ${val(result, 'degrees_of_freedom')} dof`),
+  ].join('');
+  const title = `Residuals of the seven-parameter fit at ${rows.length} points, in plan: the horizontal part as an arrow and the vertical as a bar, both exaggerated ${f} times. RMS over all axes ${disp(result, 'rms')}.`;
+  return { markup: svg(body, title), desc: title };
+}
+
 export const DIAGRAMS = {
   'survey.gnss.dop': gnssSky,
   'survey.curves.vertical-curve': verticalCurve,
@@ -674,4 +721,5 @@ export const DIAGRAMS = {
   'survey.cogo.bowditch': traverseClosure,
   'survey.cogo.transit': traverseClosure,
   'survey.cogo.crandall': traverseClosure,
+  'survey.cogo.helmert-3d-fit': helmertResiduals,
 };

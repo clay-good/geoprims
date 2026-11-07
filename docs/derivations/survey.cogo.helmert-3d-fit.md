@@ -33,6 +33,8 @@ Least squares for the seven parameters of the linearized Helmert (Bursa-Wolf) tr
 - `SCALE_SUSPECT` warns when the scale differs from one by more than 100 ppm.
 - Points that are all on one line leave the rotations undefined and are refused.
 
+
+The fitted rotations are checked against the model that produced them: past one degree the (I + Ω) approximation is worth more than 150 ppm, so the fit is refused with `NO_SOLUTION` naming the rotation it wanted. Deakin's (2007) survey-to-design figure, turned by about 130°, 86°, and 190°, is the case that showed why: the linearized least squares settles happily on rotations of tens of degrees, a negative scale, and metre residuals. Systems turned that far need their axes brought together first.
 ## Approximations
 
 The rotation matrix is the small-angle form, as in the Helmert tool, so the fit and the transform agree exactly. All points weigh equally.
@@ -62,3 +64,4 @@ The rotation matrix is the small-angle form, as in the Helmert tool, so the fit 
   - 10 synthetic local points made with known parameters, in both conventions, come back within 1e-9, with residuals below 1e-9 m.
   - The test's transform is written separately from the core, following the IOGP form that `geodesy.datum.helmert` applies.
 - Precision: at ECEF magnitudes with points 2 km apart, double precision fixes the rotations only to about 1e-7 arc-seconds, so translations come back to micrometers.
+- `core/crates/gp-survey/tests/helmert.rs` `rotations_past_a_degree_are_refused`: Deakin's (2007) survey-to-design figure, turned by degrees, is refused with `NO_SOLUTION` naming the one-degree limit, while a half-degree turn about Z is still recovered to 1e-6 arcseconds.

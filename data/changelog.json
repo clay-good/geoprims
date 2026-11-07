@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-11-06",
+      "kind": "fixed",
+      "tools": [
+        "survey.cogo.helmert-3d-fit"
+      ],
+      "vectors": [],
+      "summary": "The three-dimensional Helmert fit now refuses systems that are turned too far for it, instead of answering anyway. It fits the small-rotation model geodetic datum transformations use, which is good to about a degree; past that the approximation is worth more than 150 parts per million. Fed a published example whose two systems differ by rotations of 130, 86, and 190 degrees, it used to settle on rotations of tens of degrees, a negative scale, and residuals of metres, with only the scale warning to hint that anything was wrong. It now says plainly that the fit wants a rotation past the one degree the model holds to, and suggests bringing the axes together first. Nothing changes for the small rotations the tool is for: no published vector moved."
+    },
+    {
+      "date": "2026-11-06",
       "kind": "added",
       "tools": [
         "navigation.vessel.under-keel-clearance"

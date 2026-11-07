@@ -390,6 +390,22 @@ fn run_helmert_3d_fit(ctx: &mut Ctx) -> Result<Json, ToolError> {
         }
     }
     let r = [p[4], p[5], p[6]];
+    // The model is (I + Ω), good to θ²/2. Past a degree that approximation is
+    // worth more than 150 ppm, and the least-squares solution of a model that
+    // far from the truth is a number, not an answer: a figure turned by 130°
+    // (Deakin 2007's survey-to-design example) settles on rotations of tens of
+    // degrees, a negative scale, and metre residuals. Say so instead.
+    const MAX_ROTATION: f64 = 0.017_453_292_519_943_295; // one degree, in radians
+    if let Some(big) = r.iter().copied().find(|x| x.abs() > MAX_ROTATION) {
+        return Err(ToolError::new(
+            ErrorCode::NoSolution,
+            format!(
+                "The fit wants a rotation of {:.2}°, past the one degree the small-angle model holds to. These systems are turned too far for a datum-transformation fit; turn the source system onto the target's axes first, then fit the remainder.",
+                big.to_degrees()
+            ),
+        )
+        .at("/points"));
+    }
     // Back to uncentered translations: T = c_t + t'' − (1 + s)(I + Ω) c_s.
     let rc = rotate(r, cs, cf);
     let t = [0, 1, 2].map(|k| ct[k] + p[k] - (1.0 + p[3]) * rc[k]);

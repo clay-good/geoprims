@@ -316,7 +316,7 @@
     "lastmod": "2026-10-19"
   },
   "/changelog/": {
-    "hash": "4d86c369c303cebf",
+    "hash": "8528233d4a578917",
     "lastmod": "2026-11-07"
   },
   "/disclaimer/": {
@@ -1808,7 +1808,7 @@
     "lastmod": "2026-10-20"
   },
   "/quality/": {
-    "hash": "47b64ce17f6fb9fb",
+    "hash": "190217b040b12b80",
     "lastmod": "2026-11-07"
   },
   "/raster/": {
@@ -2008,8 +2008,8 @@
     "lastmod": "2026-10-20"
   },
   "/survey/cogo/helmert-3d-fit/": {
-    "hash": "71fc6139a85a36a8",
-    "lastmod": "2026-10-28"
+    "hash": "75b0658eb3166202",
+    "lastmod": "2026-11-07"
   },
   "/survey/cogo/intersection/": {
     "hash": "db36bd23f5fdf0a8",
@@ -2636,7 +2636,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "9f9cc92fe1f988fb",
+    "hash": "2f9e96a0b7ccedf1",
     "lastmod": "2026-11-07"
   },
   "/workflows/": {

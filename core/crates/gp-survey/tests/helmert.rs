@@ -79,3 +79,60 @@ fn helmert_3d_fit_invariants() {
     let worst = r["residuals"][3]["residual"].as_str().unwrap();
     assert!(worst.contains("mm"), "{worst}");
 }
+
+/// Systems turned by degrees are outside the small-angle model, and the tool
+/// says so rather than reporting the least-squares answer of a model that far
+/// from the truth. The case is Deakin's (2007, "3D Coordinate Transformations",
+/// Appendix): a plane figure ABC whose survey and design systems differ by
+/// rotations of about 130°, 86°, and 190°.
+#[test]
+fn rotations_past_a_degree_are_refused() {
+    let pts = [
+        ([1000.0, 1000.0, 1000.0], [1911.9, 1435.2, 554.1]),
+        ([1620.0, 740.0, 340.0], [2540.6, 1668.1, 1216.1]),
+        ([1100.0, 1200.0, 1300.0], [1547.5, 1396.7, 629.8]),
+    ];
+    let rows: Vec<Value> = pts
+        .iter()
+        .enumerate()
+        .map(|(i, (s, t))| {
+            json!({"name": format!("P{i}"), "x": format!("{} m", s[0]), "y": format!("{} m", s[1]), "z": format!("{} m", s[2]),
+                   "x_target": format!("{} m", t[0]), "y_target": format!("{} m", t[1]), "z_target": format!("{} m", t[2])})
+        })
+        .collect();
+    let r: Value = serde_json::from_str(&REGISTRY.invoke(
+        "survey.cogo.helmert-3d-fit",
+        &json!({"points": rows}).to_string(),
+    ))
+    .unwrap();
+    assert_eq!(r["ok"], false, "{r}");
+    assert_eq!(r["error"]["code"], "NO_SOLUTION", "{r}");
+    assert!(
+        r["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("one degree"),
+        "{r}"
+    );
+    // A turn well inside the model still answers: half a degree about Z.
+    let small = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1800.0];
+    let src: Vec<[f64; 3]> = (0..5)
+        .map(|i| {
+            let t = f64::from(i);
+            [
+                100.0 * t - 200.0,
+                (t * 2.1).sin() * 180.0,
+                (t * 1.3).cos() * 90.0,
+            ]
+        })
+        .collect();
+    let turned: Vec<_> = src
+        .iter()
+        .map(|s| (*s, transform(small, *s, false)))
+        .collect();
+    let ok = fit(&turned, false);
+    assert!(
+        (ok["rz"]["value"].as_f64().unwrap() - 1800.0).abs() < 1e-6,
+        "{ok}"
+    );
+}

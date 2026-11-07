@@ -4216,6 +4216,26 @@
       "editionCheck": true
     },
     {
+      "id": "os-coordinate-systems-guide",
+      "name": "A Guide to Coordinate Systems in Great Britain",
+      "issuer": "Ordnance Survey",
+      "currentEdition": "Version 3.6 (D00659), 2020",
+      "currentReleaseDate": "2020-03-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-11-07",
+      "verificationNote": "Read at ordnancesurvey.co.uk on 2026-11-07: section 7.1 (the National Grid reference convention, 100 km squares with a two-letter code), Annexe A (the National Grid projection parameters), Annexe B and D (the OSGB36 to ETRS89 seven-parameter set, published to four decimals, which is a different transformation from EPSG operation 1314's three-decimal one), and Annexe C with its worked example, E 651409.903 N 313177.270.",
+      "freeAccessUrl": "https://www.ordnancesurvey.co.uk/documents/resources/guide-coordinate-systems-great-britain.pdf",
+      "matchTerms": [
+        "Guide to Coordinate Systems in Great Britain"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "jenson-domingue-1988",
       "name": "Extracting topographic structure from digital elevation data for geographic information system analysis",
       "issuer": "Jenson, S. K., and Domingue, J. O., Photogrammetric Engineering and Remote Sensing",

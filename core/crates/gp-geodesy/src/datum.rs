@@ -1117,17 +1117,17 @@ const EPSG_DATASET: Reference = Reference {
 };
 
 /// A published transformation from a legacy datum to WGS 84.
-struct Legacy {
-    id: &'static str,
+pub(crate) struct Legacy {
+    pub(crate) id: &'static str,
     name: &'static str,
     epsg: u32,
     /// Semi-major axis and inverse flattening of the datum's ellipsoid.
-    a: f64,
-    rf: f64,
-    params: Params,
-    convention: Convention,
+    pub(crate) a: f64,
+    pub(crate) rf: f64,
+    pub(crate) params: Params,
+    pub(crate) convention: Convention,
     /// Stated accuracy (m).
-    accuracy: f64,
+    pub(crate) accuracy: f64,
     /// Area of use: west, south, east, north (degrees; east < west crosses 180°).
     area: [f64; 4],
     area_name: &'static str,
@@ -1139,6 +1139,14 @@ const fn t3(tx: f64, ty: f64, tz: f64) -> Params {
         r: [0.0; 3],
         ds: 0.0,
     }
+}
+
+/// One published legacy-datum transformation, by its id, so a tool that needs
+/// the same parameters reads them here rather than copying them: a copy of
+/// OSGB36's, typed again in the grid-reference tools, drifted from this table
+/// by 3 mm before this existed.
+pub(crate) fn legacy(id: &str) -> Option<&'static Legacy> {
+    LEGACY.iter().find(|d| d.id == id)
 }
 
 const LEGACY: &[Legacy] = &[
@@ -1172,6 +1180,10 @@ const LEGACY: &[Legacy] = &[
         epsg: 1314,
         a: 6_377_563.396,
         rf: 299.324_964_6,
+        // EPSG operation 1314 itself, to three decimals. Ordnance Survey's own
+        // guide publishes a four-decimal set (0.1502, 0.2470, 0.8421 and
+        // -20.4894), which is a different published transformation and moves a
+        // point about 3 mm; this row cites EPSG, so it carries EPSG's numbers.
         params: Params {
             t: [446.448, -125.157, 542.06],
             r: [0.15, 0.247, 0.842],

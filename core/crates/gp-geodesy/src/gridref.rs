@@ -824,3 +824,517 @@ fn run_usng_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("square_size", ctx.out("square_size", meters(d.size))),
     ]))
 }
+
+// --------------------------------------------------- British National Grid
+
+const OS_GUIDE: Reference = Reference {
+    title: "A Guide to Coordinate Systems in Great Britain",
+    issuer: "Ordnance Survey",
+    year: 2020,
+    edition: "Version 3.6 (D00659), © Crown copyright 2020",
+    locator: "Section 7.1, the National Grid reference convention (100 km squares with a two-letter code, the letter I left out); Annexe A, the National Grid projection parameters; Annexe C, the transverse Mercator formulae and their worked example",
+    url: "https://www.ordnancesurvey.co.uk/documents/resources/guide-coordinate-systems-great-britain.pdf",
+};
+
+/// The National Grid projection (OS guide, Annexe A): Airy 1830, true origin
+/// 49°N 2°W, scale 0.999 601 271 7, false origin 400 km west and 100 km north.
+fn bng_grid() -> gp_geo::proj::TmGrid {
+    gp_geo::proj::TmGrid::new(
+        6_377_563.396,
+        1.0 / 299.324_964_6,
+        49.0,
+        -2.0,
+        0.999_601_271_7,
+        400_000.0,
+        -100_000.0,
+    )
+}
+
+/// OSGB36 to WGS 84 by the published seven-parameter set, read from the datum
+/// table rather than copied: these are Ordnance Survey's own numbers and only
+/// want writing down once.
+fn osgb36_to_wgs84(lat: f64, lon: f64, to_wgs: bool) -> (f64, f64) {
+    use gp_geo::frames as fr;
+    use gp_geo::helmert::{Helmert, Params};
+    let d = crate::datum::legacy("OSGB36").expect("the datum table lists OSGB36");
+    let osgb = gp_geo::ellipsoid::Ellipsoid {
+        id: "osgb36",
+        name: "Airy 1830",
+        a: d.a,
+        f: 1.0 / d.rf,
+    };
+    let wgs = gp_geo::ellipsoid::CATALOG[0];
+    let h = Helmert {
+        p: d.params,
+        rate: Params::default(),
+        t0: 0.0,
+        convention: d.convention,
+    };
+    let (src, dst) = if to_wgs { (&osgb, &wgs) } else { (&wgs, &osgb) };
+    let p = fr::to_ecef(src, lat.to_radians(), lon.to_radians(), 0.0);
+    let q = if to_wgs {
+        h.forward([p.0, p.1, p.2], 0.0)
+    } else {
+        h.reverse([p.0, p.1, p.2], 0.0)
+    };
+    let (phi, lam, _) = fr::from_ecef(dst, q[0], q[1], q[2]).expect("not the center");
+    (phi.to_degrees(), gp_base::angle::wrap_lon(lam.to_degrees()))
+}
+
+/// The square's edges in latitude and longitude, from its four corners on the
+/// grid, so the map can draw the square a reference actually names.
+fn bng_bounds(e: f64, n: f64, side: f64, to_wgs: bool) -> (f64, f64, f64, f64) {
+    let g = bng_grid();
+    let corners = [(e, n), (e + side, n), (e, n + side), (e + side, n + side)];
+    let mut bounds = (90.0f64, 180.0f64, -90.0f64, -180.0f64);
+    for (ce, cn) in corners {
+        let (mut lat, mut lon) = g.inverse(ce, cn);
+        if to_wgs {
+            (lat, lon) = osgb36_to_wgs84(lat, lon, true);
+        }
+        bounds = (
+            bounds.0.min(lat),
+            bounds.1.min(lon),
+            bounds.2.max(lat),
+            bounds.3.max(lon),
+        );
+    }
+    bounds
+}
+
+const BNG_DATUM: Field = Field::new(
+    "datum",
+    "Datum of the latitude and longitude",
+    "WGS 84 (what a phone gives) or OSGB36 itself, like WGS84",
+    Kind::Choice(&["WGS84", "OSGB36"]),
+);
+const BNG_NOTICE: &str = "Without the OSTN15 grid this uses Ordnance Survey's published seven-parameter transformation, which they state as about 2 m, not the centimetres OSTN15 gives.";
+
+pub static BNG_FORWARD: ToolDef = ToolDef {
+    id: "geodesy.grid-ref.bng-forward",
+    title: "Latitude and longitude to a British National Grid reference",
+    summary: "Turns a position into its National Grid reference, like TQ 30624 78388, with the easting and northing behind it and the square it names.",
+    aliases: &[
+        "lat long to BNG",
+        "OS grid reference from coordinates",
+        "British National Grid converter",
+        "latitude longitude to OS grid",
+    ],
+    keywords: &[
+        "BNG",
+        "National Grid",
+        "Ordnance Survey",
+        "OSGB36",
+        "grid reference",
+        "easting",
+        "northing",
+        "Britain",
+    ],
+    inputs: &[
+        Field::new(
+            "lat",
+            "Latitude",
+            "North positive, like 51.5007",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(9))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "East positive, like -0.1246",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(9))
+        .angle_range("[-180,180)"),
+        BNG_DATUM,
+        Field::new(
+            "figures",
+            "Figures",
+            "How many digits the reference carries, 2 to 10, like 10",
+            Kind::Number {
+                min: 2.0,
+                max: 10.0,
+            },
+        )
+        .precision(Precision::Decimals(0)),
+    ],
+    outputs: &[
+        Field::new(
+            "reference",
+            "National Grid reference",
+            "Two letters and the figures, like TQ 30624 78388",
+            Kind::Text { max_len: 24 },
+        ),
+        Field::new(
+            "square",
+            "100 km square",
+            "The two-letter code it falls in",
+            Kind::Text { max_len: 4 },
+        ),
+        Field::new(
+            "easting",
+            "Easting",
+            "From the National Grid's false origin",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(3)),
+        Field::new(
+            "northing",
+            "Northing",
+            "From the National Grid's false origin",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(3)),
+        Field::new(
+            "square_size",
+            "Square the reference names",
+            "The side of the square those figures pick out",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(0)),
+        CELL_OUT[2],
+        CELL_OUT[3],
+        CELL_OUT[4],
+        CELL_OUT[5],
+        Field::new(
+            "notice",
+            "How the datum was handled",
+            "Which transformation stands behind the answer",
+            Kind::Text { max_len: 220 },
+        ),
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &["LOW_ACCURACY_TRANSFORM", "EXPERIMENTAL_TOOL"],
+    model: "Latitude and longitude on WGS 84 carried to OSGB36 by Ordnance Survey's published seven-parameter transformation (EPSG 1314, position-vector), projected on the National Grid transverse Mercator (Airy 1830, true origin 49°N 2°W, scale 0.9996012717, false origin 400 km west and 100 km north), then lettered: the grid's 100 km squares carry a two-letter code with I left out, and the figures are truncated, never rounded",
+    accuracy: "The projection is exact to the series' nanometre; from WGS 84 the seven-parameter transformation is about 2 m, which is what Ordnance Survey states for it, so a ten-figure reference is more precise than it is accurate",
+    when_to_use: "Use this to turn a phone's or a chart's latitude and longitude into the grid reference a British map, a rights-of-way notice, or a rescue report is written in. Pick how many figures you need: two for a 10 km square, six for a 100 m square, ten for a metre. Give the datum your coordinates are on, WGS 84 or OSGB36 itself.",
+    limitations: "This is the seven-parameter path, about 2 m, not the OSTN15 grid that Ordnance Survey publishes for centimetre work; a ten-figure reference is therefore more precise than it is accurate. The National Grid covers Great Britain and its near waters: outside the lettered area, 0 to 700 km east and 0 to 1,300 km north of the false origin, there is no reference to give. Ireland and Northern Ireland use the Irish Grid, which is a different system. Heights are untouched.",
+    references: &[OS_GUIDE],
+    examples: &[Example {
+        id: "primary",
+        title: "The Ordnance Survey guide's own worked example, on OSGB36",
+        source: "A Guide to Coordinate Systems in Great Britain v3.6, Annexe C: 52°39′27.2531″N 1°43′04.5177″E on OSGB36 gives E 651409.903 N 313177.270, which is TG 51409 13177",
+        input: r#"{"lat":52.657570305,"lon":1.717921583,"datum":"OSGB36","figures":10}"#,
+    }],
+    primary_example: "primary",
+    visualization: BBOX,
+    related: &[
+        Related {
+            id: "geodesy.grid-ref.bng-inverse",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.grid-ref.mgrs-forward",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.datum.legacy",
+            reason: "parent",
+        },
+    ],
+    sentence: "That point is {reference}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_bng_forward,
+    ..ToolDef::BLANK
+};
+
+fn run_bng_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let on_wgs = ctx.choice("datum")? != Some("OSGB36");
+    let figures = ctx.number("figures")?.unwrap_or(10.0).round() as usize;
+    if !figures.is_multiple_of(2) {
+        return Err(ToolError::invalid(
+            "/figures",
+            "A National Grid reference carries an even number of figures: 2, 4, 6, 8, or 10.",
+        ));
+    }
+    let (plat, plon) = if on_wgs {
+        ctx.warnings
+            .push(Warning::new("LOW_ACCURACY_TRANSFORM", BNG_NOTICE));
+        osgb36_to_wgs84(lat, lon, false)
+    } else {
+        (lat, lon)
+    };
+    let g = bng_grid().forward(plat, plon);
+    let reference = gr::bng_encode(g.e, g.n, figures)
+        .map_err(|m| ToolError::new(ErrorCode::OutOfDomain, m).at("/lat"))?;
+    let square = gr::bng_square(g.e, g.n).expect("encode checked the bounds");
+    let m = units::by_symbol(QT::Length, "m").expect("m");
+    let q = |v: f64| Q { value: v, unit: m };
+    let side = 100_000.0 / 10f64.powi((figures / 2) as i32);
+    if ctx.explaining() {
+        ctx.step(
+            "Onto OSGB36",
+            if on_wgs {
+                "Ordnance Survey's seven-parameter transformation (EPSG 1314)"
+            } else {
+                "the coordinates are already on OSGB36"
+            },
+            format!("{lat:.7}°, {lon:.7}°"),
+            format!("{plat:.7}°, {plon:.7}°"),
+        );
+        ctx.step(
+            "On the National Grid",
+            "transverse Mercator, Airy 1830, true origin 49°N 2°W",
+            format!("{plat:.7}°, {plon:.7}°"),
+            format!("E {:.3} m, N {:.3} m", g.e, g.n),
+        );
+        ctx.step(
+            "Lettered",
+            "the 100 km square's code, then the figures, truncated",
+            format!("E {:.0}, N {:.0}", g.e, g.n),
+            reference.clone(),
+        );
+    }
+    let (se, sn) = ((g.e / side).floor() * side, (g.n / side).floor() * side);
+    let (south, west, north, east) = bng_bounds(se, sn, side, on_wgs);
+    let d = |v: f64| Q {
+        value: v,
+        unit: units::by_symbol(QT::Angle, "deg").expect("deg"),
+    };
+    Ok(Json::obj([
+        ("reference", Json::str(reference)),
+        ("square", Json::str(square)),
+        ("easting", ctx.out("easting", q(g.e))),
+        ("northing", ctx.out("northing", q(g.n))),
+        ("square_size", ctx.out("square_size", q(side))),
+        ("south", ctx.out("south", d(south))),
+        ("west", ctx.out("west", d(west))),
+        ("north", ctx.out("north", d(north))),
+        ("east", ctx.out("east", d(east))),
+        (
+            "notice",
+            Json::str(if on_wgs {
+                BNG_NOTICE
+            } else {
+                "The coordinates were taken as OSGB36, so no datum transformation was applied."
+            }),
+        ),
+    ]))
+}
+
+pub static BNG_INVERSE: ToolDef = ToolDef {
+    id: "geodesy.grid-ref.bng-inverse",
+    title: "British National Grid reference to latitude and longitude",
+    summary: "Reads a National Grid reference like TQ 30 80 and gives the square it names: its south-west corner, its center, its size, and the latitude and longitude of that center.",
+    aliases: &[
+        "BNG to lat long",
+        "OS grid reference to coordinates",
+        "read a National Grid reference",
+        "grid reference to latitude longitude",
+    ],
+    keywords: &[
+        "BNG",
+        "National Grid",
+        "Ordnance Survey",
+        "OSGB36",
+        "grid reference",
+        "easting",
+        "northing",
+        "Britain",
+    ],
+    inputs: &[
+        code_in(
+            "reference",
+            "National Grid reference",
+            "Two letters and an even number of figures, like TQ 30 80",
+        ),
+        BNG_DATUM,
+    ],
+    outputs: &[
+        Field::new(
+            "lat",
+            "Latitude of the center",
+            "Of the square the reference names",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(7))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude of the center",
+            "Of the square the reference names",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(7))
+        .angle_range("[-180,180)"),
+        Field::new(
+            "easting",
+            "Easting of the south-west corner",
+            "From the National Grid's false origin",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(1)),
+        Field::new(
+            "northing",
+            "Northing of the south-west corner",
+            "From the National Grid's false origin",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(1)),
+        Field::new(
+            "square_size",
+            "Square the reference names",
+            "The side of the square those figures pick out",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "square",
+            "100 km square",
+            "The two-letter code",
+            Kind::Text { max_len: 4 },
+        ),
+        CELL_OUT[2],
+        CELL_OUT[3],
+        CELL_OUT[4],
+        CELL_OUT[5],
+        Field::new(
+            "notice",
+            "How the datum was handled",
+            "Which transformation stands behind the answer",
+            Kind::Text { max_len: 220 },
+        ),
+    ],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["LOW_ACCURACY_TRANSFORM", "EXPERIMENTAL_TOOL"],
+    model: "The two letters give the 100 km square, the figures the offset inside it, truncated, so a reference names a square rather than a point: its south-west corner, and its center half a square further. The center is unprojected from the National Grid transverse Mercator onto OSGB36, and carried to WGS 84 by Ordnance Survey's published seven-parameter transformation (EPSG 1314) when WGS 84 is asked for",
+    accuracy: "The square's corner and size are exact. The latitude and longitude on OSGB36 are exact to the series' nanometre; on WGS 84 the seven-parameter transformation is about 2 m, which is what Ordnance Survey states for it",
+    when_to_use: "Use this to read a British grid reference off a map, a notice, or a rescue call and find where it is. It answers with the square the reference actually names, not a false point: two figures name a 10 km square, six a 100 m square, ten a metre, and the result gives the size as well as the corner and the center.",
+    limitations: "A reference names a square, and the latitude and longitude given are its center, so a two-figure reference is good to 5 km by construction. On WGS 84 the answer runs through the seven-parameter transformation, about 2 m, not the OSTN15 grid. The National Grid covers Great Britain; Ireland and Northern Ireland use the Irish Grid, which is a different system and is not read here. Heights are untouched.",
+    references: &[OS_GUIDE],
+    examples: &[Example {
+        id: "primary",
+        title: "TQ 30 80, the convention's own example",
+        source: "A Guide to Coordinate Systems in Great Britain v3.6 §7.1: the two letters give the 100 km square and the figures the offset inside it, so TQ 30 80 is the 1 km square whose south-west corner is E 530000 N 180000",
+        input: r#"{"reference":"TQ 30 80","datum":"WGS84"}"#,
+    }],
+    primary_example: "primary",
+    visualization: BBOX,
+    related: &[
+        Related {
+            id: "geodesy.grid-ref.bng-forward",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.grid-ref.mgrs-inverse",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.datum.legacy",
+            reason: "parent",
+        },
+    ],
+    sentence: "That reference names a {square_size} square centered on {lat}, {lon}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_bng_inverse,
+    ..ToolDef::BLANK
+};
+
+fn run_bng_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let text = ctx.text("reference")?.expect("required");
+    let (e, n, side) = gr::bng_decode(&text).map_err(|m| ToolError::invalid("/reference", m))?;
+    let want_wgs = ctx.choice("datum")? != Some("OSGB36");
+    let (clat, clon) = bng_grid().inverse(e + side / 2.0, n + side / 2.0);
+    let (lat, lon) = if want_wgs {
+        ctx.warnings
+            .push(Warning::new("LOW_ACCURACY_TRANSFORM", BNG_NOTICE));
+        osgb36_to_wgs84(clat, clon, true)
+    } else {
+        (clat, clon)
+    };
+    let m = units::by_symbol(QT::Length, "m").expect("m");
+    let q = |v: f64| Q { value: v, unit: m };
+    let square = gr::bng_square(e, n).unwrap_or_else(|| text.trim()[..2].to_uppercase());
+    let (south, west, north, east) = bng_bounds(e, n, side, want_wgs);
+    if ctx.explaining() {
+        ctx.step(
+            "The square",
+            "two letters for the 100 km square, then the figures inside it",
+            text.clone(),
+            format!("E {e:.0} m, N {n:.0} m, {side:.0} m square"),
+        );
+        ctx.step(
+            "Its center",
+            "half a square further east and north",
+            format!("E {:.1} m, N {:.1} m", e + side / 2.0, n + side / 2.0),
+            format!(
+                "{}°",
+                gp_base::display::number(lat, Precision::Decimals(7), ctx.options.format)
+            ),
+        );
+    }
+    Ok(Json::obj([
+        (
+            "lat",
+            ctx.out(
+                "lat",
+                Q {
+                    value: lat,
+                    unit: units::by_symbol(QT::Angle, "deg").expect("deg"),
+                },
+            ),
+        ),
+        (
+            "lon",
+            ctx.out(
+                "lon",
+                Q {
+                    value: lon,
+                    unit: units::by_symbol(QT::Angle, "deg").expect("deg"),
+                },
+            ),
+        ),
+        ("easting", ctx.out("easting", q(e))),
+        ("northing", ctx.out("northing", q(n))),
+        ("square_size", ctx.out("square_size", q(side))),
+        ("square", Json::str(square)),
+        ("south", ctx.out("south", deg(south))),
+        ("west", ctx.out("west", deg(west))),
+        ("north", ctx.out("north", deg(north))),
+        ("east", ctx.out("east", deg(east))),
+        (
+            "notice",
+            Json::str(if want_wgs {
+                BNG_NOTICE
+            } else {
+                "The latitude and longitude are on OSGB36 itself, so no datum transformation was applied."
+            }),
+        ),
+    ]))
+}

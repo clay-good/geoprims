@@ -1290,6 +1290,14 @@
       "expect": "raster.hydrology.longest-flow-path"
     },
     {
+      "query": "latitude longitude to OS grid reference",
+      "expect": "geodesy.grid-ref.bng-forward"
+    },
+    {
+      "query": "what does the grid reference TQ 30 80 mean",
+      "expect": "geodesy.grid-ref.bng-inverse"
+    },
+    {
       "query": "under keel clearance with squat",
       "expect": "navigation.vessel.under-keel-clearance"
     },

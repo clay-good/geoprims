@@ -349,3 +349,149 @@ mod tests {
         assert!((c.south - 57.6491).abs() < 1e-12 && (c.west - 10.407433333333334).abs() < 1e-12);
     }
 }
+
+// --------------------------------------------------- British National Grid
+
+/// The National Grid's letters, in order, with I left out (Ordnance Survey,
+/// A Guide to Coordinate Systems in Great Britain §7.1).
+const BNG_LETTERS: &[u8] = b"ABCDEFGHJKLMNOPQRSTUVWXYZ";
+/// The grid runs 0 to 700 km east and 0 to 1,300 km north of its false
+/// origin: seven 100 km columns and thirteen rows carry a letter pair.
+pub const BNG_EAST_MAX: f64 = 700_000.0;
+pub const BNG_NORTH_MAX: f64 = 1_300_000.0;
+
+/// The two-letter code of the 100 km square holding an easting and northing,
+/// or None outside the lettered grid.
+pub fn bng_square(e: f64, n: f64) -> Option<String> {
+    if !(0.0..BNG_EAST_MAX).contains(&e) || !(0.0..BNG_NORTH_MAX).contains(&n) {
+        return None;
+    }
+    let (ce, cn) = (
+        (e / 100_000.0).floor() as i64,
+        (n / 100_000.0).floor() as i64,
+    );
+    // The 500 km square first, then the 100 km square inside it, counting
+    // from the south-west corner of each, west to east and south to north.
+    let first = (19 - cn) - (19 - cn).rem_euclid(5) + (ce + 10) / 5;
+    let second = ((19 - cn) * 5).rem_euclid(25) + ce.rem_euclid(5);
+    let pick = |i: i64| -> Option<char> {
+        usize::try_from(i)
+            .ok()
+            .and_then(|k| BNG_LETTERS.get(k))
+            .map(|b| *b as char)
+    };
+    Some(format!("{}{}", pick(first)?, pick(second)?))
+}
+
+/// A National Grid reference for an easting and northing, with `figures`
+/// digits in each half (2, 4, 6, 8, or 10), truncated as the convention
+/// requires rather than rounded.
+pub fn bng_encode(e: f64, n: f64, figures: usize) -> Result<String, String> {
+    if !(2..=10).contains(&figures) || !figures.is_multiple_of(2) {
+        return Err("A National Grid reference carries 2, 4, 6, 8, or 10 figures.".into());
+    }
+    let square = bng_square(e, n).ok_or_else(|| {
+        "That easting and northing is outside the lettered National Grid, which runs 0 to 700 km east and 0 to 1,300 km north of its false origin.".to_string()
+    })?;
+    let digits = figures / 2;
+    let unit = 100_000.0 / 10f64.powi(digits as i32);
+    let part = |v: f64| -> String {
+        let within = (v.rem_euclid(100_000.0) / unit).floor() as u64;
+        format!("{within:0digits$}", digits = digits)
+    };
+    Ok(format!("{square} {} {}", part(e), part(n)))
+}
+
+/// The square a National Grid reference names: its south-west corner, its
+/// center, and its side in meters.
+pub fn bng_decode(s: &str) -> Result<(f64, f64, f64), String> {
+    let up: String = s
+        .chars()
+        .filter(|c| !c.is_whitespace())
+        .map(|c| c.to_ascii_uppercase())
+        .collect();
+    let bytes = up.as_bytes();
+    if bytes.len() < 2 || !bytes[0].is_ascii_alphabetic() || !bytes[1].is_ascii_alphabetic() {
+        return Err("A National Grid reference starts with two letters, like TQ 30 80.".into());
+    }
+    let index = |b: u8| -> Result<i64, String> {
+        if b == b'I' {
+            return Err("The letter I is not used in the National Grid.".into());
+        }
+        BNG_LETTERS
+            .iter()
+            .position(|x| *x == b)
+            .map(|p| p as i64)
+            .ok_or_else(|| format!("{} is not a National Grid letter.", b as char))
+    };
+    let (first, second) = (index(bytes[0])?, index(bytes[1])?);
+    // Undo the lettering, which runs from the square two columns west of the
+    // grid's own origin: the 500 km square, then the 100 km square in it.
+    let ce = (first - 2).rem_euclid(5) * 5 + second.rem_euclid(5);
+    let cn = 19 - (first / 5) * 5 - second / 5;
+    if !(0..7).contains(&ce) || !(0..13).contains(&cn) {
+        return Err(format!(
+            "{}{} is not a square of the National Grid.",
+            bytes[0] as char, bytes[1] as char
+        ));
+    }
+    let rest = &up[2..];
+    if !rest.bytes().all(|b| b.is_ascii_digit()) {
+        return Err("After the two letters a National Grid reference is all figures.".into());
+    }
+    if !rest.len().is_multiple_of(2) || rest.len() > 10 {
+        return Err(
+            "A National Grid reference carries an even number of figures, up to 10, half for the easting and half for the northing.".into(),
+        );
+    }
+    let digits = rest.len() / 2;
+    let side = if digits == 0 {
+        100_000.0
+    } else {
+        100_000.0 / 10f64.powi(digits as i32)
+    };
+    let value = |part: &str| -> f64 {
+        if part.is_empty() {
+            0.0
+        } else {
+            part.parse::<f64>().unwrap_or(0.0) * side
+        }
+    };
+    let e = ce as f64 * 100_000.0 + value(&rest[..digits]);
+    let n = cn as f64 * 100_000.0 + value(&rest[digits..]);
+    Ok((e, n, side))
+}
+
+#[cfg(test)]
+mod bng_tests {
+    use super::*;
+
+    #[test]
+    fn the_conventions_own_example() {
+        // Ordnance Survey's guide, §7.1 and the National Grid figure.
+        assert_eq!(
+            bng_decode("TQ 30 80").unwrap(),
+            (530_000.0, 180_000.0, 1_000.0)
+        );
+        assert_eq!(
+            bng_encode(530_624.974, 178_388.464, 10).unwrap(),
+            "TQ 30624 78388"
+        );
+        // The letter I is not used, and the message says so.
+        assert!(bng_decode("TI 30 80").unwrap_err().contains("letter I"));
+        // Every square round trips through its own code.
+        for ce in 0..7 {
+            for cn in 0..13 {
+                let (e, n) = (ce as f64 * 100_000.0 + 1.0, cn as f64 * 100_000.0 + 1.0);
+                let Some(code) = bng_square(e, n) else {
+                    continue;
+                };
+                let (de, dn, side) = bng_decode(&code).unwrap();
+                assert_eq!(
+                    (de, dn, side),
+                    (ce as f64 * 100_000.0, cn as f64 * 100_000.0, 100_000.0)
+                );
+            }
+        }
+    }
+}

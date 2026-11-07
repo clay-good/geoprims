@@ -994,6 +994,13 @@
       "intro": "These tools write and read grid references: MGRS and the US National Grid, plus GARS, GEOREF, and Maidenhead locators. Search and rescue teams, military users, pilots, and radio amateurs use them to pass a position as a short code. Start with MGRS encoding for a point. The main pitfall is rounding a shortened reference; MGRS and USNG truncate, and a reference names a square, not a point.",
       "tasks": [
         {
+          "want": "read or write a British National Grid reference",
+          "tools": [
+            "bng-forward",
+            "bng-inverse"
+          ]
+        },
+        {
           "want": "convert to or from MGRS or USNG",
           "tools": [
             "mgrs-forward",

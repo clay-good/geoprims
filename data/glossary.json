@@ -1372,7 +1372,9 @@
       "definition": "The legacy datum of the British National Grid, on the Airy 1830 ellipsoid.",
       "source": "epsg",
       "relatedTools": [
-        "geodesy.datum.legacy"
+        "geodesy.datum.legacy",
+        "geodesy.grid-ref.bng-forward",
+        "geodesy.grid-ref.bng-inverse"
       ]
     },
     {
@@ -2112,6 +2114,8 @@
         "geodesy.datum.itrf",
         "geodesy.datum.legacy",
         "geodesy.datum.nad83",
+        "geodesy.grid-ref.bng-forward",
+        "geodesy.grid-ref.bng-inverse",
         "geodesy.height.ellipsoidal-to-orthometric",
         "geodesy.magnetic.declination",
         "geodesy.magnetic.grivation",

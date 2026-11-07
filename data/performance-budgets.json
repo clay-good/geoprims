@@ -34,6 +34,8 @@
     "drone.photogrammetry.gcp-plan": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "area" },
     "drone.photogrammetry.image-count": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "area" },
     "geodesy.crs.search": { "kind": "data-proportional", "p95Ms": 40, "scalesWith": "CRS registry" },
+    "geodesy.grid-ref.bng-forward": { "kind": "closed-form", "p95Ms": 2 },
+    "geodesy.grid-ref.bng-inverse": { "kind": "closed-form", "p95Ms": 2 },
     "geodesy.grid-ref.mgrs-forward": { "kind": "iterative", "p95Ms": 10 },
     "geodesy.magnetic.isogonic": { "kind": "data-proportional", "p95Ms": 75, "scalesWith": "latitude-longitude grid" },
     "geodesy.parse.angle-arithmetic": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "terms" },

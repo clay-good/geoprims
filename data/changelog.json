@@ -3,6 +3,16 @@
   "entries": [
     {
       "date": "2026-11-07",
+      "kind": "added",
+      "tools": [
+        "geodesy.grid-ref.bng-forward",
+        "geodesy.grid-ref.bng-inverse"
+      ],
+      "vectors": [],
+      "summary": "Two tools read and write British National Grid references. One turns a latitude and longitude into the reference a British map, a rights-of-way notice, or a rescue report is written in, at the precision you ask for: two figures for a 10 km square, six for 100 m, ten for a metre. The other reads a reference like TQ 30 80 and gives back the square it actually names, with its corner, its size, its edges for the map, and the latitude and longitude of its middle. Coordinates on WGS 84 go through Ordnance Survey's published seven-parameter transformation, which they state as about two metres, and the result says so rather than implying that a ten-figure reference is good to a metre."
+    },
+    {
+      "date": "2026-11-07",
       "kind": "changed",
       "tools": [
         "raster.hydrology.fill",

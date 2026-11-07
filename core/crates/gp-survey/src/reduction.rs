@@ -42,7 +42,7 @@ const TRIMBLE_ACCESS: Reference = Reference {
     year: 2026,
     edition: "Trimble Access 2026.10",
     locator: "Curvature and refraction corrections; 0.13 listed as a typical coefficient",
-    url: "https://help.fieldsystems.trimble.com/trimble-access/latest/en/Instrument-corrections.htm",
+    url: "https://help.fieldsystems.trimble.com/trimble-access/latest/en/instrument-corrections.htm",
 };
 
 const USGS_TRIG_LEVELING: Reference = Reference {

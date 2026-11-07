@@ -6,6 +6,13 @@
       "kind": "fixed",
       "tools": [],
       "vectors": [],
+      "summary": "Seven source links now point where their documents actually live. Two had genuinely moved: the GPS interface specification, after gps.gov reorganised, and a Trimble help page whose address was lower-cased. Five others had settled on a new canonical address. The monthly link check that found them was also overstating the problem: it reported sixteen dead links when two documents had moved, because a site that blocks automated requests, or that is briefly down for maintenance, looked exactly like a document that had gone. It now says plainly when it simply could not reach a source, and advises checking in a browser before anything is repointed, so a citation is never made less accurate than it was."
+    },
+    {
+      "date": "2026-11-07",
+      "kind": "fixed",
+      "tools": [],
+      "vectors": [],
       "summary": "Build-tool dependencies are up to date, clearing every high and medium security advisory the project was carrying. These are development tools, not part of the site or the calculators: no shipped code changes and no answer moves. Three low-severity advisories remain in a build plugin whose only published fix is an older, incompatible version; they affect the build machine rather than any reader, and they are tracked rather than forced."
     },
     {

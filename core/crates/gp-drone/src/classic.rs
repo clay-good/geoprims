@@ -18,7 +18,7 @@ const USACE: Reference = Reference {
     year: 1993,
     edition: "31 March 1993",
     locator: "Chapter 10, Principles of Photogrammetry, equations 10-1 to 10-15",
-    url: "https://www.lpl.arizona.edu/hamilton/sites/lpl.arizona.edu.hamilton/files/courses/ptys551/Principles_of_Photogrammetry.pdf",
+    url: "https://lpl.arizona.edu/hamilton/sites/lpl.arizona.edu.hamilton/files/courses/ptys551/Principles_of_Photogrammetry.pdf",
 };
 
 const PSU: Reference = Reference {

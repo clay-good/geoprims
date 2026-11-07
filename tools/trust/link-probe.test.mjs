@@ -70,12 +70,62 @@ test('a DOI resolving and an archive snapshot settling are not moves', async () 
   assert.equal((await probe('https://www.rfc-editor.org/rfc/rfc7946', { fetchImpl: fake('https://www.rfc-editor.org/info/rfc7946/') })).state, 'redirected');
 });
 
-test('a link that never answers is broken, and all-good means no issue', async (t) => {
+test('a link that never answers is unreachable, not broken, and all-good means no issue', async (t) => {
   const base = await fixture(t);
-  const [slow] = await probeAll([{ url: `${base}/slow`, citations: ['Slow'], tools: [] }], { timeoutMs: 100 });
-  assert.deepEqual([slow.state, slow.status], ['broken', 'timeout']);
+  // Nothing answered, so the document is not known to be gone: the host may be
+  // refusing automated traffic or be down. Reported apart from a real 4xx.
+  const [slow] = await probeAll([{ url: `${base}/slow`, citations: ['Slow'], tools: [] }], { timeoutMs: 100, retries: 0 });
+  assert.deepEqual([slow.state, slow.status], ['unreachable', 'timeout']);
   const good = await probeAll([{ url: `${base}/ok.pdf`, citations: ['Fine'], tools: [] }]);
   assert.equal(report(good), '');
+});
+
+test('a connection that fails once and then answers is not reported', async () => {
+  const { probe } = await import('./link-probe.mjs');
+  // Three of the sixteen links reported broken on 2026-11-01 answered on the
+  // next try, so one bad connection must not reach the issue.
+  let calls = 0;
+  const flaky = async () => {
+    calls += 1;
+    if (calls <= 2) throw Object.assign(new Error('timed out'), { name: 'TimeoutError' });
+    return new Response(null, { status: 200 });
+  };
+  assert.equal((await probe('https://example.gov/doc.pdf', { fetchImpl: flaky, retryDelayMs: 0 })).state, 'ok');
+  // And a host that is really down still reports, after the retry.
+  const dead = async () => {
+    throw Object.assign(new Error('timed out'), { name: 'TimeoutError' });
+  };
+  const out = await probe('https://example.gov/doc.pdf', { fetchImpl: dead, retryDelayMs: 0 });
+  assert.deepEqual([out.state, out.status], ['unreachable', 'timeout']);
+});
+
+test('a redirect to the front page is not a move to cite', async () => {
+  const { probe } = await import('./link-probe.mjs');
+  // itrf.ign.fr sent every path to its own front page while in maintenance,
+  // and the issue advised citing that address directly. It is not the document.
+  const fake = (location) => async () => new Response(null, { status: 301, headers: { location } });
+  const root = await probe('https://itrf.ign.fr/docs/solutions/itrf2020/Transfo-ITRF2020_TRFs.txt', {
+    fetchImpl: fake('https://itrf.ign.fr/'),
+  });
+  assert.deepEqual([root.state, root.to], ['refused', 'https://itrf.ign.fr/']);
+  // A move to a real path is still a move.
+  const moved = await probe('https://example.gov/old.pdf', { fetchImpl: fake('https://example.gov/new/old.pdf') });
+  assert.equal(moved.state, 'redirected');
+  // A front page asking for a front page is nothing unusual.
+  const home = await probe('https://example.gov/', { fetchImpl: fake('https://example.gov/') });
+  assert.equal(home.state, 'ok');
+});
+
+test('the report tells a reader not to repoint a citation the probe could not reach', async () => {
+  const body = report([
+    { url: 'https://nga.example.mil/doc.pdf', state: 'unreachable', status: 'timeout', citations: ['A standard'], tools: ['geodesy.utm.forward'] },
+    { url: 'https://example.gov/gone.pdf', state: 'broken', status: 404, citations: ['A gone thing'], tools: [] },
+  ], { date: '2026-11-07' });
+  assert.match(body, /## No answer \(1\)/);
+  assert.match(body, /check in a browser first/);
+  assert.match(body, /## Broken \(1\)/);
+  // The broken note no longer claims a link that did not answer is gone.
+  assert.doesNotMatch(body, /These did not answer, or answered with an error/);
 });
 
 test('the real catalog and ledger give every link a citation', () => {

@@ -152,8 +152,8 @@
     "lastmod": "2026-10-21"
   },
   "/aviation/ifr/visibility-to-cmv/": {
-    "hash": "b3fc10bc4f905c5e",
-    "lastmod": "2026-10-21"
+    "hash": "ac0a4216ebaa5430",
+    "lastmod": "2026-11-07"
   },
   "/aviation/loading/": {
     "hash": "519132f7166b1fce",
@@ -168,7 +168,7 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/loading/fuel-density-temperature/": {
-    "hash": "433967ee521a694f",
+    "hash": "530d7c52b8dc77c8",
     "lastmod": "2026-11-07"
   },
   "/aviation/loading/fuel-plan/": {
@@ -316,7 +316,7 @@
     "lastmod": "2026-10-19"
   },
   "/changelog/": {
-    "hash": "f52c51efd758b626",
+    "hash": "9036a1c37c48f492",
     "lastmod": "2026-11-07"
   },
   "/disclaimer/": {
@@ -472,20 +472,20 @@
     "lastmod": "2026-10-19"
   },
   "/drone/photogrammetry/parallax-height/": {
-    "hash": "55aa78950357b165",
+    "hash": "45f632de358c6b07",
     "lastmod": "2026-11-07"
   },
   "/drone/photogrammetry/photo-scale/": {
-    "hash": "351121ceaff74573",
+    "hash": "19365953c7f6d50d",
     "lastmod": "2026-11-07"
   },
   "/drone/photogrammetry/relief-displacement/": {
-    "hash": "d65ed58b0d594ec9",
+    "hash": "0d571d1923e6dc5e",
     "lastmod": "2026-11-07"
   },
   "/drone/photogrammetry/stereo-base/": {
-    "hash": "5a9a9c89931663b9",
-    "lastmod": "2026-10-20"
+    "hash": "01dac746ff37e6f5",
+    "lastmod": "2026-11-07"
   },
   "/drone/photogrammetry/terrain-overlap/": {
     "hash": "7e8668c7fe027b89",
@@ -1588,8 +1588,8 @@
     "lastmod": "2026-10-09"
   },
   "/licenses/": {
-    "hash": "e429b4233589b0ef",
-    "lastmod": "2026-10-20"
+    "hash": "edc6e00a608012df",
+    "lastmod": "2026-11-07"
   },
   "/methodology/": {
     "hash": "81815c4101655cd7",
@@ -1808,11 +1808,11 @@
     "lastmod": "2026-10-21"
   },
   "/navigation/tide/datums/": {
-    "hash": "2dcfb90394d91909",
+    "hash": "41e38a0f7edfb9ec",
     "lastmod": "2026-11-07"
   },
   "/navigation/tide/predict/": {
-    "hash": "16d390dbbdb5532d",
+    "hash": "1716f69fb29cccfe",
     "lastmod": "2026-11-07"
   },
   "/navigation/vector/": {
@@ -1848,7 +1848,7 @@
     "lastmod": "2026-10-20"
   },
   "/quality/": {
-    "hash": "6dca9791aa73b604",
+    "hash": "73288e76d82ea3a3",
     "lastmod": "2026-11-07"
   },
   "/raster/": {
@@ -2004,7 +2004,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "7cb8992167efc91e",
+    "hash": "3c7aace21d346495",
     "lastmod": "2026-11-07"
   },
   "/survey/": {
@@ -2236,8 +2236,8 @@
     "lastmod": "2026-10-19"
   },
   "/survey/gnss/dop/": {
-    "hash": "6ef6b1f8b89676eb",
-    "lastmod": "2026-10-19"
+    "hash": "9ce43bbc12a57ebd",
+    "lastmod": "2026-11-07"
   },
   "/survey/gnss/localization/": {
     "hash": "0666c3021d0559b2",
@@ -2292,8 +2292,8 @@
     "lastmod": "2026-11-07"
   },
   "/survey/reduction/curvature-refraction/": {
-    "hash": "7bd7bbd90358d813",
-    "lastmod": "2026-10-19"
+    "hash": "7b559e57359de389",
+    "lastmod": "2026-11-07"
   },
   "/survey/reduction/distance-offset/": {
     "hash": "d4afa68438689e50",
@@ -2316,8 +2316,8 @@
     "lastmod": "2026-10-19"
   },
   "/survey/reduction/inaccessible-height/": {
-    "hash": "6d7d85edde2bef66",
-    "lastmod": "2026-10-19"
+    "hash": "270f649b069d533b",
+    "lastmod": "2026-11-07"
   },
   "/survey/reduction/level-adjust/": {
     "hash": "7272e4c60764f307",
@@ -2332,8 +2332,8 @@
     "lastmod": "2026-10-20"
   },
   "/survey/reduction/slope/": {
-    "hash": "3eb3d55d0e87ee8d",
-    "lastmod": "2026-10-19"
+    "hash": "fe5e73eb33f7ce16",
+    "lastmod": "2026-11-07"
   },
   "/survey/reduction/stadia/": {
     "hash": "28b2bd74e3b7e2d6",
@@ -2704,7 +2704,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "c5b841b1d8eb1e83",
+    "hash": "19fac4572674c855",
     "lastmod": "2026-11-07"
   },
   "/workflows/": {

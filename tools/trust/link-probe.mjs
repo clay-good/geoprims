@@ -39,13 +39,36 @@ const expectedRedirect = (from, to) =>
 /** A redirect to a bot wall or a sign-in page: the page itself went unchecked. */
 const walled = (to) => /^https?:\/\/unblock\.|login|authorize|signin|sign-in|formsauthentication/i.test(to);
 
+/** A redirect that lands on the origin's own front page: the path is gone, or
+ * the site is in maintenance. Either way the new address is not the document,
+ * so "cite it directly" would be wrong advice. */
+const toFrontPage = (from, to) => {
+  try {
+    const t = new URL(to);
+    return t.pathname === '/' && t.search === '' && new URL(from).pathname !== '/';
+  } catch {
+    return false;
+  }
+};
+
 /**
- * One link's state: ok, redirected (with where to), refused (403 or 429, or a
- * redirect to a bot wall or sign-in page: the page is unchecked rather than
- * known to be gone), or broken (any other 4xx or 5xx, or no answer).
+ * One link's state:
+ * - `ok`
+ * - `redirected` (with where to), a document that moved
+ * - `refused`: 403, 429, a bot wall or sign-in page, or a redirect to the
+ *   site's front page. The page is unchecked rather than known to be gone.
+ * - `unreachable`: nothing answered at all, twice. The host may be refusing
+ *   automated traffic, or be temporarily down, and the document may be fine.
+ * - `broken`: a 4xx or 5xx that is none of the above. This is the only state
+ *   that means the document itself is gone.
+ *
  * Redirects are not followed, so a moved document shows as moved.
+ *
+ * A connection-level failure is asked again before it counts, because a single
+ * timeout is usually the network and not the source: of sixteen links reported
+ * broken on 2026-11-01, three answered on the next try.
  */
-export async function probe(url, { timeoutMs = 20_000, fetchImpl = fetch } = {}) {
+export async function probe(url, { timeoutMs = 20_000, fetchImpl = fetch, retries = 1, retryDelayMs = 2_000 } = {}) {
   const ask = (method) =>
     fetchImpl(url, {
       method,
@@ -64,21 +87,30 @@ export async function probe(url, { timeoutMs = 20_000, fetchImpl = fetch } = {})
     }
     return ask('GET');
   };
-  try {
-    const res = await answer();
-    const status = res.status;
-    if (status >= 300 && status < 400) {
-      const to = res.headers.get('location');
-      const target = to ? new URL(to, url).href : '';
-      if (expectedRedirect(url, target)) return { state: 'ok', status };
-      return walled(target) ? { state: 'refused', status, to: target } : { state: 'redirected', status, to: target };
+  const once = async () => {
+    try {
+      const res = await answer();
+      const status = res.status;
+      if (status >= 300 && status < 400) {
+        const to = res.headers.get('location');
+        const target = to ? new URL(to, url).href : '';
+        if (expectedRedirect(url, target)) return { state: 'ok', status };
+        if (walled(target) || toFrontPage(url, target)) return { state: 'refused', status, to: target };
+        return { state: 'redirected', status, to: target };
+      }
+      if (status === 403 || status === 429) return { state: 'refused', status };
+      if (status >= 400) return { state: 'broken', status };
+      return { state: 'ok', status };
+    } catch (e) {
+      return { state: 'unreachable', status: e?.name === 'TimeoutError' ? 'timeout' : 'no answer' };
     }
-    if (status === 403 || status === 429) return { state: 'refused', status };
-    if (status >= 400) return { state: 'broken', status };
-    return { state: 'ok', status };
-  } catch (e) {
-    return { state: 'broken', status: e?.name === 'TimeoutError' ? 'timeout' : 'no answer' };
+  };
+  let out = await once();
+  for (let i = 0; i < retries && out.state === 'unreachable'; i++) {
+    await new Promise((r) => setTimeout(r, retryDelayMs));
+    out = await once();
   }
+  return out;
 }
 
 /** Probes every link, a few at a time, in a stable order. */
@@ -100,14 +132,15 @@ export function report(results, { date } = {}) {
   const section = (title, note, rows) =>
     rows.length ? [`## ${title} (${rows.length})`, '', note, '', '| Link | Status | Citation | Tools |', '|---|---|---|---|', ...rows.map(row), ''] : [];
   const by = (s) => results.filter((r) => r.state === s);
-  const [broken, moved, refused] = [by('broken'), by('redirected'), by('refused')];
-  if (!broken.length && !moved.length && !refused.length) return '';
+  const [broken, moved, refused, unreachable] = [by('broken'), by('redirected'), by('refused'), by('unreachable')];
+  if (!broken.length && !moved.length && !refused.length && !unreachable.length) return '';
   return [
     `The monthly free-access probe${date ? ` on ${date}` : ''} checked ${results.length} links (trust/freshness "Free-access link probe").`,
     '',
-    ...section('Broken', 'These did not answer, or answered with an error. Find where the document went and repoint the citation and the ledger row.', broken),
+    ...section('Broken', 'These answered with an error. The document itself is gone: find where it went and repoint the citation and the ledger row.', broken),
     ...section('Redirected', 'These answer by sending readers somewhere else. Check the new address is the same document, then cite it directly.', moved),
-    ...section('Not checked', 'These sites refused an automated request or asked it to sign in, so the probe cannot say whether the page is still there. Check them by hand.', refused),
+    ...section('Not checked', 'These sites refused an automated request, asked it to sign in, or sent the probe to their own front page, so the probe cannot say whether the page is still there. Open them in a browser before changing anything.', refused),
+    ...section('No answer', 'Nothing answered, twice. That is usually the host refusing automated traffic or being temporarily down rather than the document moving, so check in a browser first: repointing a citation because the probe could not reach it would make it less accurate, not more.', unreachable),
   ].join('\n');
 }
 
@@ -120,6 +153,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const out = process.argv.includes('--out') ? process.argv[process.argv.indexOf('--out') + 1] : null;
   if (out) writeFileSync(out, body);
   const count = (s) => results.filter((r) => r.state === s).length;
-  console.log(`${links.length} links: ${count('ok')} ok, ${count('broken')} broken, ${count('redirected')} redirected, ${count('refused')} not checked`);
+  console.log(`${links.length} links: ${count('ok')} ok, ${count('broken')} broken, ${count('redirected')} redirected, ${count('refused')} not checked, ${count('unreachable')} no answer`);
   if (!out) console.log(body);
 }

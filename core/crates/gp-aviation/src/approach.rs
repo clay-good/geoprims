@@ -396,7 +396,7 @@ const EASA_AMC10: Reference = Reference {
     year: 2026,
     edition: "Revision 24, March 2026 (ED Decision 2022/012/R, applicable from 30 October 2022)",
     locator: "AMC10 CAT.OP.MPA.110 (a) to (c) and Table 16, Conversion of reported VIS to RVR/CMV (page 967)",
-    url: "https://www.easa.europa.eu/en/document-library/easy-access-rules/easy-access-rules-air-operations-regulation-eu-no-9652012",
+    url: "https://www.easa.europa.eu/en/document-library/easy-access-rules/easy-access-rules-air-operations",
 };
 
 pub static VISIBILITY_TO_CMV: ToolDef = ToolDef {

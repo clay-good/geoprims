@@ -33,7 +33,7 @@ const IS_GPS_200: Reference = Reference {
     year: 2022,
     edition: "IS-GPS-200N",
     locator: "Section 20.3.3.5.2.1 and Table 20-VI (almanac parameters), with the user algorithm of Table 20-IV",
-    url: "https://www.gps.gov/technical/icwg/",
+    url: "https://www.gps.gov/sites/default/files/2025-07/IS-GPS-200N.pdf",
 };
 const SPS_PS: Reference = Reference {
     title: "Global Positioning System Standard Positioning Service Performance Standard",
@@ -49,7 +49,7 @@ const NAVCEN_YUMA: Reference = Reference {
     year: 2026,
     edition: "Current almanac, published weekly",
     locator: "The YUMA almanac file and its field definitions",
-    url: "https://www.navcen.uscg.gov/gps-nanus-almanacs-opsadvisories-sof",
+    url: "https://navcen.uscg.gov/gps-nanus-almanacs-opsadvisories-sof",
 };
 const OREKIT_DOP: Reference = Reference {
     title: "Orekit DOPComputer test",

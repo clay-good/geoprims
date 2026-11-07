@@ -519,7 +519,7 @@ const MC_VCF: Reference = Reference {
     year: 2016,
     edition: "tables issued January 2016; V-18 modified 2017-02-01",
     locator: "V-18 Table 1 (Table 54B for Jet A and avgas, 54A for Jet B) and the Jet A, Jet B, and aviation gasoline VCF tables, −40 to 40 °C",
-    url: "https://ised-isde.canada.ca/site/measurement-canada/en/node/93",
+    url: "https://ised-isde.canada.ca/site/measurement-canada/en/laws-and-requirements/v-18-selection-volume-correction-factor-tables-and-standard-density-values-some-common-products",
 };
 
 const ABB_API: Reference = Reference {

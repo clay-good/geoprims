@@ -36,22 +36,33 @@ function files(dir, out = []) {
 
 const urlOf = (p) => '/' + relative(dist, p).replace(/(^|\/)index\.html$/, '$1');
 const registry = JSON.parse(readFileSync(join(web, '../../assets/registry.json'), 'utf8'));
-const optionalPackFiles = new Set(registry.assets
-  .filter((asset) => asset.loadPolicy === 'on-demand' && asset.offlinePack)
-  .flatMap((asset) => Object.keys(asset.files).map((file) => `/assets/${asset.id}/${asset.version}/${file}`)));
-const packs = registry.assets
-  .filter((asset) => asset.loadPolicy === 'on-demand' && asset.offlinePack)
-  .map((asset) => ({
+// A file the registry splits into `parts` is served as those parts, so it is
+// the parts that reach dist and the parts the pack has to name. Naming the
+// whole file instead left them looking like ordinary pages: they went into the
+// precache, which is how a 14 MB budget came to report 30 MB.
+const served = (name, file) => (Array.isArray(file.parts)
+  ? file.parts.map((part) => ({ name: part.file, bytes: part.bytes, sha256: part.sha256 }))
+  : [{ name, bytes: file.bytes, sha256: file.sha256 }]);
+const optional = registry.assets.filter((asset) => asset.loadPolicy === 'on-demand' && asset.offlinePack);
+const optionalPackFiles = new Set(optional.flatMap((asset) =>
+  Object.entries(asset.files).flatMap(([name, file]) =>
+    served(name, file).map((f) => `/assets/${asset.id}/${asset.version}/${f.name}`))));
+const packs = optional.map((asset) => {
+  const files = Object.entries(asset.files)
+    .filter(([, file]) => file.pack !== false)
+    .flatMap(([name, file]) => served(name, file).map((f) => ({
+      path: `/assets/${asset.id}/${asset.version}/${f.name}`,
+      bytes: f.bytes,
+      sha256: f.sha256,
+    })));
+  return {
     id: asset.id,
     version: asset.version,
     title: asset.title,
-    bytes: Object.values(asset.files).filter((file) => file.pack !== false).reduce((sum, file) => sum + file.bytes, 0),
-    files: Object.entries(asset.files).filter(([, file]) => file.pack !== false).map(([name, file]) => ({
-      path: `/assets/${asset.id}/${asset.version}/${name}`,
-      bytes: file.bytes,
-      sha256: file.sha256,
-    })),
-  }));
+    bytes: files.reduce((sum, f) => sum + f.bytes, 0),
+    files,
+  };
+});
 const isDocs = (u) => DOCS_DIRS.some((d) => u === `/${d}/` || u.startsWith(`/${d}/`));
 const list = files(dist).filter((p) => !optionalPackFiles.has(urlOf(p)) && !isDocs(urlOf(p))).sort();
 

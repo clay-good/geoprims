@@ -66,10 +66,35 @@ export function fileAssets(wasmDir, dir, options = {}) {
   const packagedPath = ({ id, version, key }) => join(found, 'data', id, version, key);
   const downloaded = new Set();
   const identity = ({ id, version, key }) => `${id}@${version}/${key}`;
+  // A file the registry splits into `parts` is split only for delivery, because
+  // a platform caps how large one object may be. On a filesystem there is no
+  // such cap, so assets/data keeps the whole file and a part request is served
+  // as a slice of it rather than as 27 MB of duplicates checked into the
+  // repository. The provider still verifies each slice against the part's
+  // pinned digest and the join against the file's.
+  const slicePart = (id, version, key) => {
+    const entry = entries.get(`${id}@${version}`);
+    for (const [name, file] of Object.entries(entry?.files ?? {})) {
+      if (!Array.isArray(file.parts)) continue;
+      let at = 0;
+      for (const part of file.parts) {
+        if (part.file !== key) {
+          at += part.bytes;
+          continue;
+        }
+        const whole = packagedPath({ id, version, key: name });
+        if (!existsSync(whole)) return null;
+        return readFileSync(whole).subarray(at, at + part.bytes);
+      }
+    }
+    return null;
+  };
   const read = async (id, version, key, file) => {
     const asset = { id, version, key };
     const packaged = packagedPath(asset);
     if (existsSync(packaged)) return readFileSync(packaged);
+    const sliced = slicePart(id, version, key);
+    if (sliced) return sliced;
     const cached = cachePath(asset);
     if (existsSync(cached)) return readFileSync(cached);
     if (!options.allowDownload) return null;

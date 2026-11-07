@@ -7,6 +7,9 @@
 //
 // The PWA budget does not cover this: it measures the precache, which excludes
 // both files.
+//
+// Both are fixed now: the archive is no longer served, and the index is split
+// into pinned parts. This test is what keeps a third one from appearing.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
@@ -19,17 +22,12 @@ const dist = join(web, 'dist');
 const MAX_ASSET_BYTES = 25 * 1024 * 1024;
 
 /**
- * The one asset still over the limit, with the work it is waiting on. The site
- * cannot deploy while this list is non-empty; it is here so that a *new*
- * oversized asset fails this test rather than the deploy, and so the remaining
- * one is written down instead of being rediscovered.
- *
- * boundaries.bin is the derived time-zone boundary index the coordinate zone
- * lookup fetches on demand, so it has to be served. Getting it under the limit
- * means sharding it -- tools/data/tz-boundaries.py writes one monolithic file
- * and the registry records `"tiling": "none"` -- or serving it from R2.
+ * Assets allowed over the limit. Empty, and meant to stay that way: the one
+ * file that was over, the 26.9 MiB time-zone boundary index, is now served as
+ * the parts `assets/registry.json` pins for it, which the runtime's asset
+ * provider joins back into one verified buffer.
  */
-const KNOWN_OVER = ['assets/tz-boundaries/2026e/boundaries.bin'];
+const KNOWN_OVER = [];
 
 function walk(dir, prefix = '') {
   const out = [];

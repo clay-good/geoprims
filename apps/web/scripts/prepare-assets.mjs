@@ -1,6 +1,7 @@
 // Copies the built core into public/: Wasm modules and the catalog. Run after
 // `npm run build` at the repository root (which builds dist/).
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 
 const web = new URL('..', import.meta.url).pathname;
@@ -33,6 +34,31 @@ cpSync(join(root, 'assets/data'), join(web, 'public/assets'), {
 });
 for (const p of unpacked) {
   if (!existsSync(p)) throw new Error(`registry marks ${p} pack: false but it is not in assets/data`);
+}
+// A file the registry splits into `parts` is served as those parts and not as
+// itself: Cloudflare Workers refuses any asset over 25 MiB, and the 26.9 MiB
+// time-zone boundary index was stopping the whole site from deploying. The
+// runtime's asset provider joins the parts back and checks each one against its
+// pinned digest and the join against the file's, so the core still asks for the
+// whole file and gets one verified buffer.
+for (const asset of registry.assets) {
+  for (const [name, file] of Object.entries(asset.files ?? {})) {
+    if (!Array.isArray(file.parts)) continue;
+    const dir = join(web, 'public/assets', asset.id, asset.version);
+    const whole = readFileSync(join(root, 'assets/data', asset.id, asset.version, name));
+    let at = 0;
+    for (const part of file.parts) {
+      const bytes = whole.subarray(at, at + part.bytes);
+      at += part.bytes;
+      const sha256 = createHash('sha256').update(bytes).digest('hex');
+      if (bytes.length !== part.bytes || sha256 !== part.sha256) {
+        throw new Error(`${asset.id}/${name}: ${part.file} does not match its pinned digest; re-pin the parts in assets/registry.json`);
+      }
+      writeFileSync(join(dir, part.file), bytes);
+    }
+    if (at !== whole.length) throw new Error(`${asset.id}/${name}: the parts cover ${at} of ${whole.length} bytes`);
+    rmSync(join(dir, name), { force: true });
+  }
 }
 cpSync(join(root, 'assets/registry.json'), join(web, 'public/assets/registry.json'));
 // Golden vectors, downloadable per tool at /vectors/<tool id>.jsonl (proof-display).

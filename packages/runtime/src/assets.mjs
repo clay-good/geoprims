@@ -70,7 +70,7 @@ export function assetProvider(registry, read, verified = async () => {}) {
       asset: { id, version, key },
     },
   });
-  const load = async (entry, key, file) => {
+  const fetchOne = async (entry, key, file) => {
     let bytes = null;
     try {
       bytes = await read(entry.id, entry.version, key, file);
@@ -78,10 +78,39 @@ export function assetProvider(registry, read, verified = async () => {}) {
       bytes = null;
     }
     if (!bytes) return unavailable(entry.id, entry.version, key, file);
-    bytes = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-    if (bytes.length !== file.bytes || hex(await crypto.subtle.digest('SHA-256', bytes)) !== file.sha256) {
-      return integrity(entry.id, entry.version, key);
+    return { bytes: bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes) };
+  };
+  const digestMatches = async (bytes, want) =>
+    bytes.length === want.bytes && hex(await crypto.subtle.digest('SHA-256', bytes)) === want.sha256;
+  // A file the registry splits into `parts` is one logical asset delivered as
+  // several objects, because a platform limits how large a single one may be:
+  // Cloudflare Workers refuses any asset over 25 MiB, and the 26.9 MiB
+  // time-zone boundary index stopped the whole site deploying. Each part is
+  // checked against its own pinned digest and the join against the file's, so
+  // splitting the delivery does not loosen the integrity check -- it adds one.
+  // The core still asks for the whole file by name and gets one buffer, so
+  // nothing above this line knows the difference.
+  const load = async (entry, key, file) => {
+    if (!Array.isArray(file.parts)) {
+      const got = await fetchOne(entry, key, file);
+      if (got.error) return got;
+      if (!(await digestMatches(got.bytes, file))) return integrity(entry.id, entry.version, key);
+      return got;
     }
+    const pieces = [];
+    for (const part of file.parts) {
+      const got = await fetchOne(entry, part.file, part);
+      if (got.error) return got;
+      if (!(await digestMatches(got.bytes, part))) return integrity(entry.id, entry.version, part.file);
+      pieces.push(got.bytes);
+    }
+    const bytes = new Uint8Array(pieces.reduce((n, p) => n + p.length, 0));
+    let at = 0;
+    for (const p of pieces) {
+      bytes.set(p, at);
+      at += p.length;
+    }
+    if (!(await digestMatches(bytes, file))) return integrity(entry.id, entry.version, key);
     return { bytes };
   };
   const tileIndex = async (entry) => {

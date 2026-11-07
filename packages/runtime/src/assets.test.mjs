@@ -207,3 +207,71 @@ test('every registry row carries what the licenses page has to show', () => {
     assert.ok(a.attribution.length > 20, `${a.id}'s attribution is too short to be real`);
   }
 });
+
+test('a split file joins back to the whole, and a bad part is refused', async () => {
+  // A file the registry marks with `parts` is delivered as several objects
+  // because a platform caps one object's size; it must still arrive as the
+  // same bytes, with every part and the join checked against pinned digests.
+  const whole = new Uint8Array(48).map((_, i) => (i * 7) % 251);
+  const split = [whole.subarray(0, 20), whole.subarray(20, 48)];
+  const sha = async (b) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', b))]
+    .map((x) => x.toString(16).padStart(2, '0')).join('');
+  const registry = { assets: [{
+    id: 'split', version: '1', files: { 'whole.bin': {
+      bytes: whole.length, sha256: await sha(whole),
+      parts: [
+        { file: 'whole.bin.000', bytes: split[0].length, sha256: await sha(split[0]) },
+        { file: 'whole.bin.001', bytes: split[1].length, sha256: await sha(split[1]) },
+      ],
+    } },
+  }] };
+  const want = { id: 'split', version: '1', key: 'whole.bin' };
+  const parts = new Map([['whole.bin.000', split[0]], ['whole.bin.001', split[1]]]);
+
+  const good = assetProvider(registry, async (id, version, key) => parts.get(key) ?? null);
+  const joined = await good(want);
+  assert.equal(joined.error, undefined, JSON.stringify(joined.error));
+  assert.deepEqual([...joined.bytes], [...whole], 'the parts must join back to the whole file');
+
+  const tampered = assetProvider(registry, async (id, version, key) => {
+    const b = Uint8Array.from(parts.get(key) ?? []);
+    if (key.endsWith('.001')) b[0] ^= 0xff;
+    return b.length ? b : null;
+  });
+  assert.equal((await tampered(want)).error?.code, 'ASSET_INTEGRITY');
+
+  const missing = assetProvider(registry, async (id, version, key) => (key.endsWith('.001') ? null : parts.get(key)));
+  assert.equal((await missing(want)).error?.code, 'ASSET_UNAVAILABLE');
+
+  // A part that passes its own digest but joins to the wrong whole is refused
+  // too: the whole-file digest is the check that cannot be fooled part by part.
+  const swapped = { assets: [structuredClone(registry.assets[0])] };
+  swapped.assets[0].files['whole.bin'].parts.reverse();
+  const reversed = assetProvider(swapped, async (id, version, key) => parts.get(key) ?? null);
+  assert.equal((await reversed(want)).error?.code, 'ASSET_INTEGRITY');
+});
+
+test('every pinned part is the slice of the file it claims to be', () => {
+  // The parts in assets/registry.json are pinned by hand, so check them
+  // against the file in assets/data rather than trusting them.
+  const reg = JSON.parse(readFileSync(join(root, 'assets/registry.json'), 'utf8'));
+  let checked = 0;
+  for (const asset of reg.assets) {
+    for (const [name, file] of Object.entries(asset.files ?? {})) {
+      if (!Array.isArray(file.parts)) continue;
+      const bytes = readFileSync(join(root, 'assets/data', asset.id, asset.version, name));
+      assert.equal(bytes.length, file.bytes, `${asset.id}/${name} is not the size the registry pins`);
+      let at = 0;
+      for (const part of file.parts) {
+        const slice = bytes.subarray(at, at + part.bytes);
+        assert.equal(slice.length, part.bytes, `${part.file} runs past the end of ${name}`);
+        assert.equal(createHash('sha256').update(slice).digest('hex'), part.sha256, `${part.file} is not that slice of ${name}`);
+        at += part.bytes;
+        assert.ok(part.bytes <= 25 * 1024 * 1024, `${part.file} is itself over the 25 MiB a part exists to stay under`);
+        checked++;
+      }
+      assert.equal(at, bytes.length, `${asset.id}/${name}: the parts cover ${at} of ${bytes.length} bytes`);
+    }
+  }
+  assert.ok(checked > 0, 'no asset declares parts, so this test checks nothing');
+});

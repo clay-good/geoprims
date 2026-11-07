@@ -6,6 +6,13 @@
       "kind": "fixed",
       "tools": [],
       "vectors": [],
+      "summary": "The time-zone boundary data is now delivered in two pieces, which is what the site needed to deploy at all. Cloudflare Workers refuses any single file over 25 MiB and the boundary index is 26.9 MB, so no deploy could start, whatever else was ready. The index is split into two pinned pieces that the runtime joins back before anything reads them, checking each piece against its own fingerprint and the joined file against the one published for the whole, so a reader gets the same bytes as before and a damaged download is refused rather than used. Nothing changes in what any tool answers."
+    },
+    {
+      "date": "2026-11-07",
+      "kind": "fixed",
+      "tools": [],
+      "vectors": [],
       "summary": "The site is deployable again. Cloudflare Workers refuses any single asset over 25 MiB, and the build was shipping two: the 49.5 MB upstream time-zone source archive, which the asset registry marks as kept for provenance rather than serving but which the copy step took along anyway, and the 26.9 MB boundary index derived from it. The deploy aborted on the first file it met, so geoprims.com had been serving a build from before 12 October while every other gate stayed green. The archive is no longer served, which drops the build by 49.5 MB, and a new check fails the build rather than the deploy if an oversized asset appears. The boundary index itself is still over the limit and still needs sharding, so it is recorded as the one known exception."
     },
     {

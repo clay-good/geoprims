@@ -60,7 +60,10 @@
       },
       "tiling": "none",
       "loadPolicy": "on-demand",
-      "consumers": ["web-assets", "mcp-server"]
+      "consumers": [
+        "web-assets",
+        "mcp-server"
+      ]
     },
     {
       "id": "igrf14",
@@ -138,7 +141,20 @@
         },
         "boundaries.bin": {
           "sha256": "cdcd2a3e854eaa66e1293259839245f129c2ca7801b3f483518140d0eadcffbf",
-          "bytes": 28228004
+          "bytes": 28228004,
+          "partBytes": 16777216,
+          "parts": [
+            {
+              "file": "boundaries.bin.000",
+              "sha256": "6cc3d07f529c0e3c4e49f4106f42e2ffa54898034d0ee826afc645d7481c3f00",
+              "bytes": 16777216
+            },
+            {
+              "file": "boundaries.bin.001",
+              "sha256": "12c3b892482c7be7a7e4ddcef69d422e8995430bf6eb38e0565f0e0b82312f53",
+              "bytes": 11450788
+            }
+          ]
         },
         "timezone-names.json": {
           "sha256": "2584551f8c9af23a19bc8b197bf46ad458d9fa8c78d4df056f0408c67fd315ff",
@@ -152,7 +168,10 @@
       "tiling": "none",
       "loadPolicy": "on-demand",
       "offlinePack": "Look up an IANA time zone from a coordinate. Includes the upstream ODbL license.",
-      "consumers": ["web-assets", "mcp-server"]
+      "consumers": [
+        "web-assets",
+        "mcp-server"
+      ]
     },
     {
       "id": "ngs-antinfo",
@@ -172,7 +191,10 @@
       "tiling": "none",
       "loadPolicy": "on-demand",
       "offlinePack": "Use the NGS IGS20 antenna calibration catalog offline.",
-      "consumers": ["web-assets", "mcp-server"]
+      "consumers": [
+        "web-assets",
+        "mcp-server"
+      ]
     },
     {
       "id": "nadcon5",
@@ -234,7 +256,10 @@
       },
       "tiling": "none",
       "loadPolicy": "on-demand",
-      "consumers": ["web-assets", "mcp-server"]
+      "consumers": [
+        "web-assets",
+        "mcp-server"
+      ]
     },
     {
       "id": "spcs2022-beta",
@@ -255,7 +280,10 @@
       "loadPolicy": "on-demand",
       "status": "beta",
       "publishedAt": "2026-06-01",
-      "consumers": ["web-assets", "mcp-server"]
+      "consumers": [
+        "web-assets",
+        "mcp-server"
+      ]
     },
     {
       "id": "ne-110m",
@@ -275,7 +303,10 @@
       "tiling": "none",
       "loadPolicy": "bundled",
       "bundledIn": "apps/web/public/basemap/ne-110m.json",
-      "consumers": ["web-map", "mcp-server"]
+      "consumers": [
+        "web-map",
+        "mcp-server"
+      ]
     },
     {
       "id": "ne-50m",
@@ -295,7 +326,9 @@
       "tiling": "none",
       "loadPolicy": "on-demand",
       "offlinePack": "Add higher-detail boundaries and coastlines for map views.",
-      "consumers": ["web-map"]
+      "consumers": [
+        "web-map"
+      ]
     }
   ]
 }

@@ -5,6 +5,15 @@
       "date": "2026-11-06",
       "kind": "changed",
       "tools": [
+        "navigation.celestial.almanac"
+      ],
+      "vectors": [],
+      "summary": "The celestial almanac is now stable, and it ships ten more golden vectors. The ten added instants come from the same US Naval Observatory celestial-navigation data as the first ten, from the half of that record the vector generator had been skipping, so the published numbers the tool is held to now span twenty instants between 1995 and 2045 rather than ten. Nothing it computes changed, and none of the first fourteen vectors moved. The Nautical Almanac remains the governing publication, as the tool's own page says."
+    },
+    {
+      "date": "2026-11-06",
+      "kind": "changed",
+      "tools": [
         "navigation.celestial.altitude-correction",
         "navigation.celestial.sight-reduction",
         "navigation.piloting.set-and-drift",
@@ -15,7 +24,7 @@
         "time.moon.rise-set"
       ],
       "vectors": [],
-      "summary": "Eight marine and celestial tools are now stable: sextant altitude corrections, sight reduction, set and drift, plane sailing, tide datum conversion, tide prediction, the moon's position, and moonrise and moonset. Nothing they compute changed. Each was already checked against a published source rather than against itself: Bowditch's own worked examples for the sights, the sailings, and the current triangle, NOAA's published tide predictions and station datums for the tides, and the US Naval Observatory's computed data for the moon. What the stable mark adds is that the build now holds them to the whole bar on every commit, and their pages drop the experimental warning. The navigation MCP toolset grows to 37 tools, still under its cap."
+      "summary": "Eight marine and celestial tools are now stable: sextant altitude corrections, sight reduction, set and drift, plane sailing, tide datum conversion, tide prediction, the moon's position, and moonrise and moonset. Nothing they compute changed. Each was already checked against a published source rather than against itself: Bowditch's own worked examples for the sights, the sailings, and the current triangle, NOAA's published tide predictions and station datums for the tides, and the US Naval Observatory's computed data for the moon. What the stable mark adds is that the build now holds them to the whole bar on each commit. Their pages no longer carry the experimental warning. The navigation MCP toolset grows to 37 tools, still under its cap."
     },
     {
       "date": "2026-11-06",

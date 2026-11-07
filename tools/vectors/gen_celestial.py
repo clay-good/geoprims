@@ -14,12 +14,14 @@ Tolerances: 0.1' (0.0017 deg), the spec's almanac tolerance, except Venus
 (0.5') and the Moon (0.25'), where USNO itself departs from JPL Horizons
 (the gp-astro tests and the change's design note).
 
-    gen_celestial.py    # print the vectors as JSON lines
+    gen_celestial.py            # print v001 to v014, the published vectors
+    gen_celestial.py --extra    # print v015 onward from the unused USNO instants
 
 Writes nothing: new vectors are appended by hand so published files stay frozen.
 """
 import json
 import re
+import sys
 from pathlib import Path
 
 DATA = Path(__file__).resolve().parents[2] / "core" / "crates" / "gp-astro" / "tests" / "data"
@@ -60,7 +62,10 @@ stars = json.loads((DATA / "usno_stars.json").read_text())["rows"]
 text = (DATA.parents[1] / "src" / "star_tables.rs").read_text()
 hip_number = {int(h): int(n) for n, h in re.findall(r"number: (\d+),\s*name: \"[^\"]+\",\s*hip: (\d+)", text)}
 assert len(hip_number) == 58, len(hip_number)
-instants = sorted({r["ut1"] for r in bodies})[::4]
+all_instants = sorted({r["ut1"] for r in bodies})
+# [::4] built v004 to v013; --extra emits the disjoint [2::4] instants,
+# appended as v015 onward so the published vectors stay frozen.
+instants = all_instants[2::4] if "--extra" in sys.argv else all_instants[::4]
 for ut1 in instants:
     ex, t = {"ok": True}, {}
     for r in bodies:
@@ -83,7 +88,9 @@ for ut1 in instants:
     rows.append({"input": {"utc": ut1.replace(" ", "T") + ":00Z", "dut1": "0 s"}, "expect": ex,
                  "source": "USNO celnav API 4.0.1 (aa.usno.navy.mil/api/celnav), times as UT1, fetched 2026-10-20",
                  "sourceVersion": "API 4.0.1", "tolerance": t})
-rows.append({"input": {"utc": "1799-12-31T12:00:00Z"}, "expect": {"ok": False, "error.code": "OUT_OF_DOMAIN"},
-             "source": "add-celestial-and-moon navigation/celestial scenario: before 1800 is out of domain", "sourceVersion": "2026", "tolerance": {}})
-for i, r in enumerate(rows, 1):
+if "--extra" not in sys.argv:
+    rows.append({"input": {"utc": "1799-12-31T12:00:00Z"}, "expect": {"ok": False, "error.code": "OUT_OF_DOMAIN"},
+                 "source": "add-celestial-and-moon navigation/celestial scenario: before 1800 is out of domain", "sourceVersion": "2026", "tolerance": {}})
+first = 15 if "--extra" in sys.argv else 1
+for i, r in enumerate(rows[3:] if "--extra" in sys.argv else rows, first):
     print(json.dumps({"id": f"v{i:03d}", **r}, ensure_ascii=False, separators=(",", ":")))

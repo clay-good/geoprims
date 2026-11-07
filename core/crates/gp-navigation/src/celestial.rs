@@ -168,6 +168,7 @@ const STAR_ROW: &[Field] = &[
 
 pub static ALMANAC: ToolDef = ToolDef {
     id: "navigation.celestial.almanac",
+    stability: gp_base::tool::Stability::Stable,
     title: "Celestial almanac (GHA and declination)",
     summary: "GHA and declination of the Sun, Moon, and navigational planets, GHA Aries, and the SHA and declination of the 57 navigational stars and Polaris, for one instant",
     aliases: &[

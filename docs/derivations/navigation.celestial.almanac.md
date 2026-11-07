@@ -65,7 +65,7 @@ A UTC time from 1800-01-01 to 2100-12-31 (OUT_OF_DOMAIN otherwise); DUT1 within 
   - The Moon at 60 instants: within 0.7″.
   - The IAU 2006/2000A nutation and precession angles match ERFA within 1e-11 rad.
 - `core/crates/gp-astro/tests/stars.rs` compares the star reduction with ERFA's `pmsafe` and `atci13` at 1,160 star-instants: within 0.015″.
-- `tools/vectors/gen_celestial.py` builds the 14 vectors in `core/vectors/navigation.celestial.almanac.jsonl`: the Bowditch values, ten USNO instants, and the out-of-domain scenario.
+- `tools/vectors/gen_celestial.py` builds the 24 vectors in `core/vectors/navigation.celestial.almanac.jsonl`: the Bowditch values, twenty USNO instants, and the out-of-domain scenario. The plain run prints v001 to v014, which are frozen; `--extra` prints v015 onward from the USNO instants the first run skipped.
 
 ## Invariants
 

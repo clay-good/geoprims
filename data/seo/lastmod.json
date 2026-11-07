@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "925aaa6feeed8f77",
+    "hash": "4b0e2d84cacc8cbf",
     "lastmod": "2026-11-07"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "62c35be671ba7a54",
+    "hash": "e4d69039155ca8e6",
     "lastmod": "2026-11-07"
   },
   "/aviation/": {
@@ -316,7 +316,7 @@
     "lastmod": "2026-10-19"
   },
   "/changelog/": {
-    "hash": "16ad29d6d33f8832",
+    "hash": "3c7ad4b4c72be755",
     "lastmod": "2026-11-07"
   },
   "/disclaimer/": {
@@ -1552,7 +1552,7 @@
     "lastmod": "2026-10-20"
   },
   "/methodology/": {
-    "hash": "34cd05ddd02fe469",
+    "hash": "222a9181d919d555",
     "lastmod": "2026-11-07"
   },
   "/navigation/": {
@@ -1564,11 +1564,11 @@
     "lastmod": "2026-10-28"
   },
   "/navigation/celestial/almanac/": {
-    "hash": "dae3635aa7cbfb00",
-    "lastmod": "2026-10-28"
+    "hash": "e0e8fc60b5ef1039",
+    "lastmod": "2026-11-07"
   },
   "/navigation/celestial/altitude-correction/": {
-    "hash": "fa37f05c7a1a647d",
+    "hash": "6ccc78b56bdeb8b8",
     "lastmod": "2026-11-07"
   },
   "/navigation/celestial/polaris-latitude/": {
@@ -1576,7 +1576,7 @@
     "lastmod": "2026-10-28"
   },
   "/navigation/celestial/sight-reduction/": {
-    "hash": "1d2dac0b38aee016",
+    "hash": "65fbcaddbff44c04",
     "lastmod": "2026-11-07"
   },
   "/navigation/celestial/sun-azimuth-check/": {
@@ -1676,7 +1676,7 @@
     "lastmod": "2026-10-20"
   },
   "/navigation/piloting/set-and-drift/": {
-    "hash": "70d1b72d41823d95",
+    "hash": "3dde6ddb5bedea16",
     "lastmod": "2026-11-07"
   },
   "/navigation/piloting/two-bearing-fix/": {
@@ -1756,7 +1756,7 @@
     "lastmod": "2026-10-20"
   },
   "/navigation/sailing/plane/": {
-    "hash": "2e7ebd95fdb12f3c",
+    "hash": "7a070d1c526f82d8",
     "lastmod": "2026-11-07"
   },
   "/navigation/sailing/traverse/": {
@@ -1768,11 +1768,11 @@
     "lastmod": "2026-10-21"
   },
   "/navigation/tide/datums/": {
-    "hash": "bbb9a7aa74c05e41",
+    "hash": "2dcfb90394d91909",
     "lastmod": "2026-11-07"
   },
   "/navigation/tide/predict/": {
-    "hash": "d135e37d441fae25",
+    "hash": "16d390dbbdb5532d",
     "lastmod": "2026-11-07"
   },
   "/navigation/vector/": {
@@ -2280,11 +2280,11 @@
     "lastmod": "2026-10-28"
   },
   "/time/moon/position/": {
-    "hash": "c00afb207766a149",
+    "hash": "ec8d33583e4c44f3",
     "lastmod": "2026-11-07"
   },
   "/time/moon/rise-set/": {
-    "hash": "393d2790e654c83a",
+    "hash": "7653b60a5da34a88",
     "lastmod": "2026-11-07"
   },
   "/time/scale/": {
@@ -2364,7 +2364,7 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "d513cfe6bac6d54c",
+    "hash": "1b54bcfe6a08de35",
     "lastmod": "2026-11-07"
   },
   "/units/": {
@@ -2628,7 +2628,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "488ae326491903a5",
+    "hash": "f625ce62f140966e",
     "lastmod": "2026-11-07"
   },
   "/workflows/": {

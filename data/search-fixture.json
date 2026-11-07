@@ -1318,6 +1318,10 @@
       "expect": "geodesy.datum.gda2020"
     },
     {
+      "query": "WGS84 to ETRS89 for a European grid",
+      "expect": "geodesy.datum.etrf"
+    },
+    {
       "query": "under keel clearance with squat",
       "expect": "navigation.vessel.under-keel-clearance"
     },

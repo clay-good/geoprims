@@ -506,6 +506,7 @@
       "definition": "The reference system European national grids are built on, fixed to the European plate, so it does not drift with it as ITRF and WGS 84 do.",
       "source": "epsg-crs-registry",
       "relatedTools": [
+        "geodesy.datum.etrf",
         "geodesy.grid-ref.itm-inverse"
       ]
     },
@@ -716,6 +717,7 @@
       "definition": "An Earth ellipsoid defined by the IUGG. GRS 80 underlies NAD 83 and is almost identical to WGS 84.",
       "source": "grs80",
       "relatedTools": [
+        "geodesy.datum.etrf",
         "geodesy.datum.gda2020",
         "geodesy.datum.itrf",
         "geodesy.datum.nad83",
@@ -972,6 +974,7 @@
       "definition": "The global scientific reference frame, realized from thousands of stations whose motions it models. ITRF2020 is current.",
       "source": "iers-itrf2020-transfo",
       "relatedTools": [
+        "geodesy.datum.etrf",
         "geodesy.datum.itrf",
         "geodesy.datum.nad83"
       ]
@@ -2184,6 +2187,7 @@
       "definition": "The US Department of Defense global reference frame and ellipsoid that GPS uses; the current version is WGS 84.",
       "source": "nga-wgs84",
       "relatedTools": [
+        "geodesy.datum.etrf",
         "geodesy.datum.itrf",
         "geodesy.datum.legacy",
         "geodesy.datum.nad83",

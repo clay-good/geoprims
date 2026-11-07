@@ -39,6 +39,7 @@
     "geodesy.grid-ref.itm-forward": { "kind": "closed-form", "p95Ms": 2 },
     "geodesy.grid-ref.itm-inverse": { "kind": "closed-form", "p95Ms": 2 },
     "geodesy.datum.gda2020": { "kind": "closed-form", "p95Ms": 2 },
+    "geodesy.datum.etrf": { "kind": "closed-form", "p95Ms": 2 },
     "geodesy.projection.lv95-forward": { "kind": "closed-form", "p95Ms": 2 },
     "geodesy.projection.lv95-inverse": { "kind": "iterative", "p95Ms": 10 },
     "geodesy.grid-ref.mgrs-forward": { "kind": "iterative", "p95Ms": 10 },

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "8baf24658a27d36d",
+    "hash": "25902656160875ff",
     "lastmod": "2026-11-07"
   },
   "/accuracy/": {
@@ -316,7 +316,7 @@
     "lastmod": "2026-10-19"
   },
   "/changelog/": {
-    "hash": "e8645e73c371aa68",
+    "hash": "e2887716004e7b64",
     "lastmod": "2026-11-07"
   },
   "/disclaimer/": {
@@ -576,7 +576,7 @@
     "lastmod": "2026-10-19"
   },
   "/geodesy/": {
-    "hash": "1c660c1cf5c79ee1",
+    "hash": "15d5b5006e6199ac",
     "lastmod": "2026-11-07"
   },
   "/geodesy/crs/": {
@@ -592,11 +592,15 @@
     "lastmod": "2026-10-19"
   },
   "/geodesy/datum/": {
-    "hash": "2fe0b25494e2be3d",
+    "hash": "3fc8793883d2c9ca",
+    "lastmod": "2026-11-07"
+  },
+  "/geodesy/datum/etrf/": {
+    "hash": "2d6c3dddbe2b3ff6",
     "lastmod": "2026-11-07"
   },
   "/geodesy/datum/gda2020/": {
-    "hash": "6fefaa5bca86b180",
+    "hash": "86693384c42316c8",
     "lastmod": "2026-11-07"
   },
   "/geodesy/datum/helmert/": {
@@ -1580,7 +1584,7 @@
     "lastmod": "2026-10-20"
   },
   "/methodology/": {
-    "hash": "64a5742f6fd846db",
+    "hash": "2c4b2275236ac490",
     "lastmod": "2026-11-07"
   },
   "/navigation/": {
@@ -1836,7 +1840,7 @@
     "lastmod": "2026-10-20"
   },
   "/quality/": {
-    "hash": "2bbfaf65ad27eef9",
+    "hash": "926c0cf03b0f1936",
     "lastmod": "2026-11-07"
   },
   "/raster/": {
@@ -1992,7 +1996,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "fa772eb951d5e20c",
+    "hash": "1441d9efd0e3b67c",
     "lastmod": "2026-11-07"
   },
   "/survey/": {
@@ -2428,7 +2432,7 @@
     "lastmod": "2026-11-07"
   },
   "/tools/": {
-    "hash": "6c2a7676281fdd64",
+    "hash": "c1c32350c46f71c6",
     "lastmod": "2026-11-07"
   },
   "/units/": {
@@ -2692,7 +2696,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "d6a92eb2b271293a",
+    "hash": "33cbd32eb0ed8fc9",
     "lastmod": "2026-11-07"
   },
   "/workflows/": {

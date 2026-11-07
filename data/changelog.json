@@ -5,6 +5,15 @@
       "date": "2026-11-07",
       "kind": "added",
       "tools": [
+        "geodesy.datum.etrf"
+      ],
+      "vectors": [],
+      "summary": "A new tool carries a position between the global frames a satellite works in and ETRS89, which every European national grid is built on. The two drift apart, because ETRS89 is pinned to the European plate as it sat in 1989 and the plate has been moving since: measured at Dublin, a position is 0.48 m from ETRS89 at epoch 2010 and 0.84 m at 2026, running south-west. That is why the tool asks when the coordinates were measured rather than assuming today, and why the Irish and Swiss grid tools say a satellite position is a step away from the grid they are defined on: this is that step."
+    },
+    {
+      "date": "2026-11-07",
+      "kind": "added",
+      "tools": [
         "geodesy.datum.gda2020"
       ],
       "vectors": [],

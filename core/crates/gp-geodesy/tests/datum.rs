@@ -832,3 +832,74 @@ fn gda2020_moves_the_continent_and_inverts() {
         .collect();
     assert!(codes.contains(&"OUTSIDE_AREA_OF_USE"), "{away}");
 }
+
+#[test]
+fn etrs89_drifts_from_the_global_frames_with_the_epoch() {
+    // add-international-grids, geodesy/national-grids: ETRS89 is pinned to the
+    // Eurasian plate, the global frames are not, and the gap grows.
+    let run = |input: serde_json::Value| -> Value {
+        serde_json::from_str(&REGISTRY.invoke("geodesy.datum.etrf", &input.to_string())).unwrap()
+    };
+    let at = |epoch: &str| {
+        run(
+            serde_json::json!({"direction": "to-etrs89", "frame": "ITRF2020", "epoch": epoch,
+                               "lat": 53.349806, "lon": -6.260247, "height": "85 m"}),
+        )
+    };
+    let (early, late) = (at("2010.0"), at("2026.0"));
+    let (a, b) = (
+        early["result"]["shift"]["value"].as_f64().unwrap(),
+        late["result"]["shift"]["value"].as_f64().unwrap(),
+    );
+    assert!(b > a, "the gap should grow: {a} then {b}");
+    // About 2.2 cm a year over those sixteen years.
+    let rate = (b - a) / 16.0;
+    assert!((0.015..=0.030).contains(&rate), "drift {rate} m a year");
+    // It runs south-west in Europe, which is the plate's motion seen from a
+    // frame that does not follow it.
+    for (lat, lon) in [
+        (53.349806, -6.260247),
+        (47.3781, 8.5402),
+        (60.1699, 24.9384),
+    ] {
+        let r = run(
+            serde_json::json!({"direction": "to-etrs89", "frame": "ITRF2020",
+                                       "epoch": "2026.0", "lat": lat, "lon": lon}),
+        );
+        let az = r["result"]["azimuth"]["value"].as_f64().unwrap();
+        assert!((190.0..=250.0).contains(&az), "{lat},{lon}: azimuth {az}°");
+    }
+    // The two directions are exact inverses.
+    let back = run(serde_json::json!({
+        "direction": "to-itrf", "frame": "ITRF2020", "epoch": "2026.0",
+        "lat": late["result"]["lat"]["value"].as_f64().unwrap(),
+        "lon": late["result"]["lon"]["value"].as_f64().unwrap(),
+        "height": format!("{} m", late["result"]["height"]["value"].as_f64().unwrap()),
+    }));
+    assert!(
+        (back["result"]["lat"]["value"].as_f64().unwrap() - 53.349806).abs() < 1e-9,
+        "{back}"
+    );
+    assert!(
+        (back["result"]["lon"]["value"].as_f64().unwrap() + 6.260247).abs() < 1e-9,
+        "{back}"
+    );
+    // Outside the published area the answer still comes, flagged.
+    let away = run(
+        serde_json::json!({"direction": "to-etrs89", "frame": "ITRF2020",
+                                      "epoch": "2026.0", "lat": 40.7128, "lon": -74.006}),
+    );
+    let codes: Vec<&str> = away["meta"]["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|w| w["code"].as_str().unwrap())
+        .collect();
+    assert!(codes.contains(&"OUTSIDE_AREA_OF_USE"), "{away}");
+    // And an epoch outside the table is refused.
+    let old = run(
+        serde_json::json!({"direction": "to-etrs89", "frame": "ITRF2020",
+                                     "epoch": "1800", "lat": 53.3, "lon": -6.2}),
+    );
+    assert_eq!(old["error"]["code"], "OUT_OF_DOMAIN", "{old}");
+}

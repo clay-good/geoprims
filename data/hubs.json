@@ -895,6 +895,12 @@
           ]
         },
         {
+          "want": "put a satellite position onto ETRS89 for a European grid",
+          "tools": [
+            "etrf"
+          ]
+        },
+        {
           "want": "move a position between any two ITRF, WGS 84, or NAD 83 frames, with the steps and their accuracy",
           "tools": [
             "transform"

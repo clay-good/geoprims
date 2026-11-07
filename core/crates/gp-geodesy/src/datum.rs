@@ -2581,3 +2581,306 @@ fn run_gda2020(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ),
     ]))
 }
+
+// --------------------------------------------------------------- ETRS89
+
+const EPSG_ETRF: Reference = Reference {
+    title: "EPSG Geodetic Parameter Dataset (EPSG v13.102 CRS registry)",
+    issuer: "IOGP, from the EUREF Technical Working Group",
+    year: 2026,
+    edition: "v13.102, as shipped in PROJ 9.9.0",
+    locator: "ITRF2014 to ETRF2000 (1), EPSG method 1053 (time-dependent Position Vector, geocentric) at reference epoch 2010.0, stated at 0.01 m; and the remark on ETRF2000 that the EUREF Technical Working Group recommended it as the realization of ETRS89",
+    url: "https://epsg.org/crs_9067/ETRF2000.html",
+};
+
+/// ITRF2014 → ETRF2000 (EPSG, time-dependent position vector, epoch 2010.0),
+/// in the tool's own units: metres, arc-seconds and ppm, with rates per year.
+const ETRF2000_FROM_ITRF2014: Params = Params {
+    t: [0.054_7, 0.052_2, -0.074_1],
+    r: [0.001_701, 0.010_29, -0.016_632],
+    ds: 0.002_12,
+};
+const ETRF2000_RATES: Params = Params {
+    t: [0.000_1, 0.000_1, -0.001_9],
+    r: [0.000_081, 0.000_49, -0.000_792],
+    ds: 0.000_11,
+};
+const ETRF_EPOCH: f64 = 2010.0;
+
+pub static ETRF: ToolDef = ToolDef {
+    id: "geodesy.datum.etrf",
+    title: "ITRF or WGS 84 to ETRS89",
+    summary: "Carries a position between a global frame (ITRF or WGS 84) and ETRS89, the European frame national grids are built on, which is fixed to the plate and so drifts from the global frames by about 2.5 cm a year.",
+    aliases: &[
+        "ITRF to ETRS89",
+        "WGS84 to ETRS89",
+        "ETRF2000 transformation",
+        "European reference frame",
+    ],
+    keywords: &[
+        "ETRS89", "ETRF2000", "ITRF", "EUREF", "Europe", "frame", "epoch", "plate",
+    ],
+    inputs: &[
+        Field::new(
+            "direction",
+            "Direction",
+            "Which way to carry the position, like to-etrs89",
+            Kind::Choice(&["to-etrs89", "to-itrf"]),
+        )
+        .core(),
+        Field::new(
+            "frame",
+            "Global frame",
+            "The ITRF or WGS 84 realization on the other side, like ITRF2020",
+            Kind::Choice(FRAMES),
+        )
+        .core(),
+        Field::new(
+            "epoch",
+            "Coordinate epoch",
+            "The date the coordinates refer to: 2026-09-19 or 2026.72",
+            Kind::Text { max_len: 40 },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "lat",
+            "Latitude",
+            "Decimal degrees, north positive, like 53.349806",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(9))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "Decimal degrees, east positive, like -6.260247",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(9))
+        .angle_range("[-180,180)"),
+        Field::new(
+            "height",
+            "Ellipsoidal height",
+            "Above the GRS 80 ellipsoid, like 85 m",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        ),
+    ],
+    outputs: &[
+        Field::new(
+            "lat",
+            "Latitude",
+            "On the frame asked for",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "On the frame asked for",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .angle_range("[-180,180)"),
+        Field::new(
+            "height",
+            "Ellipsoidal height",
+            "On the frame asked for",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(4)),
+        Field::new(
+            "shift",
+            "How far the point moved",
+            "Horizontally, on the ground",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(4)),
+        Field::new(
+            "azimuth",
+            "Which way it moved",
+            "Degrees from true north",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(1))
+        .angle_range("[0,360)"),
+        Field::new(
+            "method",
+            "What was applied",
+            "The chain of frames and the tie",
+            Kind::Text { max_len: 260 },
+        ),
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &["REALIZATION_ASSUMED", "OUTSIDE_AREA_OF_USE"],
+    model: "The frame given is carried to ITRF2014 by the IERS parameters the neighbouring ITRF tool uses, then to ETRF2000 by EPSG's ITRF2014 to ETRF2000 (1): a time-dependent position-vector transformation (EPSG method 1053) with its reference epoch of 2010.0, so the rotation rates that hold ETRS89 to the Eurasian plate are applied over the years from 2010 to the coordinates' epoch. The reverse runs the same chain backwards",
+    accuracy: "EPSG states the tie at 0.01 m, and it agrees with PROJ applying the same operation to a nanodegree. The ITRF-to-ITRF leg adds the few millimetres the IERS parameters carry",
+    when_to_use: "Use this when a satellite position has to meet a European national grid. ETRS89 is fixed to the Eurasian plate and the global frames are not, so the two drift apart by about 2.5 cm a year: a position taken today on WGS 84 is most of a metre from the ETRS89 the grid is built on. Give the coordinates' epoch, which is the date they were measured, not today's date.",
+    limitations: "ETRS89 is a European frame: EPSG publishes this tie for roughly 16°W to 33°E and 33°N to 84°N, and outside it the answer is flagged. ETRF2000 is the realization the EUREF Technical Working Group recommends; ETRF2014 and ETRF2020 exist and are technically better, and a national grid tied to one of those is a different step. This is a rigid transformation of the whole plate and knows nothing of local deformation. Heights are ellipsoidal, and a national height datum is its own step.",
+    references: &[EPSG_ETRF, IOGP_7_2],
+    examples: &[Example {
+        id: "primary",
+        title: "A Dublin position on WGS 84 today, onto ETRS89",
+        input: r#"{"direction":"to-etrs89","frame":"ITRF2020","epoch":"2026.0","lat":53.349806,"lon":-6.260247,"height":"85 m"}"#,
+        source: "PROJ 9.9.0 applying EPSG's ITRF2014 to ETRF2000 (1) after the IERS tie from ITRF2020: the point moves about 0.7 m, which is the plate's motion since 1989 as the frames record it",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "point",
+        map: &[("lat", "lat"), ("lon", "lon")],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.datum.itrf",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.grid-ref.itm-forward",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.datum.plate-motion",
+            reason: "alternative",
+        },
+    ],
+    sentence: "That point moves {shift}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_etrf,
+    ..ToolDef::BLANK
+};
+
+fn run_etrf(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let to_etrs = ctx.choice("direction")? != Some("to-itrf");
+    let frame_name = ctx.choice("frame")?.unwrap_or("ITRF2020");
+    let frame = resolve(ctx, frame_name, "the global frame");
+    let t = epoch(ctx, "epoch")?.expect("required");
+    if !(1980.0..=2100.0).contains(&t) {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "The epoch must be between 1980 and 2100.",
+        )
+        .at("/epoch"));
+    }
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let m = units::by_symbol(QT::Length, "m").expect("m");
+    let h = ctx.quantity("height")?.map_or(0.0, |q| q.to(m));
+    if !(33.0..=84.0).contains(&lat) || !(-16.0..=33.0).contains(&lon) {
+        ctx.warnings.push(Warning::new(
+            "OUTSIDE_AREA_OF_USE",
+            "This point is outside the area EPSG publishes the ETRS89 tie for (about 16°W to 33°E and 33°N to 84°N), so the answer is extrapolation.",
+        ));
+    }
+    let grs80 = CATALOG
+        .iter()
+        .find(|e| e.id == "grs80")
+        .copied()
+        .unwrap_or(Ellipsoid {
+            id: "grs80",
+            name: "GRS 1980",
+            a: 6_378_137.0,
+            f: 1.0 / 298.257_222_101,
+        });
+    // The ETRS89 tie is published from ITRF2014, so the chain goes through it.
+    let tie = Helmert {
+        p: ETRF2000_FROM_ITRF2014,
+        rate: ETRF2000_RATES,
+        t0: ETRF_EPOCH,
+        convention: Convention::PositionVector,
+    };
+    let (phi, lam) = (lat.to_radians(), lon.to_radians());
+    let v = fr::to_ecef(&grs80, phi, lam, h);
+    let moved = if to_etrs {
+        let at_2014 =
+            helmert::itrf_transform(frame, "ITRF2014", [v.0, v.1, v.2], t).ok_or_else(|| {
+                ToolError::invalid("/frame", "That frame has no published tie to ITRF2014.")
+            })?;
+        tie.forward(at_2014, t)
+    } else {
+        let at_2014 = tie.reverse([v.0, v.1, v.2], t);
+        helmert::itrf_transform("ITRF2014", frame, at_2014, t).ok_or_else(|| {
+            ToolError::invalid("/frame", "That frame has no published tie to ITRF2014.")
+        })?
+    };
+    let (phi2, lam2, h2) =
+        fr::from_ecef(&grs80, moved[0], moved[1], moved[2]).expect("not the center");
+    let (lat2, lon2) = (
+        phi2.to_degrees(),
+        gp_base::angle::wrap_lon(lam2.to_degrees()),
+    );
+    let a = fr::to_ecef(&grs80, phi, lam, h);
+    let b = fr::to_ecef(&grs80, phi2, lam2, h2);
+    let enu = fr::ecef_to_enu(a, phi, lam, b);
+    let s12 = enu[0].hypot(enu[1]);
+    let az = if s12 == 0.0 {
+        0.0
+    } else {
+        enu[0].atan2(enu[1]).to_degrees().rem_euclid(360.0)
+    };
+    if ctx.explaining() {
+        ctx.step(
+            "Onto ITRF2014",
+            "the IERS tie the neighbouring ITRF tool uses",
+            format!("{frame} at {t:.2}"),
+            "ITRF2014".to_string(),
+        );
+        ctx.step(
+            "Onto ETRS89",
+            "EPSG's ITRF2014 to ETRF2000 (1), time-dependent, reference epoch 2010.0",
+            format!("{:.2} years of plate rotation", t - ETRF_EPOCH),
+            format!(
+                "{}°",
+                gp_base::display::number(lat2, Precision::Decimals(9), ctx.options.format)
+            ),
+        );
+    }
+    let deg_u = units::by_symbol(QT::Angle, "deg").expect("deg");
+    let q_deg = |v: f64| Q {
+        value: v,
+        unit: deg_u,
+    };
+    let q_m = |v: f64| Q { value: v, unit: m };
+    Ok(Json::obj([
+        ("lat", ctx.out("lat", q_deg(lat2))),
+        ("lon", ctx.out("lon", q_deg(lon2))),
+        ("height", ctx.out("height", q_m(h2))),
+        ("shift", ctx.out("shift", q_m(s12))),
+        ("azimuth", ctx.out("azimuth", q_deg(az))),
+        (
+            "method",
+            Json::str(if to_etrs {
+                "Carried to ITRF2014 by the IERS parameters, then to ETRF2000 by EPSG's time-dependent tie at reference epoch 2010.0."
+            } else {
+                "Carried from ETRF2000 to ITRF2014 by the reverse of EPSG's time-dependent tie, then on by the IERS parameters."
+            }),
+        ),
+    ]))
+}

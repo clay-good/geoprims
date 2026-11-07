@@ -1070,3 +1070,122 @@ mod tests {
         }
     }
 }
+
+/// The Swiss conformal cylindrical projection (LV95 and LV03), as swisstopo
+/// writes it in "Formulas and constants for the calculation of the Swiss
+/// conformal cylindrical projection and for the transformation between
+/// coordinate systems" (December 2016). It is an oblique Mercator done in
+/// three steps: the Bessel ellipsoid onto a sphere, a rotation that carries
+/// the fundamental point in Bern onto that sphere's equator, and a Mercator
+/// of the rotated sphere.
+pub mod swiss {
+    /// Bessel 1841, and the fundamental point in Bern (the 'old values',
+    /// which swisstopo says remain valid for every geodetic purpose).
+    pub const A: f64 = 6_377_397.155;
+    pub const E2: f64 = 0.006_674_372_230_614;
+    /// 46° 57' 08.66" and 7° 26' 22.50".
+    pub const PHI0: f64 = 0.819_474_068_676_121_8;
+    pub const LAM0: f64 = 0.129_845_224_143_161_46;
+    /// LV95's false origin; LV03's is 600,000 and 200,000.
+    pub const FALSE_EAST: f64 = 2_600_000.0;
+    pub const FALSE_NORTH: f64 = 1_200_000.0;
+
+    fn e() -> f64 {
+        E2.sqrt()
+    }
+    /// Radius of the projection sphere, 6,378,815.90365 m.
+    fn r() -> f64 {
+        A * (1.0 - E2).sqrt() / (1.0 - E2 * PHI0.sin().powi(2))
+    }
+    /// How a longitude on the sphere relates to one on the ellipsoid.
+    fn alpha() -> f64 {
+        (1.0 + E2 / (1.0 - E2) * PHI0.cos().powi(4)).sqrt()
+    }
+    /// Latitude of the fundamental point on the sphere.
+    fn b0() -> f64 {
+        (PHI0.sin() / alpha()).asin()
+    }
+    /// The constant of the latitude formula.
+    fn k() -> f64 {
+        let (e, al) = (e(), alpha());
+        (std::f64::consts::FRAC_PI_4 + b0() / 2.0).tan().ln()
+            - al * (std::f64::consts::FRAC_PI_4 + PHI0 / 2.0).tan().ln()
+            + al * e / 2.0 * ((1.0 + e * PHI0.sin()) / (1.0 - e * PHI0.sin())).ln()
+    }
+
+    /// Bessel latitude and longitude (radians) to LV95 easting and northing.
+    pub fn forward(phi: f64, lam: f64) -> (f64, f64) {
+        let (e, al, b0, r) = (e(), alpha(), b0(), r());
+        let s = al * (std::f64::consts::FRAC_PI_4 + phi / 2.0).tan().ln()
+            - al * e / 2.0 * ((1.0 + e * phi.sin()) / (1.0 - e * phi.sin())).ln()
+            + k();
+        let b = 2.0 * (s.exp().atan() - std::f64::consts::FRAC_PI_4);
+        let l = al * (lam - LAM0);
+        let lbar = l.sin().atan2(b0.sin() * b.tan() + b0.cos() * l.cos());
+        let bbar = (b0.cos() * b.sin() - b0.sin() * b.cos() * l.cos()).asin();
+        (
+            r * lbar + FALSE_EAST,
+            r / 2.0 * ((1.0 + bbar.sin()) / (1.0 - bbar.sin())).ln() + FALSE_NORTH,
+        )
+    }
+
+    /// LV95 easting and northing to Bessel latitude and longitude (radians).
+    /// The latitude is found by the iteration swisstopo gives, which settles
+    /// in six steps from a starting value of the spherical latitude.
+    pub fn inverse(east: f64, north: f64) -> (f64, f64) {
+        let (e, al, b0, r) = (e(), alpha(), b0(), r());
+        let (y, x) = (east - FALSE_EAST, north - FALSE_NORTH);
+        let lbar = y / r;
+        let bbar = 2.0 * ((x / r).exp().atan() - std::f64::consts::FRAC_PI_4);
+        let b = (b0.cos() * bbar.sin() + b0.sin() * bbar.cos() * lbar.cos()).asin();
+        let l = lbar
+            .sin()
+            .atan2(b0.cos() * lbar.cos() - b0.sin() * bbar.tan());
+        let lam = LAM0 + l / al;
+        let mut phi = b;
+        for _ in 0..12 {
+            let s = ((std::f64::consts::FRAC_PI_4 + b / 2.0).tan().ln() - k()) / al
+                + e * (std::f64::consts::FRAC_PI_4 + (e * phi.sin()).asin() / 2.0)
+                    .tan()
+                    .ln();
+            let next = 2.0 * s.exp().atan() - std::f64::consts::FRAC_PI_2;
+            if (next - phi).abs() < 1e-15 {
+                phi = next;
+                break;
+            }
+            phi = next;
+        }
+        (phi, lam)
+    }
+}
+
+#[cfg(test)]
+mod swiss_tests {
+    use super::swiss;
+
+    #[test]
+    fn swisstopo_rigi_example() {
+        // swisstopo's own worked example (refsys, section 3.2 and 3.3): the
+        // station Rigi on the Bessel ellipsoid, and its LV95 coordinates.
+        let phi = (47.0_f64 + 3.0 / 60.0 + 28.956_592_33 / 3600.0).to_radians();
+        let lam = (8.0_f64 + 29.0 / 60.0 + 11.111_271_54 / 3600.0).to_radians();
+        let (e, n) = swiss::forward(phi, lam);
+        assert!((e - 2_679_520.05).abs() < 0.005, "easting {e}");
+        assert!((n - 1_212_273.44).abs() < 0.005, "northing {n}");
+        let (p2, l2) = swiss::inverse(2_679_520.05, 1_212_273.44);
+        assert!((p2 - 0.821_317_798_583_336).abs() < 1e-10, "phi {p2}");
+        assert!((l2 - 0.148_115_967).abs() < 1e-9, "lambda {l2}");
+        // The projection and its inverse agree over the country.
+        for (lat, lon) in [
+            (46.2_f64, 6.15_f64),
+            (47.37, 8.54),
+            (46.0, 8.95),
+            (47.56, 9.64),
+        ] {
+            let (fe, fn_) = swiss::forward(lat.to_radians(), lon.to_radians());
+            let (bp, bl) = swiss::inverse(fe, fn_);
+            assert!((bp.to_degrees() - lat).abs() < 1e-11, "{lat} {bp}");
+            assert!((bl.to_degrees() - lon).abs() < 1e-11, "{lon} {bl}");
+        }
+    }
+}

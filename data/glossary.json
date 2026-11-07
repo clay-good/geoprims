@@ -215,6 +215,16 @@
       ]
     },
     {
+      "id": "ch1903",
+      "term": "CH1903",
+      "expansion": "Schweizerische Landesvermessung 1903",
+      "definition": "The Swiss datum, on the Bessel 1841 ellipsoid, that the Swiss projection is defined for.",
+      "source": "swisstopo-formulas",
+      "relatedTools": [
+        "geodesy.projection.lv95-inverse"
+      ]
+    },
+    {
       "id": "cmv",
       "term": "CMV",
       "expansion": "converted meteorological visibility",
@@ -1017,6 +1027,27 @@
         "navigation.celestial.polaris-latitude",
         "navigation.celestial.sight-reduction",
         "navigation.celestial.sun-azimuth-check"
+      ]
+    },
+    {
+      "id": "lv03",
+      "term": "LV03",
+      "expansion": "Landesvermessung 1903",
+      "definition": "The older Swiss national grid, the same projection with a false origin of 600,000 east and 200,000 north.",
+      "source": "swisstopo-formulas",
+      "relatedTools": [
+        "geodesy.projection.lv95-forward"
+      ]
+    },
+    {
+      "id": "lv95",
+      "term": "LV95",
+      "expansion": "Landesvermessung 1995",
+      "definition": "The Swiss national grid in use since 1995, whose coordinates start at 2,600,000 east and 1,200,000 north.",
+      "source": "swisstopo-formulas",
+      "relatedTools": [
+        "geodesy.projection.lv95-forward",
+        "geodesy.projection.lv95-inverse"
       ]
     },
     {

@@ -3269,6 +3269,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &spcs2022::FORWARD,
     &spcs2022::INVERSE,
     &spcs::ARC_TO_CHORD,
+    &methods::LV95_FORWARD,
+    &methods::LV95_INVERSE,
     &methods::WEB_MERCATOR_FORWARD,
     &methods::WEB_MERCATOR_INVERSE,
     &methods::LCC_FORWARD,

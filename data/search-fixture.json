@@ -1306,6 +1306,14 @@
       "expect": "geodesy.grid-ref.itm-inverse"
     },
     {
+      "query": "Swiss LV95 coordinates from latitude longitude",
+      "expect": "geodesy.projection.lv95-forward"
+    },
+    {
+      "query": "LV03 easting northing to latitude longitude",
+      "expect": "geodesy.projection.lv95-inverse"
+    },
+    {
       "query": "under keel clearance with squat",
       "expect": "navigation.vessel.under-keel-clearance"
     },

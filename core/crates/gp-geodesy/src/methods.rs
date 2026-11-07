@@ -2230,3 +2230,312 @@ fn run_tm_exact_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
     let p = tm_exact_grid(ctx)?;
     inverse_json(ctx, p.inverse(x, y))
 }
+
+// ------------------------------------------------------------------- LV95
+
+const SWISSTOPO: Reference = Reference {
+    title: "Formulas and constants for the calculation of the Swiss conformal cylindrical projection and for the transformation between coordinate systems",
+    issuer: "Federal Office of Topography swisstopo",
+    year: 2016,
+    edition: "December 2016 edition",
+    locator: "Section 3.1 (constants and auxiliary values), 3.2 and 3.3 (the rigorous formulas each way), with the worked example for the station Rigi: 47°03′28.95659233″N 8°29′11.11127154″E on Bessel gives E 2,679,520.05 N 1,212,273.44",
+    url: "https://www.swisstopo.admin.ch/dam/en/sd-web/c46Fz-MHIc3u/refsys-EN.pdf",
+};
+const LV95_NOTE: &str = "The latitude and longitude are on CH1903 (the Bessel ellipsoid), which is what the projection is defined for; a satellite position on WGS 84 is a datum step away.";
+
+pub static LV95_FORWARD: ToolDef = ToolDef {
+    id: "geodesy.projection.lv95-forward",
+    title: "Latitude and longitude to Swiss LV95",
+    summary: "Converts a CH1903 latitude and longitude to LV95 easting and northing, the Swiss national grid, by swisstopo's rigorous formulas.",
+    aliases: &[
+        "lat long to LV95",
+        "Swiss grid converter",
+        "CH1903+ coordinates",
+        "LV95 from latitude longitude",
+    ],
+    keywords: &[
+        "LV95",
+        "CH1903",
+        "Swiss grid",
+        "swisstopo",
+        "oblique Mercator",
+        "Switzerland",
+        "projection",
+        "EPSG 2056",
+    ],
+    inputs: &[LAT, LON],
+    outputs: &[
+        Field::new(
+            "easting",
+            "Easting",
+            "LV95, counting from its false origin",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(3)),
+        Field::new(
+            "northing",
+            "Northing",
+            "LV95, counting from its false origin",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(3)),
+        Field::new(
+            "lv03_easting",
+            "LV03 easting",
+            "The old grid: the same point, 2,000,000 m less",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(3)),
+        Field::new(
+            "lv03_northing",
+            "LV03 northing",
+            "The old grid: the same point, 1,000,000 m less",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(3)),
+        Field::new(
+            "datum",
+            "Datum of the latitude and longitude",
+            "What the projection was given",
+            Kind::Text { max_len: 200 },
+        ),
+    ],
+    errors: &[ErrorCode::OutOfDomain],
+    warnings: &["REALIZATION_ASSUMED"],
+    model: "The Swiss conformal cylindrical projection, swisstopo's rigorous formulas: the Bessel ellipsoid onto a sphere of radius 6,378,815.90365 m, a rotation carrying the fundamental point in Bern (46°57′08.66″N 7°26′22.50″E) onto that sphere's equator, then a Mercator of the rotated sphere, with LV95's false origin of 2,600,000 m east and 1,200,000 m north",
+    accuracy: "The rigorous formulas, not the approximate ones: swisstopo's own worked example for the station Rigi comes back to the centimetre they print, and the projection and its inverse agree to a nanodegree over the country",
+    when_to_use: "Use this to put a latitude and longitude onto the Swiss national grid, the coordinates every Swiss map, cadastral plan, and address file is written in. It gives the LV03 coordinates beside the LV95 ones, since the two differ by exactly two million east and one million north and plenty of records are still in the old grid.",
+    limitations: "The projection is defined for CH1903 coordinates, on the Bessel ellipsoid: a satellite position on WGS 84 or ETRS89 is a datum step away, which is separate from this tool and which swisstopo publishes a grid for. The formulas hold for Switzerland and its surroundings; far outside, the rotation that makes the projection conformal there stops meaning anything. Heights are untouched: swisstopo's height transformation is its own step.",
+    references: &[SWISSTOPO],
+    examples: &[Example {
+        id: "primary",
+        title: "The station Rigi, swisstopo's own example",
+        input: r#"{"lat":"47°03'28.95659233\"N","lon":"8°29'11.11127154\"E"}"#,
+        source: "swisstopo, Formulas and constants (December 2016), section 3.2: E = 2,679,520.05 N = 1,212,273.44",
+    }],
+    primary_example: "primary",
+    visualization: FORWARD_LAYER,
+    related: &[
+        Related {
+            id: "geodesy.projection.lv95-inverse",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.projection.hotine-forward",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.datum.legacy",
+            reason: "next",
+        },
+    ],
+    sentence: "That point is E {easting}, N {northing} on LV95.",
+    limits: &[("batchRows", 10_000)],
+    run: run_lv95_forward,
+    ..ToolDef::BLANK
+};
+
+fn run_lv95_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let (e, n) = gp_geo::proj::swiss::forward(lat.to_radians(), lon.to_radians());
+    if !(e.is_finite() && n.is_finite()) {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "That point is too far from Switzerland for the Swiss projection to place.",
+        )
+        .at("/lat"));
+    }
+    ctx.warnings
+        .push(Warning::new("REALIZATION_ASSUMED", LV95_NOTE));
+    if ctx.explaining() {
+        ctx.step(
+            "Onto the projection sphere",
+            "the Bessel ellipsoid mapped conformally onto a sphere of 6,378,815.90365 m",
+            format!("{lat:.9}°, {lon:.9}°"),
+            "a spherical latitude and longitude".to_string(),
+        );
+        ctx.step(
+            "Turned onto the equator",
+            "the fundamental point in Bern carried onto the sphere's equator",
+            "46°57′08.66″N 7°26′22.50″E".to_string(),
+            "the pseudo-equator system".to_string(),
+        );
+        ctx.step(
+            "Mercator, with the false origin",
+            "E = R·l̄ + 2,600,000; N = (R/2)·ln((1 + sin b̄)/(1 − sin b̄)) + 1,200,000",
+            format!("{lat:.6}°, {lon:.6}°"),
+            format!(
+                "{} m",
+                gp_base::display::number(e, Precision::Decimals(3), ctx.options.format)
+            ),
+        );
+    }
+    Ok(Json::obj([
+        ("easting", ctx.out("easting", meters(e))),
+        ("northing", ctx.out("northing", meters(n))),
+        (
+            "lv03_easting",
+            ctx.out("lv03_easting", meters(e - 2_000_000.0)),
+        ),
+        (
+            "lv03_northing",
+            ctx.out("lv03_northing", meters(n - 1_000_000.0)),
+        ),
+        ("datum", Json::str(LV95_NOTE)),
+    ]))
+}
+
+pub static LV95_INVERSE: ToolDef = ToolDef {
+    id: "geodesy.projection.lv95-inverse",
+    title: "Swiss LV95 to latitude and longitude",
+    summary: "Converts LV95 easting and northing back to a CH1903 latitude and longitude by swisstopo's rigorous formulas, taking LV03 coordinates too.",
+    aliases: &[
+        "LV95 to lat long",
+        "Swiss grid to coordinates",
+        "LV03 to latitude longitude",
+        "read Swiss coordinates",
+    ],
+    keywords: &[
+        "LV95",
+        "LV03",
+        "CH1903",
+        "Swiss grid",
+        "swisstopo",
+        "Switzerland",
+        "inverse",
+        "EPSG 2056",
+    ],
+    inputs: &[EASTING, NORTHING],
+    outputs: &[
+        Field::new(
+            "lat",
+            "Latitude",
+            "On CH1903, north positive",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "On CH1903, east positive",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .angle_range("[-180,180)"),
+        Field::new(
+            "grid",
+            "Grid read",
+            "Whether the coordinates were taken as LV95 or LV03",
+            Kind::Text { max_len: 120 },
+        ),
+        Field::new(
+            "datum",
+            "Datum of the answer",
+            "What the latitude and longitude are on",
+            Kind::Text { max_len: 200 },
+        ),
+    ],
+    errors: &[ErrorCode::OutOfDomain],
+    warnings: &["REALIZATION_ASSUMED", "INPUT_NORMALIZED"],
+    model: "The inverse of the Swiss conformal cylindrical projection, swisstopo's rigorous formulas: Mercator back to the rotated sphere, the rotation undone, and the latitude found by the iteration swisstopo gives, which settles in six steps. An easting under 2,000,000 m is read as LV03 and 2,000,000 m east and 1,000,000 m north are added first",
+    accuracy: "The rigorous formulas: swisstopo's own worked example for the station Rigi comes back to the digits they print, and the projection and its inverse agree to a nanodegree over the country",
+    when_to_use: "Use this to read Swiss coordinates off a map, a cadastral extract, or an address file and get the latitude and longitude. It takes LV95 and the older LV03 both: a six-figure easting is read as LV03 and shifted, and the result says which grid it read.",
+    limitations: "The answer is on CH1903, the Bessel ellipsoid, which is what the projection is defined for; a position on WGS 84 or ETRS89 is a datum step away, which swisstopo publishes a grid for and which is not part of this tool. Heights are untouched. Coordinates far outside Switzerland are arithmetic rather than a national grid.",
+    references: &[SWISSTOPO],
+    examples: &[Example {
+        id: "primary",
+        title: "The station Rigi, swisstopo's own example",
+        input: r#"{"easting":"2679520.05 m","northing":"1212273.44 m"}"#,
+        source: "swisstopo, Formulas and constants (December 2016), section 3.3: 47°03′28.956592″N 8°29′11.111272″E on CH1903",
+    }],
+    primary_example: "primary",
+    visualization: INVERSE_LAYER,
+    related: &[
+        Related {
+            id: "geodesy.projection.lv95-forward",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.projection.hotine-inverse",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.datum.legacy",
+            reason: "next",
+        },
+    ],
+    sentence: "That is {lat}, {lon} on CH1903.",
+    limits: &[("batchRows", 10_000)],
+    run: run_lv95_inverse,
+    ..ToolDef::BLANK
+};
+
+fn run_lv95_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (mut e, mut n) = grid_in(ctx)?;
+    // LV03 runs from 600,000 and 200,000; LV95 from 2,600,000 and 1,200,000.
+    let lv03 = e < 2_000_000.0;
+    let grid = if lv03 {
+        ctx.warnings.push(Warning::new(
+            "INPUT_NORMALIZED",
+            "The easting is under 2,000,000 m, so the coordinates were read as LV03 and shifted onto LV95 first.",
+        ));
+        e += 2_000_000.0;
+        n += 1_000_000.0;
+        "read as LV03 and shifted onto LV95"
+    } else {
+        "read as LV95"
+    };
+    let (phi, lam) = gp_geo::proj::swiss::inverse(e, n);
+    let (lat, lon) = (phi.to_degrees(), lam.to_degrees());
+    if !(lat.is_finite() && lon.is_finite() && (-90.0..=90.0).contains(&lat)) {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "That easting and northing is not a place the Swiss projection can read.",
+        )
+        .at("/easting"));
+    }
+    ctx.warnings
+        .push(Warning::new("REALIZATION_ASSUMED", LV95_NOTE));
+    if ctx.explaining() {
+        ctx.step(
+            "Off the false origin",
+            "the grid counts 2,600,000 m east and 1,200,000 m north of its true origin",
+            format!("E {e:.3} m, N {n:.3} m"),
+            format!("{:.3} m, {:.3} m", e - 2_600_000.0, n - 1_200_000.0),
+        );
+        ctx.step(
+            "Back through the sphere",
+            "Mercator undone, the rotation undone, then swisstopo's iteration for the latitude",
+            grid.to_string(),
+            format!(
+                "{}°",
+                gp_base::display::number(lat, Precision::Decimals(9), ctx.options.format)
+            ),
+        );
+    }
+    Ok(Json::obj([
+        ("lat", ctx.out("lat", deg(lat))),
+        ("lon", ctx.out("lon", deg(lon))),
+        ("grid", Json::str(grid)),
+        ("datum", Json::str(LV95_NOTE)),
+    ]))
+}

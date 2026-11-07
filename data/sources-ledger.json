@@ -4216,6 +4216,26 @@
       "editionCheck": true
     },
     {
+      "id": "swisstopo-formulas",
+      "name": "Formulas and constants for the calculation of the Swiss conformal cylindrical projection and for the transformation between coordinate systems",
+      "issuer": "Federal Office of Topography swisstopo",
+      "currentEdition": "December 2016 edition",
+      "currentReleaseDate": "2016-12-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-11-07",
+      "verificationNote": "Read at swisstopo.admin.ch on 2026-11-07: section 3.1's constants and auxiliary values (R = 6,378,815.90365 m, alpha = 1.00072913843038, b0, K), section 3.2 and 3.3's rigorous formulas each way, and the numerical example for the station Rigi with every intermediate and the six iteration steps of the inverse latitude.",
+      "freeAccessUrl": "https://www.swisstopo.admin.ch/dam/en/sd-web/c46Fz-MHIc3u/refsys-EN.pdf",
+      "matchTerms": [
+        "Swiss conformal cylindrical projection"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "os-coordinate-systems-guide",
       "name": "A Guide to Coordinate Systems in Great Britain",
       "issuer": "Ordnance Survey",

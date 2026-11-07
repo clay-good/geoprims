@@ -5,6 +5,16 @@
       "date": "2026-11-07",
       "kind": "added",
       "tools": [
+        "geodesy.projection.lv95-forward",
+        "geodesy.projection.lv95-inverse"
+      ],
+      "vectors": [],
+      "summary": "Two tools convert the Swiss national grid, LV95 and the older LV03, either way. The Swiss grid is not a transverse Mercator: it is an oblique one, laid so that the cylinder touches the ellipsoid along a line through Bern rather than along a meridian, which is what keeps distortion small across a country wider east to west than north to south. These follow swisstopo's own rigorous formulas, not the approximate ones their document warns against for cadastral work, and reproduce their worked example for the station Rigi to the centimetre they print. The forward tool gives the LV03 coordinates beside the LV95 ones; the reverse tool recognises a six-figure LV03 easting and says it shifted it."
+    },
+    {
+      "date": "2026-11-07",
+      "kind": "added",
+      "tools": [
         "geodesy.grid-ref.itm-forward",
         "geodesy.grid-ref.itm-inverse"
       ],

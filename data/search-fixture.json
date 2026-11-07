@@ -1286,6 +1286,10 @@
       "expect": "raster.hydrology.watershed"
     },
     {
+      "query": "longest flow path hydraulic length",
+      "expect": "raster.hydrology.longest-flow-path"
+    },
+    {
       "query": "under keel clearance with squat",
       "expect": "navigation.vessel.under-keel-clearance"
     },

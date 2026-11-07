@@ -2102,6 +2102,12 @@
           "tools": [
             "watershed"
           ]
+        },
+        {
+          "want": "measure the longest way water travels to a point",
+          "tools": [
+            "longest-flow-path"
+          ]
         }
       ]
     },

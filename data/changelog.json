@@ -5,6 +5,15 @@
       "date": "2026-11-07",
       "kind": "added",
       "tools": [
+        "raster.hydrology.longest-flow-path"
+      ],
+      "vectors": [],
+      "summary": "The sixth and last hydrology tool measures the longest way water travels to a point: the hydraulic length that a time-of-concentration formula asks for. Give an elevation grid and a cell, and it returns the distance, the height the water falls over it, the average slope along it, and the path itself cell by cell, with the elevation at each. Add the grid's north-west corner and the path comes back placed in latitude and longitude, ready to draw. Diagonal steps count as root two cells, which is why a path down a diagonal valley reads longer than the straight distance across the map."
+    },
+    {
+      "date": "2026-11-07",
+      "kind": "added",
+      "tools": [
         "raster.hydrology.watershed"
       ],
       "vectors": [],

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "4477656f25099bc1",
+    "hash": "c73c7debb78c73e1",
     "lastmod": "2026-11-07"
   },
   "/accuracy/": {
@@ -316,7 +316,7 @@
     "lastmod": "2026-10-19"
   },
   "/changelog/": {
-    "hash": "8218aad5e56f7566",
+    "hash": "eb3a54832ed10010",
     "lastmod": "2026-11-07"
   },
   "/disclaimer/": {
@@ -1552,7 +1552,7 @@
     "lastmod": "2026-10-20"
   },
   "/methodology/": {
-    "hash": "00c162263f3af761",
+    "hash": "766bf599a69c871d",
     "lastmod": "2026-11-07"
   },
   "/navigation/": {
@@ -1808,15 +1808,15 @@
     "lastmod": "2026-10-20"
   },
   "/quality/": {
-    "hash": "3c0cc17953aa68b8",
+    "hash": "fad30105845f5016",
     "lastmod": "2026-11-07"
   },
   "/raster/": {
-    "hash": "4145275eb6dcc863",
+    "hash": "4e92b0b57ee810e6",
     "lastmod": "2026-11-07"
   },
   "/raster/hydrology/": {
-    "hash": "9495e2b96d95b0be",
+    "hash": "4f29f6817b9366ae",
     "lastmod": "2026-11-07"
   },
   "/raster/hydrology/fill/": {
@@ -1828,11 +1828,15 @@
     "lastmod": "2026-11-07"
   },
   "/raster/hydrology/flow-direction/": {
-    "hash": "1ff83c6bdba0f899",
+    "hash": "b0e439700c89088a",
+    "lastmod": "2026-11-07"
+  },
+  "/raster/hydrology/longest-flow-path/": {
+    "hash": "db70f22e57af8074",
     "lastmod": "2026-11-07"
   },
   "/raster/hydrology/streams/": {
-    "hash": "53a85969cea0b4c7",
+    "hash": "6b70b4e7e6d1357b",
     "lastmod": "2026-11-07"
   },
   "/raster/hydrology/watershed/": {
@@ -1960,7 +1964,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "57d26e77d2944f83",
+    "hash": "41ec114c8ee15428",
     "lastmod": "2026-11-07"
   },
   "/survey/": {
@@ -2396,7 +2400,7 @@
     "lastmod": "2026-11-07"
   },
   "/tools/": {
-    "hash": "f87926b2400b285d",
+    "hash": "365287d897db4402",
     "lastmod": "2026-11-07"
   },
   "/units/": {
@@ -2660,7 +2664,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "b81e9cb5a08b676a",
+    "hash": "67c0077be8997dde",
     "lastmod": "2026-11-07"
   },
   "/workflows/": {

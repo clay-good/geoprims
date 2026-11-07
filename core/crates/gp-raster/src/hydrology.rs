@@ -2819,3 +2819,364 @@ fn run_watershed(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("path", Json::Arr(path_rows)),
     ]))
 }
+
+pub static LONGEST_FLOW_PATH: ToolDef = ToolDef {
+    id: "raster.hydrology.longest-flow-path",
+    title: "Longest flow path to a point",
+    summary: "The longest way water travels to the cell you pick, cell by cell, with the distance along it and the height it falls.",
+    aliases: &[
+        "longest flow path",
+        "hydraulic length",
+        "time of concentration path",
+        "longest watercourse",
+    ],
+    keywords: &[
+        "longest",
+        "flow",
+        "path",
+        "hydraulic",
+        "length",
+        "concentration",
+        "hydrology",
+        "DEM",
+    ],
+    inputs: &[
+        Field::new(
+            "elevations",
+            "Elevation grid",
+            "Rows of elevations in meters, north row first, west to east, like 101.2, 100.6, 100.2",
+            Kind::List {
+                items: ROW,
+                min: 2,
+                max: MAX_SIDE,
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "cell_size",
+            "Cell size",
+            "The ground size of one cell, like 30 m",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "pour_row",
+            "Outlet row",
+            "From 1 at the north, like 7",
+            Kind::Number { min: 1.0, max: 1e6 },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "pour_column",
+            "Outlet column",
+            "From 1 at the west, like 4",
+            Kind::Number { min: 1.0, max: 1e6 },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "north_west_lat",
+            "North-west latitude",
+            "Of the grid's first cell center, if you want the path placed, like 44.12",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        ),
+        Field::new(
+            "north_west_lon",
+            "North-west longitude",
+            "Of the grid's first cell center, like -121.45",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        ),
+        Field::new(
+            "no_data",
+            "No-data value",
+            "A value that marks a missing elevation, like -9999",
+            Kind::Number {
+                min: -1e12,
+                max: 1e12,
+            },
+        ),
+    ],
+    outputs: &[
+        Field::new(
+            "length",
+            "Path length",
+            "Along the cell centers, with diagonals at √2",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(2)),
+        Field::new(
+            "drop",
+            "Drop",
+            "The path's first cell above the outlet",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(2)),
+        Field::new(
+            "average_slope",
+            "Average slope along it",
+            "Drop over length, rise over run",
+            Kind::Number { min: 0.0, max: 1e4 },
+        )
+        .precision(Precision::Decimals(5)),
+        Field::new(
+            "cells",
+            "Cells along it",
+            "Counting both ends",
+            Kind::Number { min: 1.0, max: 1e6 },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "start_row",
+            "Its top row",
+            "From 1 at the north",
+            Kind::Number { min: 1.0, max: 1e6 },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "start_column",
+            "Its top column",
+            "From 1 at the west",
+            Kind::Number { min: 1.0, max: 1e6 },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "path",
+            "The path",
+            "Its cells from the top down",
+            Kind::List {
+                items: PATH_ROW,
+                min: 1,
+                max: 25_000,
+            },
+        ),
+        Field::new(
+            "vertices",
+            "Where it runs",
+            "The cell centers it passes through, in order",
+            Kind::List {
+                items: VERTEX_ROW,
+                min: 1,
+                max: 25_000,
+            },
+        ),
+    ],
+    errors: &[
+        ErrorCode::InvalidInput,
+        ErrorCode::OutOfDomain,
+        ErrorCode::LimitExceeded,
+    ],
+    warnings: &["PITS_PRESENT", "EXPERIMENTAL_TOOL"],
+    model: "The longest chain of D8 pointers ending at the outlet, found by walking the pointers upstream and keeping, at each cell, the longest branch above it. Length sums the cell size along sides and √2 times it along diagonals between cell centers; the drop is the path's first cell above the outlet, and the average slope is the drop over the length",
+    accuracy: "Exact in the arithmetic of the rule over the window given: the path is the longest chain the pointers allow, and its length is the walked chain of cell centres",
+    when_to_use: "Use this for the hydraulic length a time-of-concentration formula asks for: the longest way water travels to a culvert, a gauge, or a basin outlet, with the height it falls on the way. Give the conditioned grid, the cell size, and the outlet's row and column; add the grid's north-west corner to get the path placed in latitude and longitude for a map.",
+    limitations: "The path follows the D8 staircase, so it reads longer than a smooth channel, most of all across a slope that faces between two of the eight directions. The window bounds it: a path that reaches the edge is as much as the data holds. An interior pit cuts a path short, so condition the grid first. The grid is plane, so a geographic grid needs its cell size in meters at the latitude. The window holds at most 25,000 cells.",
+    references: &[JENSON, OCALLAGHAN],
+    examples: &[Example {
+        id: "primary",
+        title: "The path to the east edge of a ramp of 30 m cells",
+        source: "add-raster-hydrology raster/hydrology, the Ramp path scenario: 270 m along the row, falling 9 m",
+        input: r#"{"elevations":[{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"}],"cell_size":"30 m","pour_row":1,"pour_column":10}"#,
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "raster.hydrology.watershed",
+            reason: "parent",
+        },
+        Related {
+            id: "raster.hydrology.streams",
+            reason: "alternative",
+        },
+        Related {
+            id: "raster.hydrology.fill",
+            reason: "next",
+        },
+    ],
+    sentence: "Water travels {length} to that cell.",
+    limits: &[("batchRows", 1)],
+    run: run_longest_path,
+    ..ToolDef::BLANK
+};
+
+fn run_longest_path(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let m = units::by_symbol(QT::Length, "m").expect("m");
+    let deg = units::by_symbol(QT::Angle, "deg").expect("deg");
+    let no_data = ctx.number("no_data")?;
+    let grid = read_grid(ctx, "elevations", no_data)?;
+    let (h, w) = (grid.len(), grid[0].len());
+    if h * w > MAX_CELLS {
+        return Err(ToolError::new(
+            ErrorCode::LimitExceeded,
+            format!(
+                "The window holds {} cells; this tool takes {MAX_CELLS}. Clip it smaller.",
+                h * w
+            ),
+        )
+        .at("/elevations"));
+    }
+    let cell = ctx.req_quantity("cell_size")?.to(m);
+    if !(cell.is_finite() && cell > 0.0) {
+        return Err(ToolError::invalid(
+            "/cell_size",
+            "The cell size must be more than zero.",
+        ));
+    }
+    let lat0 = ctx.quantity("north_west_lat")?.map(|q| q.to(deg));
+    let lon0 = ctx.quantity("north_west_lon")?.map(|q| q.to(deg));
+    if lat0.is_some() != lon0.is_some() {
+        return Err(ToolError::invalid(
+            "/north_west_lon",
+            "Give both the latitude and the longitude of the north-west cell, or neither.",
+        ));
+    }
+    let z: Vec<f64> = grid.iter().flatten().copied().collect();
+    let outlet = pour_point(ctx, w, h, &z)?;
+    let pit_count = pits(&z, w, h).len();
+    if pit_count > 0 {
+        ctx.warnings.push(Warning::new(
+            "PITS_PRESENT",
+            format!(
+                "{pit_count} interior cells have no lower neighbour, so a path can stop short. Condition the grid with the fill tool first."
+            ),
+        ));
+    }
+    let (path, length) = longest_path(&z, w, h, cell, outlet);
+    let start = *path.first().expect("the outlet is on the path");
+    let drop = z[start] - z[outlet];
+    let path_rows: Vec<Json> = path
+        .iter()
+        .enumerate()
+        .map(|(k, &i)| {
+            Json::obj([
+                ("step", Json::Num((k + 1) as f64)),
+                ("row", Json::Num((i / w + 1) as f64)),
+                ("column", Json::Num((i % w + 1) as f64)),
+                (
+                    "elevation",
+                    Q {
+                        value: z[i],
+                        unit: m,
+                    }
+                    .to_json(),
+                ),
+            ])
+        })
+        .collect();
+    let vertices: Vec<Json> = path
+        .iter()
+        .map(|&i| {
+            let east = (i % w) as f64 * cell + cell / 2.0;
+            let south = (i / w) as f64 * cell + cell / 2.0;
+            let mut row = vec![
+                ("link", Json::Num(1.0)),
+                (
+                    "east",
+                    Q {
+                        value: east,
+                        unit: m,
+                    }
+                    .to_json(),
+                ),
+                (
+                    "south",
+                    Q {
+                        value: south,
+                        unit: m,
+                    }
+                    .to_json(),
+                ),
+            ];
+            if let (Some(la), Some(lo)) = (lat0, lon0) {
+                let lat = la - south / 111_132.0;
+                let lon = lo + east / (111_320.0 * la.to_radians().cos()).max(1e-9);
+                row.push((
+                    "lat",
+                    Q {
+                        value: lat,
+                        unit: deg,
+                    }
+                    .to_json(),
+                ));
+                row.push((
+                    "lon",
+                    Q {
+                        value: lon,
+                        unit: deg,
+                    }
+                    .to_json(),
+                ));
+            }
+            Json::obj(row)
+        })
+        .collect();
+    if ctx.explaining() {
+        ctx.step(
+            "Upstream from the outlet",
+            "the longest branch above each cell, kept all the way up",
+            format!("{} cells in the window", h * w),
+            format!("{} cells on the path", path.len()),
+        );
+        ctx.step(
+            "Its length",
+            "the cell size along a side, √2 times it along a diagonal",
+            format!("{} steps of {cell} m", path.len().saturating_sub(1)),
+            format!(
+                "{} m",
+                gp_base::display::number(length, Precision::Decimals(2), ctx.options.format)
+            ),
+        );
+    }
+    Ok(Json::obj([
+        (
+            "length",
+            ctx.out(
+                "length",
+                Q {
+                    value: length,
+                    unit: m,
+                },
+            ),
+        ),
+        (
+            "drop",
+            ctx.out(
+                "drop",
+                Q {
+                    value: drop,
+                    unit: m,
+                },
+            ),
+        ),
+        (
+            "average_slope",
+            Json::Num(if length > 0.0 { drop / length } else { 0.0 }),
+        ),
+        ("cells", Json::Num(path.len() as f64)),
+        ("start_row", Json::Num((start / w + 1) as f64)),
+        ("start_column", Json::Num((start % w + 1) as f64)),
+        ("path", Json::Arr(path_rows)),
+        ("vertices", Json::Arr(vertices)),
+    ]))
+}

@@ -40,6 +40,7 @@ pub static TOOLS: &[&gp_base::tool::ToolDef] = &[
     &hydrology::FLOW_ACCUMULATION,
     &hydrology::STREAMS,
     &hydrology::WATERSHED,
+    &hydrology::LONGEST_FLOW_PATH,
     &terrain::ASPECT,
     &terrain::HILLSHADE,
     &terrain::ROUGHNESS_TRI,

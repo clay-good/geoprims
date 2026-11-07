@@ -340,6 +340,16 @@
       ]
     },
     {
+      "id": "dr",
+      "term": "DR",
+      "expansion": "dead reckoning",
+      "definition": "A position worked forward from a known one by course and speed alone, allowing nothing for current or leeway.",
+      "source": "bowditch",
+      "relatedTools": [
+        "navigation.piloting.dead-reckoning"
+      ]
+    },
+    {
       "id": "dut1",
       "term": "DUT1",
       "expansion": "UT1 minus UTC",
@@ -450,6 +460,14 @@
       ]
     },
     {
+      "id": "epa",
+      "term": "EPA",
+      "expansion": "US Environmental Protection Agency",
+      "definition": "The US agency whose quality guidance, EPA QA/G-5S, describes the standard sampling designs: simple random, stratified, and systematic.",
+      "source": "epa-qa-g5s",
+      "relatedTools": []
+    },
+    {
       "id": "epsg",
       "term": "EPSG",
       "expansion": "EPSG Geodetic Parameter Dataset",
@@ -470,6 +488,16 @@
       "definition": "The point on a leg where going on and turning back take the same time. With no wind it is halfway; a headwind on the way out moves it toward the destination. Also called the critical point.",
       "source": "casa-ac-91-15",
       "relatedTools": []
+    },
+    {
+      "id": "etrs89",
+      "term": "ETRS89",
+      "expansion": "European Terrestrial Reference System 1989",
+      "definition": "The reference system European national grids are built on, fixed to the European plate, so it does not drift with it as ITRF and WGS 84 do.",
+      "source": "epsg-crs-registry",
+      "relatedTools": [
+        "geodesy.grid-ref.itm-inverse"
+      ]
     },
     {
       "id": "etsi",
@@ -896,6 +924,17 @@
       ]
     },
     {
+      "id": "itm",
+      "term": "ITM",
+      "expansion": "Irish Transverse Mercator",
+      "definition": "The national grid of Ireland and Northern Ireland since 2001, a single transverse Mercator zone on ETRS89.",
+      "source": "epsg-crs-registry",
+      "relatedTools": [
+        "geodesy.grid-ref.itm-forward",
+        "geodesy.grid-ref.itm-inverse"
+      ]
+    },
+    {
       "id": "itrf",
       "term": "ITRF",
       "expansion": "International Terrestrial Reference Frame",
@@ -1221,50 +1260,6 @@
         "units.length.nm-to-km",
         "units.length.nm-to-mi"
       ]
-    },
-    {
-      "id": "dr",
-      "term": "DR",
-      "expansion": "dead reckoning",
-      "definition": "A position worked forward from a known one by course and speed alone, allowing nothing for current or leeway.",
-      "source": "bowditch",
-      "relatedTools": [
-        "navigation.piloting.dead-reckoning"
-      ]
-    },
-    {
-      "id": "epa",
-      "term": "EPA",
-      "expansion": "US Environmental Protection Agency",
-      "definition": "The US agency whose quality guidance, EPA QA/G-5S, describes the standard sampling designs: simple random, stratified, and systematic.",
-      "source": "epa-qa-g5s",
-      "relatedTools": []
-    },
-    {
-      "id": "sd",
-      "term": "SD",
-      "expansion": "semidiameter",
-      "definition": "Half the apparent width of the Sun or Moon, about 16 minutes of arc; a sextant touches a limb, so this correction takes the sight to the center.",
-      "source": "bowditch",
-      "relatedTools": [
-        "navigation.celestial.altitude-correction"
-      ]
-    },
-    {
-      "id": "sha",
-      "term": "SHA",
-      "expansion": "sidereal hour angle",
-      "definition": "How far west of the first point of Aries a star is, from 0° to 360°; it changes slowly, so a star's GHA is GHA Aries plus its SHA.",
-      "source": "bowditch",
-      "relatedTools": []
-    },
-    {
-      "id": "tvmdc",
-      "term": "TVMDC",
-      "expansion": "true, variation, magnetic, deviation, compass",
-      "definition": "The order of the compass conversion: true heading less variation gives magnetic, and magnetic less deviation gives compass, east counted positive.",
-      "source": "bowditch",
-      "relatedTools": []
     },
     {
       "id": "noaa",
@@ -1691,6 +1686,16 @@
       ]
     },
     {
+      "id": "sd",
+      "term": "SD",
+      "expansion": "semidiameter",
+      "definition": "Half the apparent width of the Sun or Moon, about 16 minutes of arc; a sextant touches a limb, so this correction takes the sight to the center.",
+      "source": "bowditch",
+      "relatedTools": [
+        "navigation.celestial.altitude-correction"
+      ]
+    },
+    {
       "id": "sem",
       "term": "SEM",
       "expansion": "System Effectiveness Model",
@@ -1699,6 +1704,14 @@
       "relatedTools": [
         "survey.gnss.dop"
       ]
+    },
+    {
+      "id": "sha",
+      "term": "SHA",
+      "expansion": "sidereal hour angle",
+      "definition": "How far west of the first point of Aries a star is, from 0° to 360°; it changes slowly, so a star's GHA is GHA Aries plus its SHA.",
+      "source": "bowditch",
+      "relatedTools": []
     },
     {
       "id": "soam",
@@ -1859,6 +1872,14 @@
         "time.moon.rise-set",
         "time.sun.position"
       ]
+    },
+    {
+      "id": "tvmdc",
+      "term": "TVMDC",
+      "expansion": "true, variation, magnetic, deviation, compass",
+      "definition": "The order of the compass conversion: true heading less variation gives magnetic, and magnetic less deviation gives compass, east counted positive.",
+      "source": "bowditch",
+      "relatedTools": []
     },
     {
       "id": "ups",

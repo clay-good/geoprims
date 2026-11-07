@@ -5,6 +5,16 @@
       "date": "2026-11-07",
       "kind": "added",
       "tools": [
+        "geodesy.grid-ref.itm-forward",
+        "geodesy.grid-ref.itm-inverse"
+      ],
+      "vectors": [],
+      "summary": "Two tools convert Irish Transverse Mercator, the grid Ireland and Northern Ireland have used since 2001, either way: a latitude and longitude into easting and northing, or those back into a latitude and longitude, with the grid convergence and the point scale factor beside them, which is what turns a true bearing into a grid bearing and a ground distance into a grid distance. The results say which frame they are on: ITM is defined on ETRS89, fixed to the European plate, and a satellite position is about half a metre away from that today and drifting. These are not Irish Grid coordinates, which are a different projection on a different datum."
+    },
+    {
+      "date": "2026-11-07",
+      "kind": "added",
+      "tools": [
         "geodesy.grid-ref.bng-forward",
         "geodesy.grid-ref.bng-inverse"
       ],

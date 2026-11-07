@@ -1001,6 +1001,13 @@
           ]
         },
         {
+          "want": "convert Irish Transverse Mercator coordinates",
+          "tools": [
+            "itm-forward",
+            "itm-inverse"
+          ]
+        },
+        {
           "want": "convert to or from MGRS or USNG",
           "tools": [
             "mgrs-forward",

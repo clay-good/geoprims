@@ -1298,6 +1298,14 @@
       "expect": "geodesy.grid-ref.bng-inverse"
     },
     {
+      "query": "latitude longitude to Irish Transverse Mercator",
+      "expect": "geodesy.grid-ref.itm-forward"
+    },
+    {
+      "query": "ITM easting northing to latitude longitude",
+      "expect": "geodesy.grid-ref.itm-inverse"
+    },
+    {
       "query": "under keel clearance with squat",
       "expect": "navigation.vessel.under-keel-clearance"
     },

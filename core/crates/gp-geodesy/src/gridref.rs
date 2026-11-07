@@ -1338,3 +1338,386 @@ fn run_bng_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ),
     ]))
 }
+
+// ------------------------------------------------ Irish Transverse Mercator
+
+const OSI_ITM: Reference = Reference {
+    title: "EPSG Geodetic Parameter Dataset (EPSG v13.102 CRS registry)",
+    issuer: "IOGP, from Ordnance Survey Ireland and Land & Property Services",
+    year: 2026,
+    edition: "v13.102, as shipped in PROJ 9.9.0",
+    locator: "EPSG 2157, IRENET95 / Irish Transverse Mercator: GRS 80, latitude of origin 53°30′N, central meridian 8°W, scale 0.999820, false easting 600,000 m, false northing 750,000 m",
+    url: "https://epsg.org/crs_2157/IRENET95-Irish-Transverse-Mercator.html",
+};
+
+/// The ITM projection (EPSG 2157), on GRS 80 and ETRS89.
+fn itm_grid() -> gp_geo::proj::TmGrid {
+    let g = gp_geo::ellipsoid::CATALOG
+        .iter()
+        .find(|e| e.id == "GRS80")
+        .copied()
+        .unwrap_or(gp_geo::ellipsoid::CATALOG[0]);
+    gp_geo::proj::TmGrid::new(g.a, g.f, 53.5, -8.0, 0.999_820, 600_000.0, 750_000.0)
+}
+
+const ITM_FRAME: &str = "ITM is defined on ETRS89, which is fixed to the European plate; a satellite position on WGS 84 or ITRF is about half a metre from it today, and growing. For survey work, move between the frames first.";
+
+pub static ITM_FORWARD: ToolDef = ToolDef {
+    id: "geodesy.grid-ref.itm-forward",
+    title: "Latitude and longitude to Irish Transverse Mercator",
+    summary: "Turns a position into Irish Transverse Mercator easting and northing, the grid Ireland and Northern Ireland have used since 2001, with the scale factor and convergence at the point.",
+    aliases: &[
+        "lat long to ITM",
+        "ITM converter",
+        "Irish Transverse Mercator from coordinates",
+        "latitude longitude to Irish grid coordinates",
+    ],
+    keywords: &[
+        "ITM",
+        "Irish Transverse Mercator",
+        "Ireland",
+        "IRENET95",
+        "ETRS89",
+        "easting",
+        "northing",
+        "EPSG 2157",
+    ],
+    inputs: &[
+        Field::new(
+            "lat",
+            "Latitude",
+            "North positive, like 53.3498",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(9))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "East positive, like -6.2603",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(9))
+        .angle_range("[-180,180)"),
+    ],
+    outputs: &[
+        Field::new(
+            "easting",
+            "Easting",
+            "ITM, from its false origin",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(3)),
+        Field::new(
+            "northing",
+            "Northing",
+            "ITM, from its false origin",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(3)),
+        Field::new(
+            "convergence",
+            "Grid convergence",
+            "Grid north minus true north at the point",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(6))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "scale_factor",
+            "Point scale factor",
+            "Grid distance over ground distance at the point",
+            Kind::Number { min: 0.0, max: 2.0 },
+        )
+        .precision(Precision::Decimals(9)),
+        Field::new(
+            "frame",
+            "Reference frame",
+            "What the coordinates are taken to be",
+            Kind::Text { max_len: 220 },
+        ),
+    ],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["REALIZATION_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Transverse Mercator on GRS 80 with EPSG 2157's parameters: latitude of origin 53°30′N, central meridian 8°W, scale 0.999820 on that meridian, false easting 600,000 m and false northing 750,000 m, by Karney's series",
+    accuracy: "The projection is exact to the series' nanometre over Ireland. The coordinates are taken as ETRS89: read as WGS 84 or ITRF they are about half a metre out today, which is plate motion, not projection",
+    when_to_use: "Use this to put a latitude and longitude onto the Irish national grid in use since 2001, north and south of the border, for a map, a planning reference, or a survey record. It gives the convergence and the point scale factor beside the coordinates, which is what you need to turn a true bearing into a grid bearing or a ground distance into a grid distance.",
+    limitations: "ITM is defined on ETRS89, which is fixed to the European plate, while a satellite gives WGS 84 or ITRF: the two are about half a metre apart today and drift about 2.5 cm a year, so survey work moves between the frames first. This is not the older Irish Grid (TM75), which is a different projection on a different datum and needs the OSi polynomial or its grid; the two are hundreds of metres apart. Heights are untouched.",
+    references: &[OSI_ITM],
+    examples: &[Example {
+        id: "primary",
+        title: "The Spire of Dublin",
+        source: "PROJ 9.9.0 applying EPSG 2157: 53.349806°N 6.260247°W on ETRS89 gives E 715830.980 N 734697.669",
+        input: r#"{"lat":53.349806,"lon":-6.260247}"#,
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.grid-ref.itm-inverse",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.grid-ref.bng-forward",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.datum.itrf",
+            reason: "next",
+        },
+    ],
+    sentence: "That point is E {easting}, N {northing} on ITM.",
+    limits: &[("batchRows", 10_000)],
+    run: run_itm_forward,
+    ..ToolDef::BLANK
+};
+
+fn run_itm_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let g = itm_grid().forward(lat, lon);
+    ctx.warnings
+        .push(Warning::new("REALIZATION_ASSUMED", ITM_FRAME));
+    let m = units::by_symbol(QT::Length, "m").expect("m");
+    let q = |v: f64| Q { value: v, unit: m };
+    if ctx.explaining() {
+        ctx.step(
+            "The frame",
+            "ITM is on ETRS89; a satellite position is on WGS 84 or ITRF",
+            format!("{lat:.7}°, {lon:.7}°"),
+            "taken as ETRS89".to_string(),
+        );
+        ctx.step(
+            "Off the central meridian",
+            "the projection measures the longitude from 8°W",
+            format!("{lon:.7}° against −8°"),
+            format!("{:.7}°", lon + 8.0),
+        );
+        ctx.step(
+            "On the ITM grid",
+            "transverse Mercator, GRS 80, origin 53°30′N 8°W, scale 0.999820, false origin 600 km east and 750 km north",
+            format!("{lat:.7}°, {lon:.7}°"),
+            format!(
+                "{} m",
+                gp_base::display::number(g.e, Precision::Decimals(3), ctx.options.format)
+            ),
+        );
+    }
+    Ok(Json::obj([
+        ("easting", ctx.out("easting", q(g.e))),
+        ("northing", ctx.out("northing", q(g.n))),
+        (
+            "convergence",
+            ctx.out("convergence", deg(g.convergence.to_degrees())),
+        ),
+        ("scale_factor", Json::Num(g.k)),
+        ("frame", Json::str(ITM_FRAME)),
+    ]))
+}
+
+pub static ITM_INVERSE: ToolDef = ToolDef {
+    id: "geodesy.grid-ref.itm-inverse",
+    title: "Irish Transverse Mercator to latitude and longitude",
+    summary: "Turns an Irish Transverse Mercator easting and northing back into a latitude and longitude, with the scale factor and convergence at the point.",
+    aliases: &[
+        "ITM to lat long",
+        "Irish Transverse Mercator to coordinates",
+        "ITM easting northing to latitude longitude",
+        "read ITM coordinates",
+    ],
+    keywords: &[
+        "ITM",
+        "Irish Transverse Mercator",
+        "Ireland",
+        "IRENET95",
+        "ETRS89",
+        "easting",
+        "northing",
+        "EPSG 2157",
+    ],
+    inputs: &[
+        Field::new(
+            "easting",
+            "Easting",
+            "ITM, from its false origin, like 715830.98 m",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(3)),
+        Field::new(
+            "northing",
+            "Northing",
+            "ITM, from its false origin, like 734697.67 m",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(3)),
+    ],
+    outputs: &[
+        Field::new(
+            "lat",
+            "Latitude",
+            "On ETRS89, north positive",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "On ETRS89, east positive",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .angle_range("[-180,180)"),
+        Field::new(
+            "convergence",
+            "Grid convergence",
+            "Grid north minus true north at the point",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(6))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "scale_factor",
+            "Point scale factor",
+            "Grid distance over ground distance at the point",
+            Kind::Number { min: 0.0, max: 2.0 },
+        )
+        .precision(Precision::Decimals(9)),
+        Field::new(
+            "frame",
+            "Reference frame",
+            "What the coordinates are taken to be",
+            Kind::Text { max_len: 220 },
+        ),
+    ],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["REALIZATION_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "The inverse transverse Mercator on GRS 80 with EPSG 2157's parameters (origin 53°30′N 8°W, scale 0.999820, false easting 600,000 m, false northing 750,000 m), by Karney's series",
+    accuracy: "The projection is exact to the series' nanometre over Ireland, and the inverse is the forward's own inverse rather than a separate approximation. The answer is on ETRS89: read as WGS 84 or ITRF it is about half a metre out today",
+    when_to_use: "Use this to read Irish Transverse Mercator coordinates off a plan, a planning file, or a survey record and get the latitude and longitude for a map or a phone. It returns the convergence and the point scale factor as well, which is what turns a grid bearing back into a true one.",
+    limitations: "The answer is on ETRS89, which a satellite position on WGS 84 or ITRF is about half a metre from today, drifting about 2.5 cm a year. These are not Irish Grid (TM75) coordinates, which are a different projection on a different datum, hundreds of metres away; a TM75 easting near 200,000 read as ITM lands in the sea. Heights are untouched.",
+    references: &[OSI_ITM],
+    examples: &[Example {
+        id: "primary",
+        title: "The Spire of Dublin",
+        source: "PROJ 9.9.0 applying EPSG 2157 in reverse: E 715830.980 N 734697.669 gives 53.349806°N 6.260247°W on ETRS89",
+        input: r#"{"easting":"715830.98 m","northing":"734697.669 m"}"#,
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.grid-ref.itm-forward",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.grid-ref.bng-inverse",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.datum.itrf",
+            reason: "next",
+        },
+    ],
+    sentence: "That is {lat}, {lon} on ETRS89.",
+    limits: &[("batchRows", 10_000)],
+    run: run_itm_inverse,
+    ..ToolDef::BLANK
+};
+
+fn run_itm_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let m = units::by_symbol(QT::Length, "m").expect("m");
+    let e = ctx.req_quantity("easting")?.to(m);
+    let n = ctx.req_quantity("northing")?.to(m);
+    if !e.is_finite() || !n.is_finite() {
+        return Err(ToolError::invalid(
+            "/easting",
+            "The easting and northing are metres on the ITM grid.",
+        ));
+    }
+    let grid = itm_grid();
+    let (lat, lon) = grid.inverse(e, n);
+    if !lat.is_finite() || !lon.is_finite() || !(-90.0..=90.0).contains(&lat) {
+        return Err(ToolError::invalid(
+            "/northing",
+            "That easting and northing is not a place on the ITM grid.",
+        ));
+    }
+    let back = grid.forward(lat, lon);
+    ctx.warnings
+        .push(Warning::new("REALIZATION_ASSUMED", ITM_FRAME));
+    if ctx.explaining() {
+        ctx.step(
+            "From the false origin",
+            "the grid counts 600 km east and 750 km north of its true origin",
+            format!("E {e:.3} m, N {n:.3} m"),
+            format!(
+                "{:.3} m east, {:.3} m north of it",
+                e - 600_000.0,
+                n - 750_000.0
+            ),
+        );
+        ctx.step(
+            "Off the ITM grid",
+            "the inverse transverse Mercator, GRS 80, origin 53°30′N 8°W, scale 0.999820",
+            format!("E {e:.3} m, N {n:.3} m"),
+            format!(
+                "{}°",
+                gp_base::display::number(lat, Precision::Decimals(9), ctx.options.format)
+            ),
+        );
+    }
+    Ok(Json::obj([
+        ("lat", ctx.out("lat", deg(lat))),
+        ("lon", ctx.out("lon", deg(lon))),
+        (
+            "convergence",
+            ctx.out("convergence", deg(back.convergence.to_degrees())),
+        ),
+        ("scale_factor", Json::Num(back.k)),
+        ("frame", Json::str(ITM_FRAME)),
+    ]))
+}

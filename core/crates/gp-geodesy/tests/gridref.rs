@@ -234,3 +234,79 @@ fn grid_reference_invariants() {
         }
     }
 }
+
+#[test]
+fn itm_round_trips_and_pins_its_origin() {
+    // add-international-grids, geodesy/national-grids: ITM is EPSG 2157, a
+    // single transverse Mercator zone over the island on ETRS89.
+    let places = [
+        (53.349806, -6.260247),
+        (51.902100, -8.473400),
+        (54.596400, -5.930000),
+        (55.381400, -7.372500),
+        (51.450300, -9.812400),
+    ];
+    for (lat, lon) in places {
+        let f = call(
+            "geodesy.grid-ref.itm-forward",
+            &format!(r#"{{"lat":{lat},"lon":{lon}}}"#),
+        );
+        assert!(f["ok"].as_bool().unwrap_or(false), "{f}");
+        let (e, n) = (
+            f["result"]["easting"]["value"].as_f64().unwrap(),
+            f["result"]["northing"]["value"].as_f64().unwrap(),
+        );
+        let b = call(
+            "geodesy.grid-ref.itm-inverse",
+            &format!(r#"{{"easting":"{e} m","northing":"{n} m"}}"#),
+        );
+        assert!(b["ok"].as_bool().unwrap_or(false), "{b}");
+        assert!(
+            (b["result"]["lat"]["value"].as_f64().unwrap() - lat).abs() < 1e-9,
+            "{b}"
+        );
+        assert!(
+            (b["result"]["lon"]["value"].as_f64().unwrap() - lon).abs() < 1e-9,
+            "{b}"
+        );
+        // Both ends report the same convergence and scale factor at the point.
+        assert!(
+            (f["result"]["convergence"]["value"].as_f64().unwrap()
+                - b["result"]["convergence"]["value"].as_f64().unwrap())
+            .abs()
+                < 1e-9,
+            "{f} vs {b}"
+        );
+    }
+    // On the central meridian at the latitude of origin: the false origin,
+    // no convergence, and the projection's own scale factor.
+    let o = call("geodesy.grid-ref.itm-forward", r#"{"lat":53.5,"lon":-8.0}"#);
+    assert!(
+        (o["result"]["easting"]["value"].as_f64().unwrap() - 600_000.0).abs() < 1e-6,
+        "{o}"
+    );
+    assert!(
+        (o["result"]["northing"]["value"].as_f64().unwrap() - 750_000.0).abs() < 1e-6,
+        "{o}"
+    );
+    assert!(
+        o["result"]["convergence"]["value"].as_f64().unwrap().abs() < 1e-12,
+        "{o}"
+    );
+    assert!(
+        (o["result"]["scale_factor"].as_f64().unwrap() - 0.999_820).abs() < 1e-12,
+        "{o}"
+    );
+
+    // ITM and the National Grid are different grids: an ITM easting read as a
+    // British one lands far away, which is why they are separate tools.
+    let dublin = call(
+        "geodesy.grid-ref.itm-forward",
+        r#"{"lat":53.349806,"lon":-6.260247}"#,
+    );
+    let e = dublin["result"]["easting"]["value"].as_f64().unwrap();
+    assert!(
+        e > 700_000.0,
+        "ITM eastings near Dublin are past the British grid's reach: {e}"
+    );
+}

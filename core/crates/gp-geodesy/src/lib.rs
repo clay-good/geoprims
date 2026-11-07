@@ -3310,6 +3310,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &frames::FROM_LOCAL,
     &gridref::BNG_FORWARD,
     &gridref::BNG_INVERSE,
+    &gridref::ITM_FORWARD,
+    &gridref::ITM_INVERSE,
     &gridref::USNG_FORWARD,
     &gridref::USNG_INVERSE,
     &gridref::MAIDENHEAD_FORWARD,

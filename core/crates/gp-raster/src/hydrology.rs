@@ -681,3 +681,449 @@ fn run_fill(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("method_used", Json::str(used)),
     ]))
 }
+
+// --------------------------------------------------------- flow direction
+
+const OCALLAGHAN: Reference = Reference {
+    title: "The extraction of drainage networks from digital elevation data",
+    issuer: "O'Callaghan, J. F., and Mark, D. M., Computer Vision, Graphics, and Image Processing",
+    year: 1984,
+    edition: "Volume 28, issue 3, pages 323-344 (DOI 10.1016/S0734-189X(84)80011-0)",
+    locator: "The steepest-descent rule that sends each cell's water to one of its eight neighbours, the D8 method",
+    url: "https://doi.org/10.1016/S0734-189X(84)80011-0",
+};
+const TARBOTON: Reference = Reference {
+    title: "A new method for the determination of flow directions and upslope areas in grid digital elevation models",
+    issuer: "Tarboton, D. G., Water Resources Research",
+    year: 1997,
+    edition: "Volume 33, issue 2, pages 309-319 (DOI 10.1029/96WR03137)",
+    locator: "Equations (1) to (6) and Table 1: the steepest slope over the eight triangular facets of a 3 by 3 window, and the facet factors a_c and a_f that turn a facet's angle into one measured counterclockwise from east",
+    url: "https://hydrology.usu.edu/dtarb/96WR03137.pdf",
+};
+const WHITEBOX_POINTER: Reference = Reference {
+    title: "D8 flow pointer (direction), Whitebox GAT help",
+    issuer: "Lindsay, J. B., Guelph Hydrologic Research Group",
+    year: 2026,
+    edition: "Whitebox GAT help page, read 2026-11-06",
+    locator: "The clockwise base-2 pointer convention, in which a cell that flows to the northwest is assigned 64, and cells with no lower neighbour are assigned zero",
+    url: "https://jblindsay.github.io/ghrg/Whitebox/Help/FlowPointerD8.html",
+};
+const TAUDEM_D8: Reference = Reference {
+    title: "D8 Flow Directions, TauDEM 5 help",
+    issuer: "Tarboton, D. G., Utah State University",
+    year: 2026,
+    edition: "TauDEM 5 documentation, read 2026-11-06",
+    locator: "D8 flow direction coding: 1 east through 8 southeast, counterclockwise from east",
+    url: "https://hydrology.usu.edu/taudem/taudem5/help/d8flowdirections.html",
+};
+
+/// The eight neighbours in ESRI's order, east first and clockwise, with the
+/// row and column step, the ESRI code, the WhiteboxTools code, and the TauDEM
+/// code. A tie in slope goes to the first of these, as the spec requires.
+const DIRS: [(i64, i64, u32, u32, u32); 8] = [
+    (0, 1, 1, 2, 1),     // east
+    (1, 1, 2, 4, 8),     // south-east
+    (1, 0, 4, 8, 7),     // south
+    (1, -1, 8, 16, 6),   // south-west
+    (0, -1, 16, 32, 5),  // west
+    (-1, -1, 32, 64, 4), // north-west
+    (-1, 0, 64, 128, 3), // north
+    (-1, 1, 128, 1, 2),  // north-east
+];
+
+/// A step from the centre cell, as a row and column offset.
+type Step = (i64, i64);
+/// Tarboton's Table 1: for each facet, the cardinal neighbour e1, the diagonal
+/// neighbour e2, and the factors a_c and a_f of his equation (6).
+const FACETS: [(Step, Step, f64, f64); 8] = [
+    ((0, 1), (-1, 1), 0.0, 1.0),
+    ((-1, 0), (-1, 1), 1.0, -1.0),
+    ((-1, 0), (-1, -1), 1.0, 1.0),
+    ((0, -1), (-1, -1), 2.0, -1.0),
+    ((0, -1), (1, -1), 2.0, 1.0),
+    ((1, 0), (1, -1), 3.0, -1.0),
+    ((1, 0), (1, 1), 3.0, 1.0),
+    ((0, 1), (1, 1), 4.0, -1.0),
+];
+
+fn at(z: &[f64], w: usize, h: usize, r: i64, c: i64) -> Option<f64> {
+    (r >= 0 && r < h as i64 && c >= 0 && c < w as i64)
+        .then(|| z[r as usize * w + c as usize])
+        .filter(|v| !v.is_nan())
+}
+
+/// D8 for one cell: the neighbour of steepest descent, as an index into DIRS,
+/// with its slope. None when nothing around it is lower.
+fn d8(z: &[f64], w: usize, h: usize, i: usize, cell: f64) -> Option<(usize, f64)> {
+    let (r, c) = ((i / w) as i64, (i % w) as i64);
+    let z0 = z[i];
+    let mut best: Option<(usize, f64)> = None;
+    for (k, (dr, dc, ..)) in DIRS.iter().enumerate() {
+        let Some(zn) = at(z, w, h, r + dr, c + dc) else {
+            continue;
+        };
+        let dist = if dr.abs() + dc.abs() == 2 {
+            cell * std::f64::consts::SQRT_2
+        } else {
+            cell
+        };
+        let slope = (z0 - zn) / dist;
+        if slope > 0.0 && best.is_none_or(|(_, s)| slope > s) {
+            best = Some((k, slope));
+        }
+    }
+    best
+}
+
+/// D-infinity for one cell (Tarboton 1997): the steepest of the eight facets,
+/// as an angle counterclockwise from east in radians and its slope. None when
+/// no facet descends.
+fn dinf(z: &[f64], w: usize, h: usize, i: usize, cell: f64) -> Option<(f64, f64)> {
+    let (r, c) = ((i / w) as i64, (i % w) as i64);
+    let e0 = z[i];
+    // atan2(d2, d1) of Tarboton's equation (5). The cells here are square, so
+    // d1 = d2 = the cell size and the facet's far edge is at π/4.
+    let mut best: Option<(f64, f64)> = None;
+    for ((dr1, dc1), (dr2, dc2), ac, af) in FACETS {
+        let (Some(e1), Some(e2)) = (at(z, w, h, r + dr1, c + dc1), at(z, w, h, r + dr2, c + dc2))
+        else {
+            continue;
+        };
+        let (s1, s2) = ((e0 - e1) / cell, (e1 - e2) / cell);
+        let (mut rr, mut s) = (s2.atan2(s1), s1.hypot(s2));
+        if rr < 0.0 {
+            rr = 0.0;
+            s = s1;
+        } else if rr > std::f64::consts::FRAC_PI_4 {
+            rr = std::f64::consts::FRAC_PI_4;
+            s = (e0 - e2) / (cell * cell + cell * cell).sqrt();
+        }
+        if s > 0.0 && best.is_none_or(|(_, bs)| s > bs) {
+            let rg = (af * rr + ac * std::f64::consts::FRAC_PI_2).rem_euclid(std::f64::consts::TAU);
+            best = Some((rg, s));
+        }
+    }
+    best
+}
+
+pub static FLOW_DIRECTION: ToolDef = ToolDef {
+    id: "raster.hydrology.flow-direction",
+    title: "Flow direction over a DEM",
+    summary: "Which way water leaves every cell of an elevation grid, by steepest descent to one of eight neighbors or by the continuous D-infinity angle, in the pointer encoding your software reads.",
+    aliases: &[
+        "D8 flow direction",
+        "flow pointer grid",
+        "D-infinity flow direction",
+        "steepest descent direction",
+    ],
+    keywords: &[
+        "flow",
+        "direction",
+        "D8",
+        "pointer",
+        "D-infinity",
+        "hydrology",
+        "DEM",
+        "drainage",
+    ],
+    inputs: &[
+        Field::new(
+            "elevations",
+            "Elevation grid",
+            "Rows of elevations in meters, north row first, west to east, like 101.2, 100.6, 100.2",
+            Kind::List {
+                items: ROW,
+                min: 2,
+                max: MAX_SIDE,
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "cell_size",
+            "Cell size",
+            "The ground size of one cell, like 30 m",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "method",
+            "Method",
+            "One neighbor by steepest descent, or the D-infinity angle, like d8",
+            Kind::Choice(&["d8", "d-infinity"]),
+        )
+        .core(),
+        Field::new(
+            "encoding",
+            "Pointer encoding",
+            "Which table of codes the directions use, like esri",
+            Kind::Choice(&["esri", "whitebox", "taudem"]),
+        )
+        .core(),
+        Field::new(
+            "no_data",
+            "No-data value",
+            "A value that marks a missing elevation, like -9999",
+            Kind::Number {
+                min: -1e12,
+                max: 1e12,
+            },
+        ),
+    ],
+    outputs: &[
+        Field::new(
+            "resolved",
+            "Cells with a direction",
+            "How many cells drain somewhere",
+            Kind::Number { min: 0.0, max: 1e9 },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "off_grid",
+            "Cells draining out of the window",
+            "On the edge or beside no data, with nothing lower inside",
+            Kind::Number { min: 0.0, max: 1e9 },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "no_outflow",
+            "Cells with nowhere to go",
+            "Interior cells with no lower neighbor; condition the grid first",
+            Kind::Number { min: 0.0, max: 1e9 },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "directions",
+            "Direction grid",
+            "The pointer code for each cell, north row first",
+            Kind::List {
+                items: ROW,
+                min: 2,
+                max: MAX_SIDE,
+            },
+        ),
+        Field::new(
+            "angles",
+            "Angle grid",
+            "D-infinity angles in radians counterclockwise from east, −1 where unresolved",
+            Kind::List {
+                items: ROW,
+                min: 0,
+                max: MAX_SIDE,
+            },
+        )
+        .optional(),
+        Field::new(
+            "steepest",
+            "Steepest descent",
+            "The largest slope found, rise over run",
+            Kind::Number { min: 0.0, max: 1e6 },
+        )
+        .precision(Precision::Decimals(6)),
+        Field::new(
+            "encoding_used",
+            "Encoding",
+            "The table the codes come from",
+            Kind::Text { max_len: 200 },
+        ),
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::LimitExceeded],
+    warnings: &["PITS_PRESENT", "EXPERIMENTAL_TOOL"],
+    model: "D8 (O'Callaghan and Mark 1984): the neighbour of steepest descent, slope (z0 − zn) / d with d the cell size, or √2 times it diagonally; ties go to the first neighbour in ESRI's order, east and clockwise. D-infinity (Tarboton 1997, equations 1 to 6 and Table 1): the steepest of the eight triangular facets of the 3 by 3 window, as an angle counterclockwise from east. Codes: ESRI (E 1, SE 2, S 4, SW 8, W 16, NW 32, N 64, NE 128), WhiteboxTools (clockwise base two from NE 1, so E 2 and NW 64), or TauDEM (1 east through 8 south-east, counterclockwise); 0 where a cell has no lower neighbour",
+    accuracy: "Exact in the arithmetic of each published rule: the direction is the steepest of the eight, and the D-infinity angle is the facet angle of Tarboton's equation (6)",
+    when_to_use: "Use this after conditioning a DEM to see where water goes from each cell, or to produce the pointer grid another tool or GIS expects. Pick the encoding your software reads: ESRI's powers of two, WhiteboxTools's clockwise table, or TauDEM's 1 to 8. D-infinity gives the continuous angle instead, which spreads flow more faithfully on a hillslope but cannot be followed cell to cell.",
+    limitations: "It is the published rule and nothing more: flats have no steepest descent, so a cell with no lower neighbour gets 0 and the result counts them, which is why a conditioned grid comes first. Cells on the window's edge, and cells beside no data, drain out of the data when nothing inside is lower. The grid is plane: cell area and diagonal distance come from the cell size, so a geographic grid needs its cell size in meters at the latitude. The window holds at most 25,000 cells.",
+    references: &[OCALLAGHAN, TARBOTON, WHITEBOX_POINTER, TAUDEM_D8],
+    examples: &[Example {
+        id: "primary",
+        title: "A 10 by 10 ramp falling to the east",
+        source: "add-raster-hydrology raster/hydrology, the Ramp scenario: every cell points east, which is 1 in the ESRI table",
+        input: r#"{"elevations":[{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"}],"cell_size":"30 m","method":"d8","encoding":"esri"}"#,
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "raster.hydrology.fill",
+            reason: "parent",
+        },
+        Related {
+            id: "raster.terrain.aspect",
+            reason: "alternative",
+        },
+        Related {
+            id: "raster.terrain.slope",
+            reason: "next",
+        },
+    ],
+    sentence: "{resolved} cells have a flow direction.",
+    limits: &[("batchRows", 1)],
+    run: run_flow_direction,
+    ..ToolDef::BLANK
+};
+
+fn run_flow_direction(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let m = units::by_symbol(QT::Length, "m").expect("m");
+    let no_data = ctx.number("no_data")?;
+    let grid = read_grid(ctx, "elevations", no_data)?;
+    let (h, w) = (grid.len(), grid[0].len());
+    if h * w > MAX_CELLS {
+        return Err(ToolError::new(
+            ErrorCode::LimitExceeded,
+            format!(
+                "The window holds {} cells; this tool takes {MAX_CELLS}. Clip it smaller.",
+                h * w
+            ),
+        )
+        .at("/elevations"));
+    }
+    let cell = ctx.req_quantity("cell_size")?.to(m);
+    if !(cell.is_finite() && cell > 0.0) {
+        return Err(ToolError::invalid(
+            "/cell_size",
+            "The cell size must be more than zero.",
+        ));
+    }
+    let method = ctx.choice("method")?.unwrap_or("d8");
+    let encoding = ctx.choice("encoding")?.unwrap_or("esri");
+    let code = |k: usize| match encoding {
+        "whitebox" => DIRS[k].3,
+        "taudem" => DIRS[k].4,
+        _ => DIRS[k].2,
+    };
+    let z: Vec<f64> = grid.iter().flatten().copied().collect();
+    let (mut resolved, mut off_grid, mut no_outflow, mut steepest) =
+        (0usize, 0usize, 0usize, 0.0f64);
+    let mut codes = vec![0u32; z.len()];
+    let mut angles = vec![-1.0f64; z.len()];
+    for i in 0..z.len() {
+        if z[i].is_nan() {
+            continue;
+        }
+        let (r, c) = (i / w, i % w);
+        let border = r == 0
+            || c == 0
+            || r + 1 == h
+            || c + 1 == w
+            || neighbours(i, w, h).any(|n| z[n].is_nan());
+        match method {
+            "d-infinity" => match dinf(&z, w, h, i, cell) {
+                Some((angle, slope)) => {
+                    angles[i] = angle;
+                    steepest = steepest.max(slope);
+                    resolved += 1;
+                    // The pointer grid still carries D8, so a reader can follow
+                    // the water cell to cell, as every published D-infinity
+                    // implementation keeps one.
+                    if let Some((k, _)) = d8(&z, w, h, i, cell) {
+                        codes[i] = code(k);
+                    }
+                }
+                None => {
+                    if border {
+                        off_grid += 1;
+                    } else {
+                        no_outflow += 1;
+                    }
+                }
+            },
+            _ => match d8(&z, w, h, i, cell) {
+                Some((k, slope)) => {
+                    codes[i] = code(k);
+                    steepest = steepest.max(slope);
+                    resolved += 1;
+                }
+                None => {
+                    if border {
+                        off_grid += 1;
+                    } else {
+                        no_outflow += 1;
+                    }
+                }
+            },
+        }
+    }
+    if no_outflow > 0 {
+        ctx.warnings.push(Warning::new(
+            "PITS_PRESENT",
+            format!(
+                "{no_outflow} interior cells have no lower neighbour, so water stops there. Condition the grid with the fill tool first."
+            ),
+        ));
+    }
+    let rows_of = |f: &dyn Fn(usize) -> String| -> Vec<Json> {
+        (0..h)
+            .map(|r| {
+                let text = (0..w).map(|c| f(r * w + c)).collect::<Vec<_>>().join(", ");
+                Json::obj([("row", Json::str(text))])
+            })
+            .collect()
+    };
+    let nd = |i: usize| z[i].is_nan();
+    let dir_rows = rows_of(&|i| {
+        if nd(i) {
+            no_data.map_or_else(
+                || "NaN".to_string(),
+                |n| gp_base::num::format_f64(n).unwrap_or_else(|| "NaN".to_string()),
+            )
+        } else {
+            codes[i].to_string()
+        }
+    });
+    let named = match encoding {
+        "whitebox" => {
+            "WhiteboxTools: clockwise base two from NE 1, so E 2, SE 4, S 8, SW 16, W 32, NW 64, N 128; 0 where nothing is lower"
+        }
+        "taudem" => {
+            "TauDEM: 1 east, 2 north-east, 3 north, 4 north-west, 5 west, 6 south-west, 7 south, 8 south-east; 0 where nothing is lower"
+        }
+        _ => "ESRI: E 1, SE 2, S 4, SW 8, W 16, NW 32, N 64, NE 128; 0 where nothing is lower",
+    };
+    if ctx.explaining() {
+        ctx.step(
+            "Steepest descent",
+            "slope = (z0 − zn) / d, d the cell size or √2 times it diagonally",
+            format!("{} cells of {cell} m", h * w),
+            format!("steepest {steepest:.6}"),
+        );
+        ctx.step(
+            "Direction",
+            if method == "d-infinity" {
+                "the steepest of the eight triangular facets (Tarboton 1997)"
+            } else {
+                "the neighbour of steepest descent (D8)"
+            },
+            named.to_string(),
+            format!("{resolved}"),
+        );
+    }
+    let mut out = vec![
+        ("resolved", Json::Num(resolved as f64)),
+        ("off_grid", Json::Num(off_grid as f64)),
+        ("no_outflow", Json::Num(no_outflow as f64)),
+        ("directions", Json::Arr(dir_rows)),
+    ];
+    if method == "d-infinity" {
+        let angle_rows = rows_of(&|i| {
+            if nd(i) {
+                no_data.map_or_else(
+                    || "NaN".to_string(),
+                    |n| gp_base::num::format_f64(n).unwrap_or_else(|| "NaN".to_string()),
+                )
+            } else {
+                gp_base::num::format_f64(angles[i]).unwrap_or_else(|| "NaN".to_string())
+            }
+        });
+        out.push(("angles", Json::Arr(angle_rows)));
+    }
+    out.push(("steepest", Json::Num(steepest)));
+    out.push(("encoding_used", Json::str(named)));
+    Ok(Json::obj(out))
+}

@@ -5,6 +5,15 @@
       "date": "2026-11-06",
       "kind": "added",
       "tools": [
+        "raster.hydrology.flow-direction"
+      ],
+      "vectors": [],
+      "summary": "A second hydrology tool says which way water leaves every cell of an elevation grid. D8 sends each cell's water to whichever of its eight neighbours lies steepest downhill, which is what a watershed or a stream network needs, because it makes the grid something you can walk cell to cell. D-infinity gives the angle instead, which is truer on a hillslope where the water spreads between two neighbours. The pointer grid comes in whichever of the three tables your software reads: the powers of two that ArcGIS uses, the WhiteboxTools table, or TauDEM's 1 to 8. Cells with no lower neighbour get a zero, and the result counts them apart from the ones that simply drain out of the window, with a warning to condition the grid first."
+    },
+    {
+      "date": "2026-11-06",
+      "kind": "added",
+      "tools": [
         "raster.hydrology.fill"
       ],
       "vectors": [],

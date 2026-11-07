@@ -1266,6 +1266,14 @@
       "expect": "navigation.tide.predict"
     },
     {
+      "query": "fill sinks in a DEM before flow accumulation",
+      "expect": "raster.hydrology.fill"
+    },
+    {
+      "query": "D8 flow direction pointer grid",
+      "expect": "raster.hydrology.flow-direction"
+    },
+    {
       "query": "under keel clearance with squat",
       "expect": "navigation.vessel.under-keel-clearance"
     },

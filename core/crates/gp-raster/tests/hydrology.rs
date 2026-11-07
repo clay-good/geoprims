@@ -223,3 +223,157 @@ fn windows_past_the_cap_are_refused() {
     let r = run(json!({"elevations": rows, "cell_size": "10 m"}));
     assert_eq!(r["error"]["code"], "LIMIT_EXCEEDED", "{r}");
 }
+
+fn flow(input: Value) -> Value {
+    serde_json::from_str(&REGISTRY.invoke("raster.hydrology.flow-direction", &input.to_string()))
+        .unwrap()
+}
+
+/// The direction grid as numbers.
+fn codes(r: &Value) -> Vec<Vec<f64>> {
+    r["result"]["directions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|row| {
+            row["row"]
+                .as_str()
+                .unwrap()
+                .split(',')
+                .map(|v| v.trim().parse::<f64>().unwrap())
+                .collect()
+        })
+        .collect()
+}
+
+fn ramp(n: usize) -> Vec<Value> {
+    (0..n)
+        .map(|_| {
+            json!({"row": (0..n).map(|c| format!("{}", 100 - c as i64)).collect::<Vec<_>>().join(", ")})
+        })
+        .collect()
+}
+
+#[test]
+fn flow_direction_scenarios() {
+    // Ramp: a 10 x 10 DEM falling east. Every cell points east, which is 1 in
+    // the ESRI table, 2 in the WhiteboxTools table, and 1 in TauDEM's.
+    for (encoding, east) in [("esri", 1.0), ("whitebox", 2.0), ("taudem", 1.0)] {
+        let r = flow(
+            json!({"elevations": ramp(10), "cell_size": "30 m", "method": "d8", "encoding": encoding}),
+        );
+        let z = codes(&r);
+        for (i, row) in z.iter().enumerate() {
+            for (j, v) in row.iter().enumerate() {
+                // The east column has nothing lower to the east: it drains off
+                // the grid and carries no code.
+                let expected = if j + 1 == row.len() { 0.0 } else { east };
+                assert_eq!(*v, expected, "{encoding} at {i},{j}: {r}");
+            }
+        }
+        assert!(
+            r["result"]["encoding_used"]
+                .as_str()
+                .unwrap()
+                .to_lowercase()
+                .contains(if encoding == "esri" { "esri" } else { encoding }),
+            "{r}"
+        );
+    }
+    // The same ramp by D-infinity: every resolved angle is 0 radians, east.
+    let d = flow(json!({"elevations": ramp(10), "cell_size": "30 m", "method": "d-infinity"}));
+    for row in d["result"]["angles"].as_array().unwrap() {
+        for v in row["row"].as_str().unwrap().split(',') {
+            let a: f64 = v.trim().parse().unwrap();
+            assert!(a == 0.0 || a == -1.0, "angle {a} on an east ramp: {d}");
+        }
+    }
+}
+
+#[test]
+fn flow_direction_invariants() {
+    // Every code is one of the encoding's eight, or zero.
+    let hill: Vec<Value> = (0..12)
+        .map(|r| {
+            json!({"row": (0..12)
+                .map(|c| format!("{:.3}", 120.0 - (f64::from(r) - 5.5).abs() - (f64::from(c) - 5.5).abs()))
+                .collect::<Vec<_>>().join(", ")})
+        })
+        .collect();
+    for (encoding, allowed) in [
+        (
+            "esri",
+            vec![0.0, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0],
+        ),
+        (
+            "whitebox",
+            vec![0.0, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0],
+        ),
+        ("taudem", vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]),
+    ] {
+        let r = flow(
+            json!({"elevations": hill, "cell_size": "10 m", "method": "d8", "encoding": encoding}),
+        );
+        for row in codes(&r) {
+            for v in row {
+                assert!(
+                    allowed.contains(&v),
+                    "{encoding}: code {v} is not in the table"
+                );
+            }
+        }
+    }
+
+    // Turning the grid turns the direction: a ramp falling east read upside
+    // down falls west, and east and west are opposite codes in every table.
+    let east = flow(json!({"elevations": ramp(6), "cell_size": "10 m", "method": "d8"}));
+    let west_rows: Vec<Value> = (0..6)
+        .map(|_| json!({"row": (0..6).map(|c| format!("{}", 95 + c as i64)).collect::<Vec<_>>().join(", ")}))
+        .collect();
+    let west = flow(json!({"elevations": west_rows, "cell_size": "10 m", "method": "d8"}));
+    assert_eq!(codes(&east)[0][0], 1.0, "{east}");
+    assert_eq!(codes(&west)[0][5], 16.0, "{west}");
+
+    // D8 and D-infinity agree on a plane: the angle is the D8 direction.
+    let diag: Vec<Value> = (0..7)
+        .map(|r| {
+            json!({"row": (0..7).map(|c| format!("{}", 100 - r - c)).collect::<Vec<_>>().join(", ")})
+        })
+        .collect();
+    let d8r = flow(json!({"elevations": diag, "cell_size": "10 m", "method": "d8"}));
+    let dinf = flow(json!({"elevations": diag, "cell_size": "10 m", "method": "d-infinity"}));
+    assert_eq!(
+        codes(&d8r)[0][0],
+        2.0,
+        "south-east is 2 in the ESRI table: {d8r}"
+    );
+    let a: f64 = dinf["result"]["angles"].as_array().unwrap()[0]["row"]
+        .as_str()
+        .unwrap()
+        .split(',')
+        .next()
+        .unwrap()
+        .trim()
+        .parse()
+        .unwrap();
+    // South-east, counterclockwise from east, is 7π/4.
+    assert!(
+        (a - 7.0 * std::f64::consts::FRAC_PI_4).abs() < 1e-12,
+        "angle {a}: {dinf}"
+    );
+
+    // An unconditioned pit has nowhere to go, and says so; conditioning it first
+    // leaves no such cell.
+    let pit = json!({"elevations": [
+        {"row": "100, 100, 100"}, {"row": "100, 95, 100"}, {"row": "100, 100, 100"}],
+        "cell_size": "10 m", "method": "d8"});
+    let r = flow(pit);
+    assert_eq!(r["result"]["no_outflow"], 1, "{r}");
+    let codes: Vec<&str> = r["meta"]["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|w| w["code"].as_str().unwrap())
+        .collect();
+    assert!(codes.contains(&"PITS_PRESENT"), "{r}");
+}

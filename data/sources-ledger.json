@@ -4216,6 +4216,86 @@
       "editionCheck": true
     },
     {
+      "id": "ocallaghan-mark-1984",
+      "name": "The extraction of drainage networks from digital elevation data",
+      "issuer": "O'Callaghan, J. F., and Mark, D. M., Computer Vision, Graphics, and Image Processing",
+      "currentEdition": "Volume 28, issue 3 (1984), pages 323-344",
+      "currentReleaseDate": "1984-12-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-11-06",
+      "verificationNote": "The D8 steepest-descent rule, cited for the method rather than read at the publisher: the paper is behind Elsevier's paywall. The rule as implemented here is the one Tarboton (1997) restates in his account of previous methods, which was read in full on 2026-11-06. DOI 10.1016/S0734-189X(84)80011-0.",
+      "freeAccessUrl": "https://doi.org/10.1016/S0734-189X(84)80011-0",
+      "matchTerms": [
+        "extraction of drainage networks"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
+      "id": "tarboton-dinfinity-1997",
+      "name": "A new method for the determination of flow directions and upslope areas in grid digital elevation models",
+      "issuer": "Tarboton, D. G., Water Resources Research",
+      "currentEdition": "Volume 33, issue 2 (1997), pages 309-319",
+      "currentReleaseDate": "1997-02-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-11-06",
+      "verificationNote": "Read on 2026-11-06 in the author's copy at hydrology.usu.edu: equations (1) to (6), Table 1's facet elevations with the factors a_c and a_f, and the rule that the facets are searched in order 1 to 8 with ties going to the first. DOI 10.1029/96WR03137.",
+      "freeAccessUrl": "https://hydrology.usu.edu/dtarb/96WR03137.pdf",
+      "matchTerms": [
+        "determination of flow directions and upslope areas"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
+      "id": "whitebox-d8-pointer",
+      "name": "D8 flow pointer (direction), Whitebox GAT help",
+      "issuer": "Lindsay, J. B., Guelph Hydrologic Research Group",
+      "currentEdition": "Whitebox GAT help page",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-11-06",
+      "verificationNote": "Read on 2026-11-06: the clockwise base-two pointer convention, with a cell flowing north-west assigned 64 and cells with no lower neighbour assigned zero. The full table is a figure, so the other codes follow from the convention it states and were checked against the change's own scenario, in which east is 2.",
+      "freeAccessUrl": "https://jblindsay.github.io/ghrg/Whitebox/Help/FlowPointerD8.html",
+      "matchTerms": [
+        "D8 flow pointer"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
+      "id": "taudem-d8-directions",
+      "name": "D8 Flow Directions, TauDEM 5 help",
+      "issuer": "Tarboton, D. G., Utah State University",
+      "currentEdition": "TauDEM 5 documentation",
+      "currentReleaseDate": null,
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-11-06",
+      "verificationNote": "Read on 2026-11-06: D8 flow direction coding 1 east through 8 south-east, counterclockwise from east, and cells on the edge or beside no data left without a direction.",
+      "freeAccessUrl": "https://hydrology.usu.edu/taudem/taudem5/help/d8flowdirections.html",
+      "matchTerms": [
+        "D8 Flow Directions"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "barnes-priority-flood-2014",
       "name": "Priority-flood: An optimal depression-filling and watershed-labeling algorithm for digital elevation models",
       "issuer": "Barnes, R., Lehman, C., and Mulla, D., Computers & Geosciences",

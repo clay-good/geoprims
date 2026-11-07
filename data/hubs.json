@@ -2078,6 +2078,12 @@
           "tools": [
             "fill"
           ]
+        },
+        {
+          "want": "see which way each cell drains",
+          "tools": [
+            "flow-direction"
+          ]
         }
       ]
     },

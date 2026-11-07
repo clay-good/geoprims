@@ -521,10 +521,11 @@
     const [r, args, at] = [result, drawnArgs, tool.id];
     handoff = null;
     if (!r?.ok || !compute) return;
-    import('../lib/handoff.mjs').then(({ handoff: find }) => {
-      const h = find(at, r, args);
-      if (h && result === r) compute.encodeLink(h.state).then((enc) => (handoff = enc?.ok && result === r ? { ...h, href: `${routeOf(h.id)}#${enc.result.fragment}` } : null));
-    });
+    import('../lib/handoff.mjs')
+      .then(({ handoff: find }) => find(at, r, args))
+      .then((h) => {
+        if (h && result === r) compute.encodeLink(h.state).then((enc) => (handoff = enc?.ok && result === r ? { ...h, href: `${routeOf(h.id)}#${enc.result.fragment}` } : null));
+      });
   });
   async function copyRow(k, v) {
     await navigator.clipboard.writeText(v);

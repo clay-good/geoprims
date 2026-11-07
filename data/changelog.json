@@ -5,6 +5,20 @@
       "date": "2026-11-07",
       "kind": "changed",
       "tools": [
+        "raster.hydrology.fill",
+        "raster.hydrology.flow-direction",
+        "raster.hydrology.flow-accumulation",
+        "raster.hydrology.streams",
+        "raster.hydrology.watershed",
+        "raster.hydrology.longest-flow-path"
+      ],
+      "vectors": [],
+      "summary": "The six hydrology tools now hand their work along. Every flow tool tells you to condition the grid first, and the fill tool's answer is exactly what they want, so its page now offers to carry the conditioned grid straight into the flow tools, with the cell size and the no-data value. The tools also point at each other in the order you would use them: fill, flow direction, accumulation, streams, watershed, longest path. A test routes water over a conditioned grid and over the grid as entered, and shows the difference: no cell left stranded in the first, a pit swallowing the bowl in the second."
+    },
+    {
+      "date": "2026-11-07",
+      "kind": "changed",
+      "tools": [
         "raster.hydrology.streams",
         "raster.hydrology.watershed"
       ],

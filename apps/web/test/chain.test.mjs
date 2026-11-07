@@ -6,7 +6,9 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { cameFrom, chainHref, chainState, chainTargets, MAX_TARGETS, routeOf } from '../src/lib/chain.mjs';
-import { fuelHandoff, tideHandoff, windHandoff } from '../src/lib/handoff.mjs';
+import { fuelHandoff, windHandoff } from '../src/lib/handoff/aviation.mjs';
+import { tideHandoff } from '../src/lib/handoff/navigation.mjs';
+import { hydrologyHandoff } from '../src/lib/handoff/raster.mjs';
 import { nodeHost } from '../../../packages/runtime/src/node.mjs';
 
 const web = new URL('..', import.meta.url).pathname;
@@ -181,4 +183,44 @@ test('a predicted tide goes to the datum tool with its datum and the station she
   const app = readFileSync(join(web, 'src/components/ToolApp.svelte'), 'utf8');
   assert.match(app, /import\('\.\.\/lib\/handoff\.mjs'\)/);
   assert.doesNotMatch(app, /from '\.\.\/lib\/handoff\.mjs'/);
+});
+
+test('a conditioned DEM goes on to the flow tools, pits and all out of the way', async () => {
+  // raster/hydrology: every flow tool's limitations say to condition first.
+  const invoke = async (id, i) => JSON.parse(await host.invoke(id, JSON.stringify(i)));
+  const bowl = [
+    '100, 100, 100, 100, 100, 100, 100',
+    '100, 99, 99, 99, 99, 99, 100',
+    '100, 99, 98, 98, 98, 99, 100',
+    '100, 99, 98, 95, 98, 99, 100',
+    '100, 99, 98, 98, 98, 99, 100',
+    '100, 99, 99, 99, 99, 99, 100',
+    '100, 100, 100, 100, 100, 100, 100',
+  ];
+  const input = { elevations: bowl.map((row) => ({ row })), cell_size: '10 m', method: 'fill' };
+  const filled = await invoke('raster.hydrology.fill', input);
+  assert.ok(filled.ok, JSON.stringify(filled.error));
+  const h = hydrologyHandoff('raster.hydrology.fill', filled, input);
+  assert.equal(h.id, 'raster.hydrology.flow-accumulation');
+  // The grid handed on is the conditioned one, not the one entered.
+  assert.notDeepEqual(h.state.i.elevations, input.elevations);
+  assert.deepEqual(h.state.i.elevations, filled.result.conditioned.map((r) => ({ row: r.row })));
+
+  // Routed over the conditioned grid, nothing is left with nowhere to go;
+  // routed over the one the reader entered, the pit swallows the bowl.
+  const routed = await invoke(h.id, h.state.i);
+  assert.ok(routed.ok, JSON.stringify(routed.error));
+  assert.equal(routed.result.pits, 0, JSON.stringify(routed.result).slice(0, 200));
+  // The same grid unconditioned, without the fill tool's own method choice.
+  const raw = await invoke('raster.hydrology.flow-accumulation', { elevations: input.elevations, cell_size: input.cell_size });
+  assert.equal(raw.result.pits, 1, JSON.stringify(raw.result).slice(0, 200));
+
+  // The link carries the whole grid, within the link's size limit.
+  const enc = await link(h.state);
+  assert.ok(enc.ok, JSON.stringify(enc).slice(0, 200));
+  assert.deepEqual((await unlink(enc.result.fragment)).result.state.i, h.state.i);
+
+  // No cell size, no hand-off; and no other tool offers this one.
+  assert.equal(hydrologyHandoff('raster.hydrology.fill', filled, { ...input, cell_size: undefined }), null);
+  assert.equal(hydrologyHandoff('raster.hydrology.streams', filled, input), null);
 });

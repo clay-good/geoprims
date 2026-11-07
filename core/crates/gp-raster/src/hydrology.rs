@@ -420,15 +420,15 @@ pub static FILL: ToolDef = ToolDef {
     }],
     related: &[
         Related {
-            id: "raster.terrain.dem-stats",
-            reason: "parent",
-        },
-        Related {
-            id: "raster.terrain.slope",
+            id: "raster.hydrology.flow-direction",
             reason: "next",
         },
         Related {
-            id: "raster.terrain.contours",
+            id: "raster.hydrology.flow-accumulation",
+            reason: "next",
+        },
+        Related {
+            id: "raster.terrain.dem-stats",
             reason: "alternative",
         },
     ],
@@ -955,12 +955,12 @@ pub static FLOW_DIRECTION: ToolDef = ToolDef {
             reason: "parent",
         },
         Related {
-            id: "raster.terrain.aspect",
-            reason: "alternative",
+            id: "raster.hydrology.flow-accumulation",
+            reason: "next",
         },
         Related {
-            id: "raster.terrain.slope",
-            reason: "next",
+            id: "raster.terrain.aspect",
+            reason: "alternative",
         },
     ],
     sentence: "{resolved} cells have a flow direction.",
@@ -1356,12 +1356,12 @@ pub static FLOW_ACCUMULATION: ToolDef = ToolDef {
             reason: "parent",
         },
         Related {
-            id: "raster.hydrology.fill",
-            reason: "alternative",
+            id: "raster.hydrology.streams",
+            reason: "next",
         },
         Related {
-            id: "raster.terrain.dem-stats",
-            reason: "next",
+            id: "raster.hydrology.fill",
+            reason: "alternative",
         },
     ],
     sentence: "At most {max_cells} cells drain through one cell.",
@@ -1824,12 +1824,12 @@ pub static STREAMS: ToolDef = ToolDef {
             reason: "parent",
         },
         Related {
-            id: "raster.hydrology.fill",
-            reason: "alternative",
+            id: "raster.hydrology.watershed",
+            reason: "next",
         },
         Related {
-            id: "raster.terrain.contours",
-            reason: "next",
+            id: "raster.hydrology.fill",
+            reason: "alternative",
         },
     ],
     sentence: "The network reaches Strahler order {highest_order}.",
@@ -2594,12 +2594,12 @@ pub static WATERSHED: ToolDef = ToolDef {
             reason: "parent",
         },
         Related {
-            id: "raster.hydrology.flow-accumulation",
-            reason: "alternative",
+            id: "raster.hydrology.longest-flow-path",
+            reason: "next",
         },
         Related {
-            id: "raster.hydrology.fill",
-            reason: "next",
+            id: "raster.hydrology.flow-accumulation",
+            reason: "alternative",
         },
     ],
     sentence: "That point drains {basin_area}.",

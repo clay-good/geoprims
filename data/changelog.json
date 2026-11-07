@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-11-06",
+      "kind": "added",
+      "tools": [
+        "raster.hydrology.fill"
+      ],
+      "vectors": [],
+      "summary": "A new tool conditions a DEM so water can leave every cell, which every flow calculation assumes and no measured elevation grid gives you: noise, bridges, culverts, and road embankments leave hollows that trap water. Enter the grid and its cell size and it either fills each hollow to the height it would spill at, by the Priority-Flood method, or cuts a channel out of it, which moves far less earth where a road or a dam is what dammed the water. It reports every cell it moved, before and after, and the earth that represents, so you can judge whether the conditioning changed the ground more than you want. Cells marked no data are never raised, never cut, and never crossed, and the window's edge is treated as an outlet, so clip wider than the basin you care about."
+    },
+    {
+      "date": "2026-11-06",
       "kind": "fixed",
       "tools": [
         "survey.cogo.helmert-3d-fit"

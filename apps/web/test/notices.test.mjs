@@ -5,7 +5,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { EXPIRING_DAYS, RANKS, VISIBLE, noticesFor, split } from '../src/lib/notices.mjs';
+import { EXPIRING_DAYS, MAX_NOTICE_CHARS, RANKS, VISIBLE, lead, noticesFor, split } from '../src/lib/notices.mjs';
 
 const web = new URL('..', import.meta.url).pathname;
 const dist = join(web, 'dist');
@@ -95,4 +95,25 @@ test('an experimental tool says so above the answer, in plain words', () => {
   assert.ok(notice, 'the experimental notice is on the page');
   assert.match(notice[1], /Experimental: not yet fully verified\./);
   assert.ok(html.indexOf(notice[0]) < html.indexOf('<section class="card answer"'), 'notices come before the answer card');
+});
+
+test('a changelog paragraph is cut to its lead, so two notices still leave the answer on screen', () => {
+  const long = {
+    date: '2026-09-01',
+    kind: 'result-change',
+    summary:
+      'The planar-area vector now names the warning it expects by its code rather than by its place in the list, using the meta.warnings.*.code form the runner already supports. Nothing computed changed. v029 had pinned index 1 and broke when promotion removed EXPERIMENTAL_TOOL from the list.',
+  };
+  const notices = noticesFor({ tool: { stability: 'stable' }, issue: null, changes: [long, { ...long, date: '2026-09-02' }], today: TODAY });
+  assert.equal(notices.length, 2);
+  for (const n of notices) {
+    assert.ok(n.text.length <= MAX_NOTICE_CHARS + 40, `${n.text.length} characters: ${n.text}`);
+    assert.ok(n.text.startsWith('A published result changed on '), n.text);
+  }
+  // The lead keeps whole words and marks that it was cut.
+  assert.ok(notices[0].text.endsWith('…'), notices[0].text);
+  // A summary that is already short is left exactly as it was written.
+  const short = noticesFor({ tool: { stability: 'stable' }, issue: null, changes: [change], today: TODAY });
+  assert.equal(short[0].text, `A published result changed on ${change.date}: ${change.summary}`);
+  assert.equal(lead('One sentence. A second one.'), 'One sentence.');
 });

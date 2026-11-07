@@ -272,6 +272,7 @@
       "definition": "A grid of elevations. A surface model includes buildings and canopy; a terrain model is the ground beneath them.",
       "source": "copernicus-dem",
       "relatedTools": [
+        "raster.hydrology.fill",
         "raster.terrain.aspect",
         "raster.terrain.dem-difference-volume",
         "raster.terrain.dem-stats",

@@ -2069,6 +2069,18 @@
         }
       ]
     },
+    "raster.hydrology": {
+      "summary": "Conditioning a DEM so water can leave every cell, the first step before any flow work.",
+      "intro": "Flow directions, accumulation, streams, and watersheds all assume water can leave every cell of a DEM, and a measured DEM does not oblige: noise, bridges, culverts, and road embankments leave hollows that trap it. This group removes them, either by filling each hollow to the height it would spill at, with a slope so small it does not show on a slope map, or by cutting a channel out of it, which moves far less earth where a road or a dam is what dammed the water. Start by filling, and compare the earth moved against what you know of the ground. The pitfall is the window's edge: it is treated as an outlet, so clip wider than the basin you care about.",
+      "tasks": [
+        {
+          "want": "remove the pits from a DEM before flow work",
+          "tools": [
+            "fill"
+          ]
+        }
+      ]
+    },
     "raster.terrain": {
       "summary": "What a digital elevation model says about a cell and the ground around it: how steep it is, which way it faces, how broken it is, and where its contours run.",
       "intro": "Terrain tools read a 3 x 3 window of a digital elevation model and describe its center cell: slope, aspect, and hillshade by Horn's method, the terrain ruggedness index, topographic position index, and roughness, and total, profile, and plan curvature. A contour tool turns a whole grid of elevations into contour lines at an interval, and a line-of-sight tool checks a ground profile between two points for what blocks the view or a radio link. GIS analysts, hydrologists, and site planners use them to check a cell by hand or to test the numbers a GIS reports. Start with slope, aspect, and hillshade. One pitfall: on a grid in degrees, a cell is narrower east to west than north to south away from the equator, so its size must be corrected for latitude, which the slope tool does.",

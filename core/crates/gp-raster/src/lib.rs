@@ -4,6 +4,7 @@ pub mod bandmath;
 pub mod contour;
 pub mod demgrid;
 pub mod geotiff;
+pub mod hydrology;
 pub mod indices;
 pub mod processing;
 pub mod scaling;
@@ -34,6 +35,7 @@ pub static TOOLS: &[&gp_base::tool::ToolDef] = &[
     &terrain::SLOPE,
     &terrain::RUGGEDNESS,
     &terrain::SLOPE_ONLY,
+    &hydrology::FILL,
     &terrain::ASPECT,
     &terrain::HILLSHADE,
     &terrain::ROUGHNESS_TRI,

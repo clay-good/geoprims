@@ -24,6 +24,22 @@ const daysBetween = (from, to) => (Date.parse(to) - Date.parse(from)) / DAY;
 export const EXPIRING_DAYS = 365;
 /** A result change stays on the page for this long (trust/proof-display). */
 export const RESULT_CHANGE_DAYS = 90;
+/**
+ * The most characters a notice carries on the page. A changelog entry is a
+ * paragraph written for the changelog; printed whole above the answer, two of
+ * them filled a phone screen and pushed the answer off it, which is the one
+ * thing the stacking contract exists to prevent. The notice carries the lead
+ * sentence and the link carries the rest.
+ */
+export const MAX_NOTICE_CHARS = 150;
+
+/** The lead sentence of `text`, cut to `max` characters on a word boundary. */
+export function lead(text, max = MAX_NOTICE_CHARS) {
+  const first = /^.*?[.!?](?=\s|$)/.exec(String(text).trim())?.[0] ?? String(text).trim();
+  if (first.length <= max) return first;
+  const cut = first.slice(0, max - 1);
+  return `${cut.slice(0, cut.lastIndexOf(' ') > max / 2 ? cut.lastIndexOf(' ') : cut.length).trimEnd()}\u2026`;
+}
 
 /**
  * Every notice a tool page should carry, highest priority first.
@@ -62,7 +78,7 @@ export function noticesFor({ tool, issue, changes = [], sources = [], today }) {
   for (const c of changes) {
     if (c.kind !== 'result-change') continue;
     if (daysBetween(c.date, today) > RESULT_CHANGE_DAYS) continue;
-    out.push({ kind: 'result-change', text: `A published result changed on ${c.date}: ${c.summary}`, href: '/changelog/', linkText: 'Changelog' });
+    out.push({ kind: 'result-change', text: `A published result changed on ${c.date}: ${lead(c.summary)}`, href: '/changelog/', linkText: 'Changelog' });
   }
   return out.sort((a, b) => RANKS[a.kind] - RANKS[b.kind]);
 }

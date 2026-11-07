@@ -425,6 +425,10 @@
     "BELOW_MARGIN": {
       "severity": "caution",
       "message": "The clearance under the keel is less than the margin you set."
+    },
+    "BREACH_INCOMPLETE": {
+      "severity": "accuracy",
+      "message": "Some pits had no outlet within the breach depth and length allowed, so they were filled instead."
     }
   }
 }

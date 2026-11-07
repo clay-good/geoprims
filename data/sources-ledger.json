@@ -4216,6 +4216,46 @@
       "editionCheck": true
     },
     {
+      "id": "barnes-priority-flood-2014",
+      "name": "Priority-flood: An optimal depression-filling and watershed-labeling algorithm for digital elevation models",
+      "issuer": "Barnes, R., Lehman, C., and Mulla, D., Computers & Geosciences",
+      "currentEdition": "Volume 62 (January 2014), pages 117-127",
+      "currentReleaseDate": "2014-01-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-11-06",
+      "verificationNote": "Read on 2026-11-06 in the authors' preprint at arXiv:1511.04463: Algorithm 2 (Improved Priority-Flood) and Algorithm 3 (Priority-Flood+epsilon) with its pseudocode and the discussion of epsilon against NextAfter on page 12. DOI 10.1016/j.cageo.2013.04.024.",
+      "freeAccessUrl": "https://arxiv.org/abs/1511.04463",
+      "matchTerms": [
+        "Priority-flood"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
+      "id": "lindsay-breach-fill-2016",
+      "name": "Efficient hybrid breaching-filling sink removal methods for flow path enforcement in digital elevation models",
+      "issuer": "Lindsay, J. B., Hydrological Processes",
+      "currentEdition": "Volume 30, issue 6 (2016), pages 846-857",
+      "currentReleaseDate": "2016-03-15",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-11-06",
+      "verificationNote": "Read on 2026-11-06 in the author's copy at jblindsay.github.io: the least-cost breach channel of Lindsay and Dhun (2015), whose cost surface is the accumulated elevation decrement needed to connect a pit to a lower cell, and the hybrid rule that filling must finish what breaching cannot reach within a set distance. DOI 10.1002/hyp.10648.",
+      "freeAccessUrl": "https://jblindsay.github.io/ghrg/pubs/2016_Lindsay_HP.pdf",
+      "matchTerms": [
+        "hybrid breaching-filling sink removal"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "anmb-squat-comparison-2016",
       "name": "Comparison between formulas of maximum ship squat (Deleanu and Panaitescu)",
       "issuer": "\"Mircea cel Batran\" Naval Academy Scientific Bulletin, Constanta",

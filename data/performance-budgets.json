@@ -81,6 +81,7 @@
     "navigation.vector.operations": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "vectors" },
     "raster.index.band-math": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "bands" },
     "raster.terrain.aspect": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "elevations" },
+    "raster.hydrology.fill": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "elevations" },
     "raster.terrain.contours": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "elevations" },
     "raster.terrain.curvature": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "elevations" },
     "raster.terrain.dem-difference-volume": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "before and after" },

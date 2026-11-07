@@ -107,7 +107,8 @@
       "groups": [
         "scale",
         "index",
-        "terrain"
+        "terrain",
+        "hydrology"
       ]
     },
     "time": {

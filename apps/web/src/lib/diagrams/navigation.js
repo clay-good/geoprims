@@ -402,6 +402,54 @@ function correctionStack(args, result) {
   return { markup: svg(body, title), desc: title };
 }
 
+/**
+ * Under-keel clearance: the stack drawn to scale from the seabed up, with
+ * the water surface, the chart datum, the tide on top of it, the keel at the
+ * draft plus squat, the reader's margin as a band off the bottom, and what
+ * is left between the margin and the keel.
+ */
+function clearanceStack(args, result) {
+  const water = val(result, 'water_depth');
+  const keelDepth = val(result, 'keel_depth');
+  const under = val(result, 'under_keel');
+  const clearance = val(result, 'clearance');
+  const squat = val(result, 'squat_used');
+  const depth = measure(args.charted_depth, LENGTH, 'm');
+  if (![water, keelDepth, under, clearance, squat].every(Number.isFinite)) return null;
+  if (!Number.isFinite(depth) || water <= 0) return null;
+  const margin = under - clearance;
+  // Heights above the seabed, which is zero.
+  const top = Math.max(water, depth) * 1.08;
+  const Y = (h) => 215 - (h / top) * 185;
+  const [left, right] = [86, 300];
+  const keel = under; // the keel sits this far above the seabed
+  const body = [
+    // The sea: surface, chart datum, seabed.
+    line('dg-accent', [left, Y(water)], [right, Y(water)]),
+    text('dg-label', left - 6, Y(water) + 4, 'Water', 'end'),
+    line('dg-grid dg-dash', [left, Y(depth)], [right, Y(depth)]),
+    text('dg-muted-text', left - 6, Y(depth) + 4, 'Chart datum', 'end'),
+    line('dg-casing', [left, Y(0)], [right, Y(0)]),
+    text('dg-muted-text', left - 6, Y(0) + 4, 'Seabed', 'end'),
+    // The hull: a block from the keel up through the surface.
+    `<rect class="dg-grid" x="150" y="${f1(Y(water) - 26)}" width="110" height="${f1(Math.max(Y(keel) - Y(water) + 26, 2))}"/>`,
+    line('dg-accent', [150, Y(keel)], [260, Y(keel)]),
+    text('dg-label', 265, Y(keel) + 4, 'Keel'),
+    // The margin off the bottom, and what is left above it. Both are named
+    // on their own arrows, so no label crowds the seabed line.
+    line('dg-muted', [left + 14, Y(margin)], [right, Y(margin)]),
+    arrow(118, Y(0), 118, Y(margin), 'dg-muted', `margin ${typed(args.margin, 'm')}`, 0.5, 1),
+    arrow(118, Y(margin), 118, Y(keel), 'dg-accent', `clear ${disp(result, 'clearance')}`, 0.5, 1),
+    // The tide above the chart datum, when there is one.
+    Math.abs(water - depth) > 1e-9
+      ? arrow(right - 26, Y(depth), right - 26, Y(water), 'dg-muted', `tide ${typed(args.tide, 'm')}`, 0.5, -1)
+      : '',
+    text('dg-muted-text', 12, 232, `draft with squat ${disp(result, 'keel_depth')} (squat ${disp(result, 'squat_used')})`),
+  ].join('');
+  const title = `Under-keel clearance: ${disp(result, 'water_depth')} of water over the seabed, a keel ${disp(result, 'keel_depth')} down with squat, ${disp(result, 'under_keel')} under the keel, and ${disp(result, 'clearance')} left above the margin. To scale.`;
+  return { markup: svg(body, title), desc: title };
+}
+
 export const DIAGRAMS = {
   'navigation.piloting.set-and-drift': currentTriangle,
   'navigation.route.cpa': cpa,
@@ -412,6 +460,7 @@ export const DIAGRAMS = {
   'navigation.los.fresnel': fresnelZone,
   'navigation.los.dip': horizonDip,
   'navigation.tide.datums': datumStack,
+  'navigation.vessel.under-keel-clearance': clearanceStack,
   'navigation.sailing.plane': sailingTriangle,
   'navigation.sailing.traverse': traverseLegs,
   'navigation.celestial.altitude-correction': correctionStack,

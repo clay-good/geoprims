@@ -1894,6 +1894,18 @@
         }
       ]
     },
+    "navigation.vessel": {
+      "summary": "What is left under the keel, from the charted depth, the tide, the draft, a squat estimate, and your own margin.",
+      "intro": "This group is about the ship herself in shallow water. Under-keel clearance is not one number but a stack: the depth on the chart, the tide you expect at the hour you pass, your deepest static draft, the squat that speed and shallow water add to it, and the margin you or the port require. The tool writes the stack out so you can see which term to change, and estimates squat by Barrass's formula within the block coefficients and depth-to-draft ratios it is published for. Send the tide height over from the tide prediction for the arrival hour. The pitfall is the margin: it is yours, and the master and the port authority decide what is acceptable, so nothing here is a permission to proceed.",
+      "tasks": [
+        {
+          "want": "work out the clearance under the keel",
+          "tools": [
+            "under-keel-clearance"
+          ]
+        }
+      ]
+    },
     "navigation.celestial": {
       "summary": "Celestial navigation end to end: the almanac data for the second of a sight, the sextant altitude corrections, the reduction to a line of position, latitude by Polaris, and a compass check by the Sun.",
       "intro": "These tools take a sextant sight from the arc to the chart. The almanac tool gives the numbers a navigator reads from the Nautical Almanac's daily pages: hour angle and declination for the Sun, Moon, four planets, Aries, and the 58 listed stars. The correction tool turns the altitude you read into the observed altitude, showing dip, refraction, semidiameter, and parallax one line at a time. The reduction tool then gives the computed altitude, the true azimuth, and how far to shift the line of position. Two shortcuts sit beside them: a latitude straight from an altitude of Polaris, and a compass check against the Sun's azimuth or amplitude. Start with the corrections. The pitfall is time: a sight's hour angle moves 15 minutes of arc for every minute of clock error.",

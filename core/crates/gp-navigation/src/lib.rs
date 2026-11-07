@@ -13,6 +13,7 @@ pub mod sailing;
 pub mod sphere;
 pub mod tide;
 pub mod vector;
+pub mod vessel;
 pub mod vincenty;
 pub mod waypoints;
 
@@ -1118,6 +1119,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &piloting::COMPASS_CONVERSION,
     &tide::PREDICT,
     &tide::DATUMS,
+    &vessel::UNDER_KEEL_CLEARANCE,
     &celestial::ALMANAC,
     &celestial::ALTITUDE_CORRECTION,
     &celestial::POLARIS_LATITUDE,

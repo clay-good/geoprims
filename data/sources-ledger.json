@@ -4216,6 +4216,27 @@
       "editionCheck": true
     },
     {
+      "id": "anmb-squat-comparison-2016",
+      "name": "Comparison between formulas of maximum ship squat (Deleanu and Panaitescu)",
+      "issuer": "\"Mircea cel Batran\" Naval Academy Scientific Bulletin, Constanta",
+      "currentEdition": "Volume XIX, Issue 1, 2016, pp. 105-111",
+      "currentReleaseDate": "2016-06-30",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-11-06",
+      "verificationNote": "Read at anmb.ro on 2026-11-06 (DOI 10.21279/1454-864X-16-I1-018, CC BY-NC-SA 4.0). It restates the PIANC squat formulas with their parameter ranges: Table 1 holds Barrass to block coefficients 0.5 to 0.85 and depth-to-draft ratios 1.1 to 1.4, equations (2) and (3) give S_max = K C_B V_K^2 / 100 with K = 5.74 S^0.76 for blockage factors 0.10 to 0.25, and equation (4) gives the other end of the ship. Its own cargo-ship case (7,800 tdw, C_B 0.667, 8 kn, a 123 m by 10 m canal) prints 0.40842 m, which is equation (2) with K taken as 1 rather than the 1.0406 its equation (3) gives for that canal's blockage factor of 0.105725.",
+      "freeAccessUrl": "https://www.anmb.ro/buletinstiintific/buletine/2016_Issue1/NMS/105-111.pdf",
+      "matchTerms": [
+        "maximum ship squat",
+        "Barrass"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "qgis-create-grid",
       "name": "QGIS Processing algorithm: Create grid",
       "issuer": "QGIS project (vendor documentation)",

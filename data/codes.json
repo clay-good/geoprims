@@ -421,6 +421,10 @@
     "PARTIAL_CONSTITUENTS": {
       "severity": "accuracy",
       "message": "The tide was predicted without some of NOAA's 37 constituents, which the result lists; heights and times may differ from NOAA's."
+    },
+    "BELOW_MARGIN": {
+      "severity": "caution",
+      "message": "The clearance under the keel is less than the margin you set."
     }
   }
 }

@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "4b0e2d84cacc8cbf",
+    "hash": "4cc7ceb6c4bacec0",
     "lastmod": "2026-11-07"
   },
   "/accuracy/": {
@@ -316,7 +316,7 @@
     "lastmod": "2026-10-19"
   },
   "/changelog/": {
-    "hash": "3c7ad4b4c72be755",
+    "hash": "4d86c369c303cebf",
     "lastmod": "2026-11-07"
   },
   "/disclaimer/": {
@@ -1552,12 +1552,12 @@
     "lastmod": "2026-10-20"
   },
   "/methodology/": {
-    "hash": "222a9181d919d555",
+    "hash": "5b32a9293ee163cd",
     "lastmod": "2026-11-07"
   },
   "/navigation/": {
-    "hash": "f902b2609daa7117",
-    "lastmod": "2026-10-28"
+    "hash": "d1235b1179725f44",
+    "lastmod": "2026-11-07"
   },
   "/navigation/celestial/": {
     "hash": "6f233653e2b683d3",
@@ -1795,12 +1795,20 @@
     "hash": "c349642ac1c1034d",
     "lastmod": "2026-10-19"
   },
+  "/navigation/vessel/": {
+    "hash": "07e63d0d228428c3",
+    "lastmod": "2026-11-07"
+  },
+  "/navigation/vessel/under-keel-clearance/": {
+    "hash": "4d8f15e74be49f63",
+    "lastmod": "2026-11-07"
+  },
   "/privacy/": {
     "hash": "4c8019420bd291d9",
     "lastmod": "2026-10-20"
   },
   "/quality/": {
-    "hash": "ff39ab9098c56805",
+    "hash": "47b64ce17f6fb9fb",
     "lastmod": "2026-11-07"
   },
   "/raster/": {
@@ -1928,8 +1936,8 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "2510642b4cae91b2",
-    "lastmod": "2026-10-28"
+    "hash": "c21b4ca6973294ac",
+    "lastmod": "2026-11-07"
   },
   "/survey/": {
     "hash": "3ec77c55d5c6b549",
@@ -2364,7 +2372,7 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "1b54bcfe6a08de35",
+    "hash": "3392c4d06ca903f5",
     "lastmod": "2026-11-07"
   },
   "/units/": {
@@ -2628,7 +2636,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "f625ce62f140966e",
+    "hash": "9f9cc92fe1f988fb",
     "lastmod": "2026-11-07"
   },
   "/workflows/": {

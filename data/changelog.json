@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-11-06",
+      "kind": "added",
+      "tools": [
+        "navigation.vessel.under-keel-clearance"
+      ],
+      "vectors": [],
+      "summary": "A new tool works out under-keel clearance. You give the charted depth, the tide you expect at the hour you pass, your static draft, and the margin you or the port require, and it writes the stack out: the water over the datum, what the ship draws once squat is added, what is left under the keel, and what is left after the margin, in meters and feet, with a drawing of the stack to scale. Squat is estimated by Barrass's formula for the speed you intend, in open water, a confined channel, or from a blockage factor you work out, and the tool refuses outside the block coefficients and depth-to-draft ratios that formula is published for rather than extrapolating. You can give a squat figure of your own instead. The result never calls a clearance safe: it reports the numbers, and says that the master and the port authority decide. The tool is experimental, because the one published worked example found for Barrass's formula does not follow its own printed equations."
+    },
+    {
+      "date": "2026-11-06",
       "kind": "changed",
       "tools": [
         "navigation.celestial.almanac"

@@ -1266,6 +1266,10 @@
       "expect": "navigation.tide.predict"
     },
     {
+      "query": "under keel clearance with squat",
+      "expect": "navigation.vessel.under-keel-clearance"
+    },
+    {
       "query": "convert MLLW to NAVD88",
       "expect": "navigation.tide.datums"
     },

@@ -21,7 +21,7 @@ Elevations and cell size in meters (any length unit is accepted); slopes are ris
 
 ## Domain
 
-- 2 to 300 rows and columns and at most 25,000 cells, else `LIMIT_EXCEEDED`; cell size more than zero.
+- 2 to 300 rows and columns and at most 25,000 cells, else `LIMIT_EXCEEDED`; cell size more than zero. A full window measured through `dist/wasm` on this machine takes 5.2 ms at the 95th percentile by D8 and 24.4 ms by D-infinity, which spends its time on eight facets a cell.
 - A cell with no lower neighbour has no direction. On the window's edge, or beside no data, that means the water leaves the data, and the result counts it under cells draining out of the window. Inside, it means a pit, counted separately and warned with `PITS_PRESENT`: condition the grid with the fill tool first.
 - No-data cells carry the no-data value in the direction and angle grids, never a direction.
 

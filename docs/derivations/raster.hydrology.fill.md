@@ -25,7 +25,7 @@ Elevations and the cell size in meters (any length unit is accepted); ε in mete
 
 ## Domain
 
-- 2 to 300 rows and columns, and at most 25,000 cells in one window, else `LIMIT_EXCEEDED`. A full window measured through `dist/wasm` on this machine takes 29.5 ms at the 95th percentile to fill and 54.5 ms to breach, against the 10 ms budget the benchmark holds the primary example to.
+- 2 to 300 rows and columns, and at most 25,000 cells in one window, else `LIMIT_EXCEEDED`. A full window measured through `dist/wasm` on this machine takes 24.7 ms at the 95th percentile to fill and 57.1 ms to breach, against the 10 ms budget the benchmark holds the primary example to.
 - Cell size more than zero; ε zero or more; the deepest cut zero or more.
 - ε of zero is allowed and leaves flats: every filled cell sits at its spill elevation. That is what some published filling routines do, and the result says which ε was used.
 - The window's edge is an outlet. A depression that continues past the edge is treated as draining there, so clip wider than the basin of interest.

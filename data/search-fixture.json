@@ -1314,6 +1314,10 @@
       "expect": "geodesy.projection.lv95-inverse"
     },
     {
+      "query": "GDA94 to GDA2020 transformation",
+      "expect": "geodesy.datum.gda2020"
+    },
+    {
       "query": "under keel clearance with squat",
       "expect": "navigation.vessel.under-keel-clearance"
     },

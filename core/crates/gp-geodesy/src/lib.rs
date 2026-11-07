@@ -3327,6 +3327,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &datum::PLATE_MOTION,
     &datum::NAD83,
     &datum::LEGACY_SHIFT,
+    &datum::GDA2020,
     &datum::NADCON5,
     &datum::TRANSFORM,
 ];

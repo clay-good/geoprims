@@ -769,3 +769,66 @@ fn nadcon5_matches_ngs_ncat_samples_in_every_region() {
         );
     }
 }
+
+#[test]
+fn gda2020_moves_the_continent_and_inverts() {
+    // add-international-grids, geodesy/national-grids: ICSM's conformal
+    // transformation, as EPSG registers it at operation 8048.
+    let run = |input: serde_json::Value| -> Value {
+        serde_json::from_str(&REGISTRY.invoke("geodesy.datum.gda2020", &input.to_string())).unwrap()
+    };
+    let places = [
+        (-23.670124, 133.885513),
+        (-33.8568, 151.2153),
+        (-31.9596, 115.8313),
+        (-12.4627, 130.8418),
+        (-42.8822, 147.3272),
+    ];
+    for (lat, lon) in places {
+        let r = run(
+            serde_json::json!({"direction": "to-gda2020", "lat": lat, "lon": lon, "height": "50 m"}),
+        );
+        assert!(r["ok"].as_bool().unwrap_or(false), "{r}");
+        // The plate carried the mainland between 1.49 m (Hobart and Sydney,
+        // in the south-east) and 1.81 m (Darwin), north-east everywhere.
+        let shift = r["result"]["shift"]["value"].as_f64().unwrap();
+        let az = r["result"]["azimuth"]["value"].as_f64().unwrap();
+        assert!(
+            (1.45..=1.85).contains(&shift),
+            "{lat},{lon}: shift {shift} m"
+        );
+        assert!((10.0..=45.0).contains(&az), "{lat},{lon}: azimuth {az}°");
+        // Every answer says what it does not model.
+        let codes: Vec<&str> = r["meta"]["warnings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|w| w["code"].as_str().unwrap())
+            .collect();
+        assert!(codes.contains(&"DISTORTION_NOT_MODELLED"), "{r}");
+        // And the reverse is the exact inverse.
+        let back = run(serde_json::json!({
+            "direction": "to-gda94",
+            "lat": r["result"]["lat"]["value"].as_f64().unwrap(),
+            "lon": r["result"]["lon"]["value"].as_f64().unwrap(),
+            "height": format!("{} m", r["result"]["height"]["value"].as_f64().unwrap()),
+        }));
+        assert!(
+            (back["result"]["lat"]["value"].as_f64().unwrap() - lat).abs() < 1e-9,
+            "{back}"
+        );
+        assert!(
+            (back["result"]["lon"]["value"].as_f64().unwrap() - lon).abs() < 1e-9,
+            "{back}"
+        );
+    }
+    // Outside the published area of use the answer still comes, flagged.
+    let away = run(serde_json::json!({"direction": "to-gda2020", "lat": -41.3, "lon": 174.8}));
+    let codes: Vec<&str> = away["meta"]["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|w| w["code"].as_str().unwrap())
+        .collect();
+    assert!(codes.contains(&"OUTSIDE_AREA_OF_USE"), "{away}");
+}

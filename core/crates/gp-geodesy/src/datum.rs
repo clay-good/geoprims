@@ -2303,3 +2303,281 @@ fn run_transform(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("steps", Json::Arr(rows)),
     ]))
 }
+
+// ------------------------------------------------------------- GDA2020
+
+const EPSG_GDA2020: Reference = Reference {
+    title: "EPSG Geodetic Parameter Dataset (EPSG v13.102 CRS registry)",
+    issuer: "IOGP, from the Intergovernmental Committee on Surveying and Mapping (ICSM)",
+    year: 2026,
+    edition: "v13.102, as shipped in PROJ 9.9.0",
+    locator: "Operation 8048, GDA94 to GDA2020 (1): ICSM's conformal transformation as seven parameters, coordinate-frame convention, stated at 0.01 m; and operations 8446 and 8447, the conformal and the conformal-plus-distortion grids",
+    url: "https://epsg.org/transformation_8048/GDA94-to-GDA2020-1.html",
+};
+
+/// ICSM's conformal transformation from GDA94 to GDA2020, as EPSG registers
+/// it: translations in metres, rotations in arc-seconds, scale in ppm, in the
+/// coordinate-frame convention.
+const GDA2020_CONFORMAL: Params = Params {
+    t: [0.061_55, -0.010_87, -0.040_19],
+    r: [-0.039_492_4, -0.032_722_1, -0.032_897_9],
+    ds: -0.009_994,
+};
+const GDA2020_NOTE: &str = "This is the conformal transformation, which carries the whole country as one rigid piece. It does not model GDA94's own distortion, which is up to about 0.1 m in places; ICSM publishes a second grid (EPSG 8447) for that.";
+
+pub static GDA2020: ToolDef = ToolDef {
+    id: "geodesy.datum.gda2020",
+    title: "GDA94 and GDA2020",
+    summary: "Transforms an Australian position between GDA94 and GDA2020 by ICSM's conformal transformation, which moves the country about 1.8 m north-east, and says what it does not model.",
+    aliases: &[
+        "GDA94 to GDA2020",
+        "GDA2020 to GDA94",
+        "Australian datum transformation",
+        "MGA94 to MGA2020",
+    ],
+    keywords: &[
+        "GDA2020",
+        "GDA94",
+        "Australia",
+        "ICSM",
+        "datum",
+        "conformal",
+        "MGA",
+        "EPSG 8048",
+    ],
+    inputs: &[
+        Field::new(
+            "direction",
+            "Direction",
+            "Which way to transform, like to-gda2020",
+            Kind::Choice(&["to-gda2020", "to-gda94"]),
+        )
+        .core(),
+        Field::new(
+            "lat",
+            "Latitude",
+            "Decimal degrees, north positive, like -23.670124",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(9))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "Decimal degrees, east positive, like 133.885513",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(9))
+        .angle_range("[-180,180)"),
+        Field::new(
+            "height",
+            "Ellipsoidal height",
+            "Above the GRS 80 ellipsoid, like 603.3466 m",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .core(),
+    ],
+    outputs: &[
+        Field::new(
+            "lat",
+            "Latitude",
+            "On the target datum",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "On the target datum",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .angle_range("[-180,180)"),
+        Field::new(
+            "height",
+            "Ellipsoidal height",
+            "On the target datum",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(4)),
+        Field::new(
+            "shift",
+            "How far the point moved",
+            "Horizontally, on the ground",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(3)),
+        Field::new(
+            "azimuth",
+            "Which way it moved",
+            "Degrees from true north",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(1))
+        .angle_range("[0,360)"),
+        Field::new(
+            "method",
+            "What was applied",
+            "The transformation and what it leaves out",
+            Kind::Text { max_len: 260 },
+        ),
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &["DISTORTION_NOT_MODELLED", "OUTSIDE_AREA_OF_USE"],
+    model: "ICSM's conformal transformation as EPSG operation 8048 registers it: geographic → ECEF on GRS 80 → seven-parameter Helmert in the coordinate-frame convention (translations 0.06155, −0.01087, −0.04019 m; rotations −0.0394924, −0.0327221, −0.0328979 arc-seconds; scale −0.009994 ppm) → back to geographic. The reverse is the exact inverse rather than the negated parameters",
+    accuracy: "EPSG states operation 8048 at 0.01 m, and it agrees with PROJ applying the same operation to a nanodegree. What that figure does not cover is GDA94's own distortion, which the conformal-plus-distortion grid carries instead",
+    when_to_use: "Use this to move an Australian position between GDA94 and GDA2020, the datums behind MGA94 and MGA2020 coordinates. The two differ by about 1.8 m to the north-east, which is the plate's motion between the two epochs, so a GDA94 coordinate read as GDA2020 is out by about a car's length. For a single point, or a set small enough to treat as rigid, the conformal transformation is the one ICSM publishes.",
+    limitations: "This is the conformal transformation: one rigid motion for the whole continent. It does not model the distortion in GDA94's own network, up to about 0.1 m in places, which ICSM's second grid (EPSG 8447) carries and which matters for cadastral work; the result says so. The transformation has a published area of use, Australia and its offshore territories, and the answer is flagged outside it. Heights are ellipsoidal and carried through the same rigid motion; AHD heights are a separate step, by AUSGeoid2020.",
+    references: &[EPSG_GDA2020, IOGP_7_2],
+    examples: &[Example {
+        id: "primary",
+        title: "Alice Springs (ALIC), GDA94 to GDA2020",
+        input: r#"{"direction":"to-gda2020","lat":-23.670124,"lon":133.885513,"height":"603.3466 m"}"#,
+        source: "PROJ 9.9.0 applying EPSG operation 8048 to the ALIC station coordinates of the change's own scenario: the point moves about 1.8 m to the north-east",
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "point",
+        map: &[("lat", "lat"), ("lon", "lon")],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.datum.itrf",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.utm.forward",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.datum.plate-motion",
+            reason: "alternative",
+        },
+    ],
+    sentence: "That point moves {shift} to the {azimuth}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_gda2020,
+    ..ToolDef::BLANK
+};
+
+fn run_gda2020(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let to_2020 = ctx.choice("direction")? != Some("to-gda94");
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let m = units::by_symbol(QT::Length, "m").expect("m");
+    let h = ctx.quantity("height")?.map_or(0.0, |q| q.to(m));
+    // The published area of use: Australia and its offshore territories.
+    if !(-60.56..=-8.47).contains(&lat) || !(93.41..=173.35).contains(&lon) {
+        ctx.warnings.push(Warning::new(
+            "OUTSIDE_AREA_OF_USE",
+            "This point is outside the area EPSG publishes operation 8048 for (Australia and its offshore territories), so the answer is extrapolation.",
+        ));
+    }
+    let grs80 = CATALOG
+        .iter()
+        .find(|e| e.id == "grs80")
+        .copied()
+        .unwrap_or(Ellipsoid {
+            id: "grs80",
+            name: "GRS 1980",
+            a: 6_378_137.0,
+            f: 1.0 / 298.257_222_101,
+        });
+    let helmert = Helmert {
+        p: GDA2020_CONFORMAL,
+        rate: Params::default(),
+        t0: 0.0,
+        convention: Convention::CoordinateFrame,
+    };
+    let (phi, lam) = (lat.to_radians(), lon.to_radians());
+    let p = fr::to_ecef(&grs80, phi, lam, h);
+    let q = if to_2020 {
+        helmert.forward([p.0, p.1, p.2], 0.0)
+    } else {
+        helmert.reverse([p.0, p.1, p.2], 0.0)
+    };
+    let (phi2, lam2, h2) = fr::from_ecef(&grs80, q[0], q[1], q[2]).expect("not the center");
+    let (lat2, lon2) = (
+        phi2.to_degrees(),
+        gp_base::angle::wrap_lon(lam2.to_degrees()),
+    );
+    // How far it moved on the ground, east and north of where it was.
+    let a = fr::to_ecef(&grs80, phi, lam, h);
+    let b = fr::to_ecef(&grs80, phi2, lam2, h2);
+    let enu = fr::ecef_to_enu(a, phi, lam, b);
+    let s12 = enu[0].hypot(enu[1]);
+    let az = if s12 == 0.0 {
+        0.0
+    } else {
+        enu[0].atan2(enu[1]).to_degrees().rem_euclid(360.0)
+    };
+    ctx.warnings
+        .push(Warning::new("DISTORTION_NOT_MODELLED", GDA2020_NOTE));
+    if ctx.explaining() {
+        ctx.step(
+            "Onto the ellipsoid's axes",
+            "geographic to earth-centred Cartesian on GRS 80",
+            format!("{lat:.9}°, {lon:.9}°, {h:.4} m"),
+            "X, Y, Z".to_string(),
+        );
+        ctx.step(
+            "The conformal motion",
+            "seven parameters, coordinate-frame convention (EPSG 8048)",
+            "0.06155, −0.01087, −0.04019 m; −0.0394924, −0.0327221, −0.0328979″; −0.009994 ppm"
+                .to_string(),
+            format!(
+                "{}°",
+                gp_base::display::number(lat2, Precision::Decimals(9), ctx.options.format)
+            ),
+        );
+    }
+    let deg_u = units::by_symbol(QT::Angle, "deg").expect("deg");
+    let q_deg = |v: f64| Q {
+        value: v,
+        unit: deg_u,
+    };
+    let q_m = |v: f64| Q { value: v, unit: m };
+    Ok(Json::obj([
+        ("lat", ctx.out("lat", q_deg(lat2))),
+        ("lon", ctx.out("lon", q_deg(lon2))),
+        ("height", ctx.out("height", q_m(h2))),
+        ("shift", ctx.out("shift", q_m(s12))),
+        ("azimuth", ctx.out("azimuth", q_deg(az))),
+        (
+            "method",
+            Json::str(if to_2020 {
+                "GDA94 to GDA2020 by EPSG operation 8048, ICSM's conformal transformation. It does not model GDA94's own distortion."
+            } else {
+                "GDA2020 to GDA94 by the exact inverse of EPSG operation 8048. It does not model GDA94's own distortion."
+            }),
+        ),
+    ]))
+}

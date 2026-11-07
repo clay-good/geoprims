@@ -441,6 +441,10 @@
     "WATERSHED_TOUCHES_EDGE": {
       "severity": "accuracy",
       "message": "The basin reaches the window's edge, so the real basin may continue beyond the data."
+    },
+    "DISTORTION_NOT_MODELLED": {
+      "severity": "accuracy",
+      "message": "The conformal transformation moves the whole area as one piece and does not model the old datum's own distortion."
     }
   }
 }

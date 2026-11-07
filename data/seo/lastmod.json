@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "a29b445a0cba18f1",
+    "hash": "8baf24658a27d36d",
     "lastmod": "2026-11-07"
   },
   "/accuracy/": {
@@ -316,7 +316,7 @@
     "lastmod": "2026-10-19"
   },
   "/changelog/": {
-    "hash": "4ba72a4bafee2ab4",
+    "hash": "e8645e73c371aa68",
     "lastmod": "2026-11-07"
   },
   "/disclaimer/": {
@@ -576,7 +576,7 @@
     "lastmod": "2026-10-19"
   },
   "/geodesy/": {
-    "hash": "b5c2b9081f8e6dbf",
+    "hash": "1c660c1cf5c79ee1",
     "lastmod": "2026-11-07"
   },
   "/geodesy/crs/": {
@@ -592,12 +592,16 @@
     "lastmod": "2026-10-19"
   },
   "/geodesy/datum/": {
-    "hash": "743eda4eec8711de",
-    "lastmod": "2026-09-25"
+    "hash": "2fe0b25494e2be3d",
+    "lastmod": "2026-11-07"
+  },
+  "/geodesy/datum/gda2020/": {
+    "hash": "6fefaa5bca86b180",
+    "lastmod": "2026-11-07"
   },
   "/geodesy/datum/helmert/": {
-    "hash": "0e7599841b2b425e",
-    "lastmod": "2026-10-19"
+    "hash": "a11364ba04cb5119",
+    "lastmod": "2026-11-07"
   },
   "/geodesy/datum/itrf/": {
     "hash": "11f2e886ae7371f4",
@@ -1576,7 +1580,7 @@
     "lastmod": "2026-10-20"
   },
   "/methodology/": {
-    "hash": "fd6395b9a1f68ab3",
+    "hash": "64a5742f6fd846db",
     "lastmod": "2026-11-07"
   },
   "/navigation/": {
@@ -1832,7 +1836,7 @@
     "lastmod": "2026-10-20"
   },
   "/quality/": {
-    "hash": "a2515a6c32d66891",
+    "hash": "2bbfaf65ad27eef9",
     "lastmod": "2026-11-07"
   },
   "/raster/": {
@@ -1988,7 +1992,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "3ac76e76d35f6c58",
+    "hash": "fa772eb951d5e20c",
     "lastmod": "2026-11-07"
   },
   "/survey/": {
@@ -2424,7 +2428,7 @@
     "lastmod": "2026-11-07"
   },
   "/tools/": {
-    "hash": "6670426604ca77d0",
+    "hash": "6c2a7676281fdd64",
     "lastmod": "2026-11-07"
   },
   "/units/": {
@@ -2688,7 +2692,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "0f54e0b8ba4e2242",
+    "hash": "d6a92eb2b271293a",
     "lastmod": "2026-11-07"
   },
   "/workflows/": {

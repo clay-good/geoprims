@@ -5,6 +5,15 @@
       "date": "2026-11-07",
       "kind": "added",
       "tools": [
+        "geodesy.datum.gda2020"
+      ],
+      "vectors": [],
+      "summary": "A new tool moves an Australian position between GDA94 and GDA2020, the datums behind MGA94 and MGA2020 coordinates. The two differ by about a car's length: the plate carried the country between 1.49 metres in the south-east and 1.80 in the north, always to the north-east, so a GDA94 coordinate read as GDA2020 is wrong by that much. The tool applies the conformal transformation ICSM publishes, and says plainly what that leaves out: the distortion in GDA94's own network, up to about a tenth of a metre in places, which ICSM's second grid carries and which matters for cadastral work. Outside the area the transformation is published for, the answer still comes, flagged as extrapolation."
+    },
+    {
+      "date": "2026-11-07",
+      "kind": "added",
+      "tools": [
         "geodesy.projection.lv95-forward",
         "geodesy.projection.lv95-inverse"
       ],

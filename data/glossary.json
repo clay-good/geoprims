@@ -624,6 +624,26 @@
       ]
     },
     {
+      "id": "gda2020",
+      "term": "GDA2020",
+      "expansion": "Geocentric Datum of Australia 2020",
+      "definition": "Australia's datum, fixed to the continent where it sat in 2020, about 1.8 m north-east of where GDA94 put it.",
+      "source": "epsg-crs-registry",
+      "relatedTools": [
+        "geodesy.datum.gda2020"
+      ]
+    },
+    {
+      "id": "gda94",
+      "term": "GDA94",
+      "expansion": "Geocentric Datum of Australia 1994",
+      "definition": "Australia's earlier datum, fixed to the continent as it sat in 1994; still behind a great deal of published mapping.",
+      "source": "epsg-crs-registry",
+      "relatedTools": [
+        "geodesy.datum.gda2020"
+      ]
+    },
+    {
       "id": "gdop",
       "term": "GDOP",
       "expansion": "geometric dilution of precision",
@@ -696,6 +716,7 @@
       "definition": "An Earth ellipsoid defined by the IUGG. GRS 80 underlies NAD 83 and is almost identical to WGS 84.",
       "source": "grs80",
       "relatedTools": [
+        "geodesy.datum.gda2020",
         "geodesy.datum.itrf",
         "geodesy.datum.nad83",
         "geodesy.datum.plate-motion"

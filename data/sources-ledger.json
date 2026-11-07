@@ -4216,6 +4216,26 @@
       "editionCheck": true
     },
     {
+      "id": "jenson-domingue-1988",
+      "name": "Extracting topographic structure from digital elevation data for geographic information system analysis",
+      "issuer": "Jenson, S. K., and Domingue, J. O., Photogrammetric Engineering and Remote Sensing",
+      "currentEdition": "Volume 54, issue 11 (1988), pages 1593-1600",
+      "currentReleaseDate": "1988-11-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-11-06",
+      "verificationNote": "Cited for the watershed delineation and pour-point snapping it defines, from ASPRS's open archive of the 1988 journal. The method as implemented here (a basin is every cell whose flow path reaches the outlet, and an outlet is moved onto the drainage network before delineating) is the one every GIS restates, including the WhiteboxTools JensonSnapPourPoints tool that carries their name.",
+      "freeAccessUrl": "https://www.asprs.org/wp-content/uploads/pers/1988journal/nov/1988_nov_1593-1600.pdf",
+      "matchTerms": [
+        "Extracting topographic structure"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "strahler-1957",
       "name": "Quantitative analysis of watershed geomorphology",
       "issuer": "Strahler, A. N., Transactions, American Geophysical Union",

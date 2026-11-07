@@ -2139,3 +2139,683 @@ fn run_streams(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("vertices", Json::Arr(vertices)),
     ]))
 }
+
+// ----------------------------------------------------- watershed and path
+
+const JENSON: Reference = Reference {
+    title: "Extracting topographic structure from digital elevation data for geographic information system analysis",
+    issuer: "Jenson, S. K., and Domingue, J. O., Photogrammetric Engineering and Remote Sensing",
+    year: 1988,
+    edition: "Volume 54, issue 11, pages 1593-1600",
+    locator: "Delineating a watershed as every cell whose flow path reaches the outlet, and snapping an outlet onto the drainage network before delineating",
+    url: "https://www.asprs.org/wp-content/uploads/pers/1988journal/nov/1988_nov_1593-1600.pdf",
+};
+
+/// Every cell whose D8 path reaches `outlet`, the outlet included.
+fn basin_of(z: &[f64], w: usize, h: usize, cell: f64, outlet: usize) -> Vec<bool> {
+    let n = z.len();
+    let mut from: Vec<Vec<usize>> = vec![vec![]; n];
+    for i in 0..n {
+        if z[i].is_nan() {
+            continue;
+        }
+        if let Some((k, _)) = d8(z, w, h, i, cell) {
+            let (dr, dc, ..) = DIRS[k];
+            let j = ((i / w) as i64 + dr) as usize * w + ((i % w) as i64 + dc) as usize;
+            from[j].push(i);
+        }
+    }
+    let mut inside = vec![false; n];
+    let mut stack = vec![outlet];
+    inside[outlet] = true;
+    while let Some(i) = stack.pop() {
+        for &u in &from[i] {
+            if !inside[u] {
+                inside[u] = true;
+                stack.push(u);
+            }
+        }
+    }
+    inside
+}
+
+/// The longest D8 path ending at `outlet`, as the cells along it from the top
+/// down, with its length in meters.
+fn longest_path(z: &[f64], w: usize, h: usize, cell: f64, outlet: usize) -> (Vec<usize>, f64) {
+    let n = z.len();
+    let mut from: Vec<Vec<usize>> = vec![vec![]; n];
+    for i in 0..n {
+        if z[i].is_nan() {
+            continue;
+        }
+        if let Some((k, _)) = d8(z, w, h, i, cell) {
+            let (dr, dc, ..) = DIRS[k];
+            let j = ((i / w) as i64 + dr) as usize * w + ((i % w) as i64 + dc) as usize;
+            from[j].push(i);
+        }
+    }
+    // Depth-first from the outlet upstream, keeping the longest branch.
+    let mut best_len = vec![0.0f64; n];
+    let mut best_up = vec![usize::MAX; n];
+    let mut order = vec![];
+    let mut stack = vec![(outlet, false)];
+    let mut seen = vec![false; n];
+    seen[outlet] = true;
+    while let Some((i, done)) = stack.pop() {
+        if done {
+            order.push(i);
+            continue;
+        }
+        stack.push((i, true));
+        for &u in &from[i] {
+            if !seen[u] {
+                seen[u] = true;
+                stack.push((u, false));
+            }
+        }
+    }
+    for &i in &order {
+        for &u in &from[i] {
+            let (dr, dc) = (
+                (i / w) as i64 - (u / w) as i64,
+                (i % w) as i64 - (u % w) as i64,
+            );
+            let step = if dr.abs() + dc.abs() == 2 {
+                cell * std::f64::consts::SQRT_2
+            } else {
+                cell
+            };
+            let len = best_len[u] + step;
+            if len > best_len[i] {
+                best_len[i] = len;
+                best_up[i] = u;
+            }
+        }
+    }
+    let mut path = vec![outlet];
+    let mut at = outlet;
+    while best_up[at] != usize::MAX {
+        at = best_up[at];
+        path.push(at);
+    }
+    path.reverse();
+    (path, best_len[outlet])
+}
+
+/// Where a pour point lands once snapped, and how it was snapped.
+/// How a pour point is moved onto the network before delineating.
+struct Snap<'a> {
+    rule: &'a str,
+    threshold: f64,
+    within: usize,
+}
+
+fn snap(z: &[f64], acc: &[f64], w: usize, h: usize, at: usize, how: &Snap<'_>) -> (usize, String) {
+    let Snap {
+        rule,
+        threshold,
+        within,
+    } = *how;
+    let (r0, c0) = ((at / w) as i64, (at % w) as i64);
+    let mut best: Option<(usize, f64, i64)> = None;
+    for dr in -(within as i64)..=(within as i64) {
+        for dc in -(within as i64)..=(within as i64) {
+            let (r, c) = (r0 + dr, c0 + dc);
+            if r < 0 || r >= h as i64 || c < 0 || c >= w as i64 {
+                continue;
+            }
+            let i = r as usize * w + c as usize;
+            if z[i].is_nan() {
+                continue;
+            }
+            let d2 = dr * dr + dc * dc;
+            let take = match rule {
+                "highest-accumulation" => best.is_none_or(|(_, a, _)| acc[i] > a),
+                // Nearest stream cell: the closest cell at or above the
+                // threshold, the one with more water breaking a tie.
+                _ => {
+                    acc[i] >= threshold
+                        && best.is_none_or(|(_, a, bd)| d2 < bd || (d2 == bd && acc[i] > a))
+                }
+            };
+            if take {
+                best = Some((i, acc[i], d2));
+            }
+        }
+    }
+    match best {
+        Some((i, _, d2)) if i != at => (
+            i,
+            format!(
+                "snapped {} cells to the {}",
+                (f64::from(d2 as i32)).sqrt().round(),
+                if rule == "highest-accumulation" {
+                    "cell with the most water within reach"
+                } else {
+                    "nearest channel cell"
+                }
+            ),
+        ),
+        _ => (at, "the cell you gave, unsnapped".to_string()),
+    }
+}
+
+const PATH_ROW: &[Field] = &[
+    Field::new(
+        "step",
+        "Step",
+        "From 1 at the top of the path, like 3",
+        Kind::Number { min: 1.0, max: 1e6 },
+    )
+    .precision(Precision::Decimals(0)),
+    Field::new(
+        "row",
+        "Row",
+        "From 1 at the north",
+        Kind::Number { min: 1.0, max: 1e6 },
+    )
+    .precision(Precision::Decimals(0)),
+    Field::new(
+        "column",
+        "Column",
+        "From 1 at the west",
+        Kind::Number { min: 1.0, max: 1e6 },
+    )
+    .precision(Precision::Decimals(0)),
+    Field::new(
+        "elevation",
+        "Elevation",
+        "At that cell",
+        Kind::Quantity {
+            q: QT::Length,
+            unit: "m",
+        },
+    )
+    .precision(Precision::Decimals(3)),
+];
+
+fn pour_point(ctx: &mut Ctx, w: usize, h: usize, z: &[f64]) -> Result<usize, ToolError> {
+    let row = ctx.number("pour_row")?.ok_or_else(|| {
+        ToolError::invalid(
+            "/pour_row",
+            "Give the pour point's row, counting from 1 at the north.",
+        )
+    })?;
+    let col = ctx.number("pour_column")?.ok_or_else(|| {
+        ToolError::invalid(
+            "/pour_column",
+            "Give the pour point's column, counting from 1 at the west.",
+        )
+    })?;
+    let (r, c) = (row.round() as i64 - 1, col.round() as i64 - 1);
+    if r < 0 || r >= h as i64 || c < 0 || c >= w as i64 {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            format!("The pour point is outside the window, which is {h} rows by {w} columns."),
+        )
+        .at("/pour_row"));
+    }
+    let i = r as usize * w + c as usize;
+    if z[i].is_nan() {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "The pour point is on a no-data cell; pick one with an elevation.",
+        )
+        .at("/pour_row"));
+    }
+    Ok(i)
+}
+
+pub static WATERSHED: ToolDef = ToolDef {
+    id: "raster.hydrology.watershed",
+    title: "Watershed above a pour point",
+    summary: "Every cell of an elevation grid whose water reaches the point you pick, with the basin's area, relief, mean slope, outline, and its longest flow path.",
+    aliases: &[
+        "watershed delineation",
+        "catchment above a point",
+        "drainage basin from a DEM",
+        "pour point watershed",
+    ],
+    keywords: &[
+        "watershed",
+        "catchment",
+        "basin",
+        "pour",
+        "outlet",
+        "delineation",
+        "hydrology",
+        "DEM",
+    ],
+    inputs: &[
+        Field::new(
+            "elevations",
+            "Elevation grid",
+            "Rows of elevations in meters, north row first, west to east, like 101.2, 100.6, 100.2",
+            Kind::List {
+                items: ROW,
+                min: 2,
+                max: MAX_SIDE,
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "cell_size",
+            "Cell size",
+            "The ground size of one cell, like 30 m",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "pour_row",
+            "Pour point row",
+            "From 1 at the north, like 7",
+            Kind::Number { min: 1.0, max: 1e6 },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "pour_column",
+            "Pour point column",
+            "From 1 at the west, like 4",
+            Kind::Number { min: 1.0, max: 1e6 },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "snap",
+            "Snap rule",
+            "Move the point onto the network first, like nearest-stream",
+            Kind::Choice(&["nearest-stream", "highest-accumulation", "none"]),
+        )
+        .core(),
+        Field::new(
+            "threshold_cells",
+            "Stream threshold, in cells",
+            "What counts as a channel for the nearest-stream rule, like 20",
+            Kind::Number { min: 1.0, max: 1e9 },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "snap_within",
+            "Search distance",
+            "How many cells out to look when snapping, like 3",
+            Kind::Number {
+                min: 0.0,
+                max: 50.0,
+            },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "no_data",
+            "No-data value",
+            "A value that marks a missing elevation, like -9999",
+            Kind::Number {
+                min: -1e12,
+                max: 1e12,
+            },
+        ),
+    ],
+    outputs: &[
+        Field::new(
+            "basin_area",
+            "Basin area",
+            "The cells that drain to the outlet, times the cell area",
+            Kind::Quantity {
+                q: QT::Area,
+                unit: "m2",
+            },
+        )
+        .precision(Precision::Decimals(1)),
+        Field::new(
+            "basin_cells",
+            "Basin cells",
+            "How many cells drain to the outlet",
+            Kind::Number { min: 1.0, max: 1e9 },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "outlet_row",
+            "Outlet row",
+            "After snapping, from 1 at the north",
+            Kind::Number { min: 1.0, max: 1e6 },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "outlet_column",
+            "Outlet column",
+            "After snapping, from 1 at the west",
+            Kind::Number { min: 1.0, max: 1e6 },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "snap_note",
+            "How the outlet was placed",
+            "Whether the point moved, and why",
+            Kind::Text { max_len: 120 },
+        ),
+        Field::new(
+            "relief",
+            "Relief",
+            "Highest cell in the basin above the outlet",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(2)),
+        Field::new(
+            "mean_slope",
+            "Mean slope",
+            "Averaged over the basin's cells, rise over run",
+            Kind::Number { min: 0.0, max: 1e4 },
+        )
+        .precision(Precision::Decimals(4)),
+        Field::new(
+            "longest_path",
+            "Longest flow path",
+            "From the farthest cell down to the outlet",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(2)),
+        Field::new(
+            "path_drop",
+            "Drop along that path",
+            "Its first cell above the outlet",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(2)),
+        Field::new(
+            "touches_edge",
+            "Reaches the window's edge",
+            "Yes when the basin may continue beyond the data",
+            Kind::Text { max_len: 8 },
+        ),
+        Field::new(
+            "basin",
+            "Basin grid",
+            "1 for a cell in the basin, 0 for the rest, north row first",
+            Kind::List {
+                items: ROW,
+                min: 2,
+                max: MAX_SIDE,
+            },
+        ),
+        Field::new(
+            "path",
+            "The longest path",
+            "Its cells from the top down",
+            Kind::List {
+                items: PATH_ROW,
+                min: 1,
+                max: 25_000,
+            },
+        ),
+    ],
+    errors: &[
+        ErrorCode::InvalidInput,
+        ErrorCode::OutOfDomain,
+        ErrorCode::LimitExceeded,
+    ],
+    warnings: &[
+        "PITS_PRESENT",
+        "WATERSHED_TOUCHES_EDGE",
+        "EXPERIMENTAL_TOOL",
+    ],
+    model: "The basin is every cell whose D8 path reaches the outlet (Jenson and Domingue 1988), found by walking the pointers upstream from it. The outlet is first snapped, by the nearest channel cell at the threshold or by the most water within the search distance. Area = cells × cell size²; relief = the basin's highest cell above the outlet; mean slope averages each cell's steepest descent; the longest flow path is the longest chain of pointers ending at the outlet, summing the cell size along sides and √2 times it along diagonals",
+    accuracy: "Exact in the arithmetic of the rules over the window given: the basin is every cell the pointers lead from, and the path length is the walked chain of cell centres",
+    when_to_use: "Use this to find what drains to a point: a culvert, a gauge, a reservoir, a sample site. Give the conditioned grid, the cell size, and the point's row and column, and let the tool snap it onto the channel first, since a point one cell off the channel delineates a hillside instead of a basin. It returns the basin's cells and area, its relief and mean slope, the longest flow path for a time-of-concentration estimate, and the basin as a grid you can draw.",
+    limitations: "The window bounds the answer: when the basin reaches the edge, the real basin may continue beyond the data, which the result says and warns. An unconditioned pit cuts a basin short, so fill or breach first. The grid is plane, so the area is the cell count times the cell size squared rather than a geodesic area; a geographic grid needs its cell size in meters at the latitude. Mean slope is the average of the cells' steepest descents, not a fitted surface. The window holds at most 25,000 cells.",
+    references: &[JENSON, OCALLAGHAN],
+    examples: &[Example {
+        id: "primary",
+        title: "The basin above the bottom of a valley",
+        source: "add-raster-hydrology raster/hydrology: the cells whose water reaches the valley's outlet, with the longest path down it",
+        input: r#"{"elevations":[{"row":"60, 48, 60, 60, 60, 48, 60"},{"row":"60, 60, 47, 60, 47, 60, 60"},{"row":"60, 60, 60, 46, 60, 60, 60"},{"row":"60, 60, 60, 45, 60, 60, 60"},{"row":"60, 60, 60, 44, 60, 60, 60"},{"row":"60, 60, 60, 43, 60, 60, 60"},{"row":"60, 60, 60, 42, 60, 60, 60"}],"cell_size":"30 m","pour_row":7,"pour_column":4,"snap":"none"}"#,
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "raster.hydrology.streams",
+            reason: "parent",
+        },
+        Related {
+            id: "raster.hydrology.flow-accumulation",
+            reason: "alternative",
+        },
+        Related {
+            id: "raster.hydrology.fill",
+            reason: "next",
+        },
+    ],
+    sentence: "That point drains {basin_area}.",
+    limits: &[("batchRows", 1)],
+    run: run_watershed,
+    ..ToolDef::BLANK
+};
+
+fn run_watershed(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let m = units::by_symbol(QT::Length, "m").expect("m");
+    let m2 = units::by_symbol(QT::Area, "m2").expect("m2");
+    let no_data = ctx.number("no_data")?;
+    let grid = read_grid(ctx, "elevations", no_data)?;
+    let (h, w) = (grid.len(), grid[0].len());
+    if h * w > MAX_CELLS {
+        return Err(ToolError::new(
+            ErrorCode::LimitExceeded,
+            format!(
+                "The window holds {} cells; this tool takes {MAX_CELLS}. Clip it smaller.",
+                h * w
+            ),
+        )
+        .at("/elevations"));
+    }
+    let cell = ctx.req_quantity("cell_size")?.to(m);
+    if !(cell.is_finite() && cell > 0.0) {
+        return Err(ToolError::invalid(
+            "/cell_size",
+            "The cell size must be more than zero.",
+        ));
+    }
+    let z: Vec<f64> = grid.iter().flatten().copied().collect();
+    let given = pour_point(ctx, w, h, &z)?;
+    let acc = accumulate_d8(&z, w, h, cell);
+    let rule = ctx.choice("snap")?.unwrap_or("nearest-stream");
+    let threshold = ctx.number("threshold_cells")?.unwrap_or_else(|| {
+        // A tenth of a percent of the window, at least five cells: enough to
+        // be a channel on a small grid, and stated in the note either way.
+        ((h * w) as f64 * 0.001).max(5.0).round()
+    });
+    let within = ctx.number("snap_within")?.unwrap_or(3.0).round() as usize;
+    let (outlet, note) = if rule == "none" {
+        (given, "the cell you gave, unsnapped".to_string())
+    } else {
+        snap(
+            &z,
+            &acc,
+            w,
+            h,
+            given,
+            &Snap {
+                rule,
+                threshold,
+                within,
+            },
+        )
+    };
+    let pit_count = pits(&z, w, h).len();
+    if pit_count > 0 {
+        ctx.warnings.push(Warning::new(
+            "PITS_PRESENT",
+            format!(
+                "{pit_count} interior cells have no lower neighbour, so a basin can stop short of its real edge. Condition the grid with the fill tool first."
+            ),
+        ));
+    }
+    let inside = basin_of(&z, w, h, cell, outlet);
+    let cells = inside.iter().filter(|b| **b).count();
+    let mut touches = false;
+    let (mut high, mut slope_sum, mut slope_n) = (z[outlet], 0.0, 0usize);
+    for (i, b) in inside.iter().enumerate() {
+        if !b {
+            continue;
+        }
+        let (r, c) = (i / w, i % w);
+        if r == 0 || c == 0 || r + 1 == h || c + 1 == w {
+            touches = true;
+        }
+        high = high.max(z[i]);
+        if let Some((_, s)) = d8(&z, w, h, i, cell) {
+            slope_sum += s;
+            slope_n += 1;
+        }
+    }
+    if touches {
+        ctx.warnings.push(Warning::new(
+            "WATERSHED_TOUCHES_EDGE",
+            "The basin reaches the window's edge, so the real basin may continue beyond the data.",
+        ));
+    }
+    let (path, path_len) = longest_path(&z, w, h, cell, outlet);
+    let drop = z[*path.first().expect("the outlet is on the path")] - z[outlet];
+    let basin_rows: Vec<Json> = (0..h)
+        .map(|r| {
+            let text = (0..w)
+                .map(|c| {
+                    let i = r * w + c;
+                    if z[i].is_nan() {
+                        no_data.map_or_else(
+                            || "NaN".to_string(),
+                            |n| gp_base::num::format_f64(n).unwrap_or_else(|| "NaN".to_string()),
+                        )
+                    } else if inside[i] {
+                        "1".to_string()
+                    } else {
+                        "0".to_string()
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join(", ");
+            Json::obj([("row", Json::str(text))])
+        })
+        .collect();
+    let path_rows: Vec<Json> = path
+        .iter()
+        .enumerate()
+        .map(|(k, &i)| {
+            Json::obj([
+                ("step", Json::Num((k + 1) as f64)),
+                ("row", Json::Num((i / w + 1) as f64)),
+                ("column", Json::Num((i % w + 1) as f64)),
+                (
+                    "elevation",
+                    Q {
+                        value: z[i],
+                        unit: m,
+                    }
+                    .to_json(),
+                ),
+            ])
+        })
+        .collect();
+    if ctx.explaining() {
+        ctx.step(
+            "The outlet",
+            "the pour point, snapped onto the network",
+            format!("row {}, column {}", given / w + 1, given % w + 1),
+            note.clone(),
+        );
+        ctx.step(
+            "The basin",
+            "every cell whose flow path reaches the outlet",
+            format!("{} cells in the window", h * w),
+            format!("{cells} cells"),
+        );
+        let area = cells as f64 * cell * cell;
+        ctx.step(
+            "Its area",
+            "cells × cell size²",
+            format!("{cells} × {cell} m × {cell} m"),
+            // Grouped the way the answer card shows it, so the trace ends on
+            // exactly the number the reader is looking at.
+            format!(
+                "{} m²",
+                gp_base::display::number(area, Precision::Decimals(1), ctx.options.format)
+            ),
+        );
+    }
+    Ok(Json::obj([
+        (
+            "basin_area",
+            ctx.out(
+                "basin_area",
+                Q {
+                    value: cells as f64 * cell * cell,
+                    unit: m2,
+                },
+            ),
+        ),
+        ("basin_cells", Json::Num(cells as f64)),
+        ("outlet_row", Json::Num((outlet / w + 1) as f64)),
+        ("outlet_column", Json::Num((outlet % w + 1) as f64)),
+        ("snap_note", Json::str(note)),
+        (
+            "relief",
+            ctx.out(
+                "relief",
+                Q {
+                    value: high - z[outlet],
+                    unit: m,
+                },
+            ),
+        ),
+        (
+            "mean_slope",
+            Json::Num(if slope_n == 0 {
+                0.0
+            } else {
+                slope_sum / slope_n as f64
+            }),
+        ),
+        (
+            "longest_path",
+            ctx.out(
+                "longest_path",
+                Q {
+                    value: path_len,
+                    unit: m,
+                },
+            ),
+        ),
+        (
+            "path_drop",
+            ctx.out(
+                "path_drop",
+                Q {
+                    value: drop,
+                    unit: m,
+                },
+            ),
+        ),
+        (
+            "touches_edge",
+            Json::str(if touches { "yes" } else { "no" }),
+        ),
+        ("basin", Json::Arr(basin_rows)),
+        ("path", Json::Arr(path_rows)),
+    ]))
+}

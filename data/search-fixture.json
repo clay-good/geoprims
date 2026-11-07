@@ -1282,6 +1282,10 @@
       "expect": "raster.hydrology.streams"
     },
     {
+      "query": "watershed above a pour point",
+      "expect": "raster.hydrology.watershed"
+    },
+    {
       "query": "under keel clearance with squat",
       "expect": "navigation.vessel.under-keel-clearance"
     },

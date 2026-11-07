@@ -85,6 +85,7 @@
     "raster.hydrology.flow-direction": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "elevations" },
     "raster.hydrology.flow-accumulation": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "elevations" },
     "raster.hydrology.streams": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "elevations" },
+    "raster.hydrology.watershed": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "elevations" },
     "raster.terrain.contours": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "elevations" },
     "raster.terrain.curvature": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "elevations" },
     "raster.terrain.dem-difference-volume": { "kind": "data-proportional", "p95Ms": 10, "scalesWith": "before and after" },

@@ -628,3 +628,133 @@ fn stream_threshold_and_placement() {
     );
     assert_eq!(half["error"]["code"], "INVALID_INPUT", "{half}");
 }
+
+fn watershed(input: Value) -> Value {
+    serde_json::from_str(&REGISTRY.invoke("raster.hydrology.watershed", &input.to_string()))
+        .unwrap()
+}
+
+fn basin_cells(r: &Value) -> Vec<Vec<f64>> {
+    r["result"]["basin"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|row| {
+            row["row"]
+                .as_str()
+                .unwrap()
+                .split(',')
+                .map(|v| v.trim().parse::<f64>().unwrap())
+                .collect()
+        })
+        .collect()
+}
+
+#[test]
+fn watershed_scenarios() {
+    let grid: Vec<Value> = FORK.iter().map(|x| json!({"row": x})).collect();
+    // Nested basins: the basin of a cell upstream lies inside the basin below.
+    let low = watershed(
+        json!({"elevations": grid, "cell_size": "30 m", "pour_row": 7, "pour_column": 4, "snap": "none"}),
+    );
+    let high = watershed(
+        json!({"elevations": grid, "cell_size": "30 m", "pour_row": 4, "pour_column": 4, "snap": "none"}),
+    );
+    let (lo, hi) = (basin_cells(&low), basin_cells(&high));
+    for (r, row) in hi.iter().enumerate() {
+        for (c, v) in row.iter().enumerate() {
+            if *v == 1.0 {
+                assert_eq!(
+                    lo[r][c], 1.0,
+                    "cell {r},{c} is upstream but outside the lower basin"
+                );
+            }
+        }
+    }
+    assert!(
+        high["result"]["basin_cells"].as_f64().unwrap()
+            < low["result"]["basin_cells"].as_f64().unwrap(),
+        "{high} vs {low}"
+    );
+    // The basin's area is its cells times the cell area.
+    let cells = low["result"]["basin_cells"].as_f64().unwrap();
+    assert!(
+        (low["result"]["basin_area"]["value"].as_f64().unwrap() - cells * 900.0).abs() < 1e-9,
+        "{low}"
+    );
+    // The outlet is in its own basin, and the longest path ends there.
+    let path = low["result"]["path"].as_array().unwrap();
+    let last = path.last().unwrap();
+    assert_eq!(last["row"], low["result"]["outlet_row"], "{low}");
+    assert_eq!(last["column"], low["result"]["outlet_column"], "{low}");
+
+    // The Ramp path scenario: 270 m along a 10-cell east ramp of 30 m cells.
+    let r = watershed(
+        json!({"elevations": ramp(10), "cell_size": "30 m", "pour_row": 1, "pour_column": 10, "snap": "none"}),
+    );
+    assert!(
+        (r["result"]["longest_path"]["value"].as_f64().unwrap() - 270.0).abs() < 0.001,
+        "{r}"
+    );
+    assert!(
+        (r["result"]["path_drop"]["value"].as_f64().unwrap() - 9.0).abs() < 1e-9,
+        "{r}"
+    );
+}
+
+#[test]
+fn watershed_edges_and_refusals() {
+    let grid: Vec<Value> = FORK.iter().map(|x| json!({"row": x})).collect();
+    // A basin that reaches the window's edge says so and warns.
+    let r = watershed(
+        json!({"elevations": grid, "cell_size": "30 m", "pour_row": 7, "pour_column": 4, "snap": "none"}),
+    );
+    assert_eq!(r["result"]["touches_edge"], "yes", "{r}");
+    let codes: Vec<&str> = r["meta"]["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|w| w["code"].as_str().unwrap())
+        .collect();
+    assert!(codes.contains(&"WATERSHED_TOUCHES_EDGE"), "{r}");
+
+    // Snapping moves a point off the channel onto it, and says it moved.
+    let off = watershed(
+        json!({"elevations": grid, "cell_size": "30 m", "pour_row": 7, "pour_column": 3,
+                               "snap": "nearest-stream", "threshold_cells": 5}),
+    );
+    assert_eq!(off["result"]["outlet_column"], 4, "{off}");
+    assert!(
+        off["result"]["snap_note"]
+            .as_str()
+            .unwrap()
+            .contains("snapped"),
+        "{off}"
+    );
+    // Snapped, it finds the valley; unsnapped, the hillside cell alone.
+    let unsnapped = watershed(
+        json!({"elevations": grid, "cell_size": "30 m", "pour_row": 7, "pour_column": 3, "snap": "none"}),
+    );
+    assert!(
+        unsnapped["result"]["basin_cells"].as_f64().unwrap()
+            < off["result"]["basin_cells"].as_f64().unwrap(),
+        "{unsnapped} vs {off}"
+    );
+
+    // A pour point off the window, or on no data, is refused by name.
+    let off_grid = watershed(
+        json!({"elevations": grid, "cell_size": "30 m", "pour_row": 99, "pour_column": 4}),
+    );
+    assert_eq!(off_grid["error"]["code"], "OUT_OF_DOMAIN", "{off_grid}");
+    assert!(
+        off_grid["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("7 rows"),
+        "{off_grid}"
+    );
+    let hole = watershed(json!({"elevations": [
+        {"row": "100, 99, 98"}, {"row": "100, -9999, 97"}, {"row": "100, 99, 96"}],
+        "cell_size": "10 m", "no_data": -9999.0, "pour_row": 2, "pour_column": 2}));
+    assert_eq!(hole["error"]["code"], "OUT_OF_DOMAIN", "{hole}");
+}

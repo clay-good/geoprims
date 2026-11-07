@@ -39,6 +39,7 @@ pub static TOOLS: &[&gp_base::tool::ToolDef] = &[
     &hydrology::FLOW_DIRECTION,
     &hydrology::FLOW_ACCUMULATION,
     &hydrology::STREAMS,
+    &hydrology::WATERSHED,
     &terrain::ASPECT,
     &terrain::HILLSHADE,
     &terrain::ROUGHNESS_TRI,

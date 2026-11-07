@@ -2096,6 +2096,12 @@
           "tools": [
             "streams"
           ]
+        },
+        {
+          "want": "find what drains to a culvert, a gauge, or a sample site",
+          "tools": [
+            "watershed"
+          ]
         }
       ]
     },

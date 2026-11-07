@@ -437,6 +437,10 @@
     "EMPTY_NETWORK": {
       "severity": "info",
       "message": "No cell reaches the stream threshold, so the network is empty."
+    },
+    "WATERSHED_TOUCHES_EDGE": {
+      "severity": "accuracy",
+      "message": "The basin reaches the window's edge, so the real basin may continue beyond the data."
     }
   }
 }

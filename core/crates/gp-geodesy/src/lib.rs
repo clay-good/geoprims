@@ -3271,6 +3271,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &spcs::ARC_TO_CHORD,
     &methods::LV95_FORWARD,
     &methods::LV95_INVERSE,
+    &methods::NZTM_FORWARD,
+    &methods::NZTM_INVERSE,
     &methods::WEB_MERCATOR_FORWARD,
     &methods::WEB_MERCATOR_INVERSE,
     &methods::LCC_FORWARD,

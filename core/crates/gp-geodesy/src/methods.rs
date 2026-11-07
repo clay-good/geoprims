@@ -2539,3 +2539,353 @@ fn run_lv95_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("datum", Json::str(LV95_NOTE)),
     ]))
 }
+
+// ------------------------------------------------------- New Zealand (NZTM2000)
+
+const LINZ_NZTM: Reference = Reference {
+    title: "New Zealand Transverse Mercator 2000 (NZTM2000), defined by LINZS25002 Standard for New Zealand Geodetic Datum 2000 Projections",
+    issuer: "Land Information New Zealand (LINZ)",
+    year: 2008,
+    edition: "LINZS25002 version 2, 24 July 2008",
+    locator: "The projection's defining parameters: reference ellipsoid GRS80, datum NZGD2000, origin latitude 0°, central meridian 173°E, false northing 10,000,000 m, false easting 1,600,000 m, central meridian scale factor 0.9996; registered as EPSG 2193",
+    url: "https://www.linz.govt.nz/guidance/geodetic-system/coordinate-systems-used-new-zealand/projections/new-zealand-transverse-mercator-2000-nztm2000",
+};
+const LINZ_DEFORMATION: Reference = Reference {
+    title: "New Zealand Geodetic Datum 2000 deformation model",
+    issuer: "Land Information New Zealand (LINZ)",
+    year: 2024,
+    edition: "Geodetic guidance, as published 2024",
+    locator: "NZGD2000 was aligned with ITRF96 on 1 January 2000 (epoch 2000.0), and treating WGS84 coordinates as equivalent to NZGD2000 \"has an associated error of 5cm per year since 2000, or 1.25m in 2025\"",
+    url: "https://www.linz.govt.nz/guidance/geodetic-system/coordinate-systems-used-new-zealand/geodetic-datums/new-zealand-geodetic-datum-2000-nzgd2000/nzgd2000-deformation-model",
+};
+
+/// NZTM2000 (EPSG 2193), on GRS 80 and NZGD2000.
+fn nztm_grid() -> TmGrid {
+    let g = crate::gridref::grs80();
+    TmGrid::new(g.a, g.f, 0.0, 173.0, 0.9996, 1_600_000.0, 10_000_000.0)
+}
+
+const NZTM_FRAME: &str = "NZTM2000 is defined on NZGD2000, which was aligned with ITRF96 at epoch 2000.0 and then held there. LINZ puts the error in treating a WGS 84 position as NZGD2000 at 5 cm a year since 2000, which is 1.25 m in 2025; closing it needs LINZ's deformation model.";
+
+const NZTM_EASTING: Field = length(
+    "easting",
+    "Easting",
+    "NZTM2000, from its false origin, like 1748815.78 m",
+);
+const NZTM_NORTHING: Field = length(
+    "northing",
+    "Northing",
+    "NZTM2000, from its false origin, like 5428791.06 m",
+);
+
+const NZTM_GRID_OUT: [Field; 2] = [
+    Field::new(
+        "easting",
+        "Easting",
+        "NZTM2000, from its false origin",
+        Kind::Quantity {
+            q: QT::Length,
+            unit: "m",
+        },
+    )
+    .precision(Precision::Decimals(3)),
+    Field::new(
+        "northing",
+        "Northing",
+        "NZTM2000, from its false origin",
+        Kind::Quantity {
+            q: QT::Length,
+            unit: "m",
+        },
+    )
+    .precision(Precision::Decimals(3)),
+];
+
+const NZTM_CONVERGENCE: Field = Field::new(
+    "convergence",
+    "Grid convergence",
+    "Grid north minus true north at the point",
+    Kind::Quantity {
+        q: QT::Angle,
+        unit: "deg",
+    },
+)
+.precision(Precision::Decimals(6))
+.angle_range("[-90,90]");
+
+const NZTM_SCALE: Field = Field::new(
+    "scale_factor",
+    "Point scale factor",
+    "Grid distance over ground distance at the point",
+    Kind::Number { min: 0.0, max: 2.0 },
+)
+.precision(Precision::Decimals(9));
+
+const NZTM_FRAME_OUT: Field = Field::new(
+    "frame",
+    "Reference frame",
+    "What the coordinates are taken to be",
+    Kind::Text { max_len: 260 },
+);
+
+pub static NZTM_FORWARD: ToolDef = ToolDef {
+    id: "geodesy.projection.nztm-forward",
+    title: "Latitude and longitude to NZTM2000",
+    summary: "Converts an NZGD2000 latitude and longitude to New Zealand Transverse Mercator 2000 easting and northing, the national grid, with the grid convergence and the point scale factor.",
+    aliases: &[
+        "lat long to NZTM",
+        "NZTM2000 converter",
+        "New Zealand grid coordinates",
+        "latlon to NZTM2000",
+    ],
+    keywords: &[
+        "NZTM2000",
+        "NZTM",
+        "NZGD2000",
+        "New Zealand",
+        "transverse Mercator",
+        "LINZ",
+        "projection",
+        "EPSG 2193",
+    ],
+    inputs: &[
+        Field::new(
+            "lat",
+            "Latitude",
+            "North positive, so New Zealand is negative, like -41.278611",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(9))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "East positive, like 174.776944",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(9))
+        .angle_range("[-180,180)"),
+    ],
+    outputs: &[
+        NZTM_GRID_OUT[0],
+        NZTM_GRID_OUT[1],
+        NZTM_CONVERGENCE,
+        NZTM_SCALE,
+        NZTM_FRAME_OUT,
+    ],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["REALIZATION_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "Transverse Mercator on GRS 80 with the parameters LINZS25002 states and EPSG registers as 2193: origin latitude 0°, central meridian 173°E, scale 0.9996 on that meridian, false easting 1,600,000 m and false northing 10,000,000 m, by Karney's series",
+    accuracy: "The projection is exact to the series' nanometre over New Zealand, and agrees with PROJ applying EPSG 2193 within a millimetre at every test place. The coordinates are taken as NZGD2000: read as a satellite's WGS 84 they are out by the plate motion LINZ states, 5 cm a year since 2000",
+    when_to_use: "Use this to put a latitude and longitude onto the grid every New Zealand map, title, and council dataset is drawn in. It gives the grid convergence and the point scale factor beside the coordinates, which is what turns a true bearing into a grid bearing and a ground distance into a grid distance.",
+    limitations: "NZTM2000 is defined on NZGD2000, a datum pinned to ITRF96 at the start of 2000 while the ground kept moving: LINZ puts the error in treating a WGS 84 position as NZGD2000 at 5 cm a year, 1.25 m in 2025, and closing it needs LINZ's deformation model, which is not part of this tool. The projection is for the main islands and their shelf; the Chatham Islands and the other outlying groups have their own circuits, and so does cadastral work, which uses the meridional circuits rather than NZTM2000. Heights are untouched.",
+    references: &[LINZ_NZTM, LINZ_DEFORMATION],
+    examples: &[Example {
+        id: "primary",
+        title: "The Beehive, Wellington",
+        source: "PROJ 9.9.0 applying EPSG 2193: 41.278611°S 174.776944°E on NZGD2000 gives E 1748815.784 N 5428791.056",
+        input: r#"{"lat":-41.278611,"lon":174.776944}"#,
+    }],
+    primary_example: "primary",
+    visualization: FORWARD_LAYER,
+    related: &[
+        Related {
+            id: "geodesy.projection.nztm-inverse",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.projection.tm-forward",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.datum.itrf",
+            reason: "next",
+        },
+    ],
+    sentence: "That point is E {easting}, N {northing} on NZTM2000.",
+    limits: &[("batchRows", 10_000)],
+    run: run_nztm_forward,
+    ..ToolDef::BLANK
+};
+
+fn run_nztm_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let g = nztm_grid().forward(lat, lon);
+    ctx.warnings
+        .push(Warning::new("REALIZATION_ASSUMED", NZTM_FRAME));
+    if ctx.explaining() {
+        ctx.step(
+            "The frame",
+            "NZTM2000 is on NZGD2000, held at epoch 2000.0; a satellite position is on WGS 84",
+            format!("{lat:.7}°, {lon:.7}°"),
+            "taken as NZGD2000".to_string(),
+        );
+        ctx.step(
+            "Off the central meridian",
+            "the projection measures the longitude from 173°E",
+            format!("{lon:.7}° against 173°"),
+            format!("{:.7}°", lon - 173.0),
+        );
+        ctx.step(
+            "On the NZTM2000 grid",
+            "transverse Mercator, GRS 80, origin 0° 173°E, scale 0.9996, false origin 1,600 km east and 10,000 km north",
+            format!("{lat:.7}°, {lon:.7}°"),
+            format!(
+                "{} m",
+                gp_base::display::number(g.e, Precision::Decimals(3), ctx.options.format)
+            ),
+        );
+    }
+    Ok(Json::obj([
+        ("easting", ctx.out("easting", meters(g.e))),
+        ("northing", ctx.out("northing", meters(g.n))),
+        ("convergence", ctx.out("convergence", deg(g.convergence))),
+        ("scale_factor", Json::Num(g.k)),
+        ("frame", Json::str(NZTM_FRAME)),
+    ]))
+}
+
+pub static NZTM_INVERSE: ToolDef = ToolDef {
+    id: "geodesy.projection.nztm-inverse",
+    title: "NZTM2000 to latitude and longitude",
+    summary: "Converts New Zealand Transverse Mercator 2000 easting and northing back to an NZGD2000 latitude and longitude, with the grid convergence and the point scale factor there.",
+    aliases: &[
+        "NZTM to lat long",
+        "NZTM2000 to latitude longitude",
+        "read New Zealand grid coordinates",
+        "NZTM easting northing to coordinates",
+    ],
+    keywords: &[
+        "NZTM2000",
+        "NZTM",
+        "NZGD2000",
+        "New Zealand",
+        "transverse Mercator",
+        "LINZ",
+        "inverse",
+        "EPSG 2193",
+    ],
+    inputs: &[
+        NZTM_EASTING.required().core(),
+        NZTM_NORTHING.required().core(),
+    ],
+    outputs: &[
+        Field::new(
+            "lat",
+            "Latitude",
+            "On NZGD2000, north positive",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "On NZGD2000, east positive",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .angle_range("[-180,180)"),
+        NZTM_CONVERGENCE,
+        NZTM_SCALE,
+        NZTM_FRAME_OUT,
+    ],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &["REALIZATION_ASSUMED", "EXPERIMENTAL_TOOL"],
+    model: "The inverse transverse Mercator on GRS 80 with LINZS25002's parameters, which EPSG registers as 2193 (origin 0° 173°E, scale 0.9996, false easting 1,600,000 m, false northing 10,000,000 m), by Karney's series",
+    accuracy: "The inverse is the forward's own inverse rather than a separate approximation, and the round trip returns every test place to within a nanodegree. The answer is on NZGD2000: read as a satellite's WGS 84 it is out by the plate motion LINZ states, 5 cm a year since 2000",
+    when_to_use: "Use this to read an easting and northing off a New Zealand map, title plan, or council dataset and get the latitude and longitude a phone or a web map wants. It returns the convergence and the point scale factor as well, which is what turns a grid bearing back into a true one.",
+    limitations: "The answer is on NZGD2000, which LINZ puts 5 cm a year from a satellite's WGS 84 since 2000, 1.25 m in 2025; closing that needs LINZ's deformation model, which is not part of this tool. These are not meridional circuit coordinates, which New Zealand cadastral surveys use and which are a different projection with its own origin for each circuit; nor are they the older New Zealand Map Grid. Heights are untouched.",
+    references: &[LINZ_NZTM, LINZ_DEFORMATION],
+    examples: &[Example {
+        id: "primary",
+        title: "The Beehive, Wellington",
+        source: "PROJ 9.9.0 applying EPSG 2193 in reverse: E 1748815.784172 N 5428791.056045 gives 41.278611°S 174.776944°E on NZGD2000",
+        input: r#"{"easting":"1748815.784172 m","northing":"5428791.056045 m"}"#,
+    }],
+    primary_example: "primary",
+    visualization: INVERSE_LAYER,
+    related: &[
+        Related {
+            id: "geodesy.projection.nztm-forward",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.projection.tm-inverse",
+            reason: "parent",
+        },
+        Related {
+            id: "geodesy.datum.itrf",
+            reason: "next",
+        },
+    ],
+    sentence: "That is {lat}, {lon} on NZGD2000.",
+    limits: &[("batchRows", 10_000)],
+    run: run_nztm_inverse,
+    ..ToolDef::BLANK
+};
+
+fn run_nztm_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (e, n) = grid_in(ctx)?;
+    if !e.is_finite() || !n.is_finite() {
+        return Err(ToolError::invalid(
+            "/easting",
+            "The easting and northing are metres on the NZTM2000 grid.",
+        ));
+    }
+    let grid = nztm_grid();
+    let (lat, lon) = grid.inverse(e, n);
+    if !lat.is_finite() || !lon.is_finite() || !(-90.0..=90.0).contains(&lat) {
+        return Err(ToolError::invalid(
+            "/northing",
+            "That easting and northing is not a place on the NZTM2000 grid.",
+        ));
+    }
+    let back = grid.forward(lat, lon);
+    ctx.warnings
+        .push(Warning::new("REALIZATION_ASSUMED", NZTM_FRAME));
+    if ctx.explaining() {
+        ctx.step(
+            "From the false origin",
+            "the grid counts 1,600 km east and 10,000 km north of its true origin",
+            format!("E {e:.3} m, N {n:.3} m"),
+            format!(
+                "{:.3} m east, {:.3} m north of it",
+                e - 1_600_000.0,
+                n - 10_000_000.0
+            ),
+        );
+        ctx.step(
+            "Off the NZTM2000 grid",
+            "the inverse transverse Mercator, GRS 80, origin 0° 173°E, scale 0.9996",
+            format!("E {e:.3} m, N {n:.3} m"),
+            format!(
+                "{}°",
+                gp_base::display::number(lat, Precision::Decimals(9), ctx.options.format)
+            ),
+        );
+    }
+    Ok(Json::obj([
+        ("lat", ctx.out("lat", deg(lat))),
+        ("lon", ctx.out("lon", deg(lon))),
+        ("convergence", ctx.out("convergence", deg(back.convergence))),
+        ("scale_factor", Json::Num(back.k)),
+        ("frame", Json::str(NZTM_FRAME)),
+    ]))
+}

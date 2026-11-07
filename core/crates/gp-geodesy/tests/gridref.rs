@@ -298,6 +298,23 @@ fn itm_round_trips_and_pins_its_origin() {
         "{o}"
     );
 
+    // The convergence is degrees, and roughly -(lambda - lambda0)*sin(phi):
+    // the forward and inverse tools agreeing was not enough, because both
+    // converted the series' degrees to degrees again and were 57.3 times too
+    // large together.
+    for (lat, lon) in places {
+        let f = call(
+            "geodesy.grid-ref.itm-forward",
+            &format!(r#"{{"lat":{lat},"lon":{lon}}}"#),
+        );
+        let gamma = f["result"]["convergence"]["value"].as_f64().unwrap();
+        let rough = (lon - -8.0) * lat.to_radians().sin();
+        assert!(
+            (gamma - rough).abs() < 0.01,
+            "convergence at {lat}, {lon} should be about {rough} degrees, not {gamma}"
+        );
+    }
+
     // ITM and the National Grid are different grids: an ITM easting read as a
     // British one lands far away, which is why they are separate tools.
     let dublin = call(

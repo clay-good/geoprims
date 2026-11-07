@@ -4236,6 +4236,46 @@
       "editionCheck": false
     },
     {
+      "id": "linz-nztm2000",
+      "name": "New Zealand Transverse Mercator 2000 (NZTM2000), defined by LINZS25002 Standard for New Zealand Geodetic Datum 2000 Projections",
+      "issuer": "Land Information New Zealand (LINZ)",
+      "currentEdition": "LINZS25002 version 2, 24 July 2008",
+      "currentReleaseDate": "2008-07-24",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-11-07",
+      "verificationNote": "Read at linz.govt.nz on 2026-11-07: the NZTM2000 projection page's defining parameters (GRS80, NZGD2000, origin latitude 0 degrees, central meridian 173 degrees East, false northing 10,000,000 m, false easting 1,600,000 m, central meridian scale factor 0.9996, EPSG 2193), which name LINZS25002 version 2 as the standard that defines them. The standard's own PDF was not read: it is behind a landing page that the search did not resolve to a file. The parameters were cross-checked against PROJ 9.9.0's EPSG 2193 record, which states the same seven values exactly, and the projection's own origin is a golden vector that pins all of them.",
+      "freeAccessUrl": "https://www.linz.govt.nz/guidance/geodetic-system/coordinate-systems-used-new-zealand/projections/new-zealand-transverse-mercator-2000-nztm2000",
+      "matchTerms": [
+        "New Zealand Transverse Mercator 2000"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
+      "id": "linz-nzgd2000-deformation",
+      "name": "New Zealand Geodetic Datum 2000 deformation model",
+      "issuer": "Land Information New Zealand (LINZ)",
+      "currentEdition": "Geodetic guidance, as published 2024",
+      "currentReleaseDate": "2024-01-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-11-07",
+      "verificationNote": "Read at linz.govt.nz on 2026-11-07: NZGD2000 \"aligned with the International Terrestrial Reference Frame 1996 (ITRF96) on 1 January 2000 (epoch 2000.0)\", and treating WGS84 coordinates as equivalent to NZGD2000 \"has an associated error of 5cm per year since 2000, or 1.25m in 2025\". The figure the tools state is LINZ's own; the deformation model itself is an asset download and is not in this repository, which is why the tools warn rather than correct.",
+      "freeAccessUrl": "https://www.linz.govt.nz/guidance/geodetic-system/coordinate-systems-used-new-zealand/geodetic-datums/new-zealand-geodetic-datum-2000-nzgd2000/nzgd2000-deformation-model",
+      "matchTerms": [
+        "New Zealand Geodetic Datum 2000 deformation model"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "os-coordinate-systems-guide",
       "name": "A Guide to Coordinate Systems in Great Britain",
       "issuer": "Ordnance Survey",

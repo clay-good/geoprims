@@ -1406,6 +1406,14 @@
       ]
     },
     {
+      "id": "nzgd2000",
+      "term": "NZGD2000",
+      "expansion": "New Zealand Geodetic Datum 2000",
+      "definition": "New Zealand's datum since 2000, aligned with ITRF96 at epoch 2000.0 and held there, with a deformation model for the ground's motion since.",
+      "source": "epsg-crs-registry",
+      "relatedTools": []
+    },
+    {
       "id": "nzgd49",
       "term": "NZGD49",
       "expansion": "New Zealand Geodetic Datum 1949",
@@ -1414,6 +1422,14 @@
       "relatedTools": [
         "geodesy.datum.legacy"
       ]
+    },
+    {
+      "id": "nztm2000",
+      "term": "NZTM2000",
+      "expansion": "New Zealand Transverse Mercator 2000",
+      "definition": "New Zealand's national grid: one transverse Mercator zone on 173°E, scale 0.9996, false origin 1,600 km east and 10,000 km north.",
+      "source": "epsg-crs-registry",
+      "relatedTools": []
     },
     {
       "id": "opus",

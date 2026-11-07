@@ -31,17 +31,17 @@ None in the projection beyond the series, which is exact to a nanometre here. Th
 - sourcePublisher: IOGP, through PROJ
 - sourceTitle: EPSG Geodetic Parameter Dataset, operation 2157 (IRENET95 / Irish Transverse Mercator)
 - sourceEdition: EPSG v13.102, as shipped in PROJ 9.9.0
-- sourceLocator: The projection's own parameters, applied by PROJ in reverse to E 715830.980 N 734697.669, the Spire of Dublin
+- sourceLocator: The projection's own parameters, applied by PROJ in reverse to E 715830.018671 N 734698.346164, the Spire of Dublin
 - independent: yes
-- inputs: easting 715830.980 m, northing 734697.669 m
+- inputs: easting 715830.018671 m, northing 734698.346164 m
 - outputs: 53.349806°N, 6.260247°W on ETRS89
 - tolerance: 1e-9°
-- verifiedBy: golden vector v001 and `core/crates/gp-geodesy/tests/gridref.rs` `itm_round_trips_and_pins_its_origin`
+- verifiedBy: golden vector v001 and `core/crates/gp-geodesy/tests/gridref.rs` `itm_round_trips_and_pins_its_origin` Then: the convergence at five places is about -(lambda - lambda0) sin(phi) and in degrees, which is what a forward and inverse tool that agreed with each other could not establish.
 - verifiedOn: 2026-11-07
 
 ## Differential tests
 
-- `tools/vectors/gen_itm.py` builds the 13 vectors in `core/vectors/geodesy.grid-ref.itm-forward.jsonl` from PROJ 9.9.0 through `cs2cs` applying EPSG:2157 itself, so the parameters come from the EPSG dataset and not from this repository: twelve places from Mizen Head to Malin Head, north and south of the border, within a nanodegree, and the grid's own false origin, which must read back as the latitude of origin on the central meridian.
+- `tools/vectors/gen_itm.py` builds 13 of the 18 vectors in `core/vectors/geodesy.grid-ref.itm-forward.jsonl` from PROJ 9.9.0 through `cs2cs` applying EPSG:2157 itself, so the parameters come from the EPSG dataset and not from this repository: twelve places from Mizen Head to Malin Head, north and south of the border, within a nanodegree, and the grid's own false origin, which must read back as the latitude of origin on the central meridian. A second set, the 5 vectors from `tools/vectors/gen_tm_convergence.py`, comes from GeographicLib's TransverseMercatorProj instead, and pins what PROJ's rows did not: the grid convergence, the point scale factor, and the coordinates to a micrometre rather than a millimetre. Those three went unchecked for as long as the tool shipped, and all three were wrong -- the convergence by a factor of 57.3, and the coordinates by the ellipsoid.
 
 ## Invariants
 

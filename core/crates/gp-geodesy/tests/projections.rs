@@ -441,3 +441,103 @@ fn projection_invariants() {
     assert!((val(&r, "scale_parallel") - 1.0).abs() < 1e-15);
     assert!((val(&r, "scale_meridian") - 1.0 / (1.0 - 0.006_694_379_990_141_3)).abs() < 1e-12);
 }
+
+#[test]
+fn nztm_round_trips_and_pins_its_origin() {
+    // add-international-grids, geodesy/national-grids: NZTM2000 is EPSG 2193,
+    // one transverse Mercator zone over the whole country on NZGD2000.
+    let places = [
+        (-41.278611, 174.776944),
+        (-36.848461, 174.762191),
+        (-43.530955, 172.636645),
+        (-45.873889, 170.503611),
+        (-46.413100, 168.352800),
+        (-37.688900, 178.548600),
+    ];
+    for (lat, lon) in places {
+        let f = run(
+            "geodesy.projection.nztm-forward",
+            &json!({"lat": lat, "lon": lon}),
+        );
+        let (e, n) = (val(&f, "easting"), val(&f, "northing"));
+        let b = run(
+            "geodesy.projection.nztm-inverse",
+            &json!({"easting": format!("{e} m"), "northing": format!("{n} m")}),
+        );
+        assert!((val(&b, "lat") - lat).abs() < 1e-9, "{b}");
+        assert!((val(&b, "lon") - lon).abs() < 1e-9, "{b}");
+        // Both ends describe the same point, so both report the same
+        // convergence and the same point scale factor there.
+        assert!(
+            (val(&f, "convergence") - val(&b, "convergence")).abs() < 1e-9,
+            "{f} vs {b}"
+        );
+        assert!(
+            (val(&f, "scale_factor") - val(&b, "scale_factor")).abs() < 1e-12,
+            "{f} vs {b}"
+        );
+        // The grid covers the country in one zone, so every place lands inside
+        // the band LINZ's own extent describes.
+        assert!(
+            (1_000_000.0..2_600_000.0).contains(&e) && (4_700_000.0..6_300_000.0).contains(&n),
+            "{lat}, {lon} fell off the national grid: E {e} N {n}"
+        );
+    }
+    // On the central meridian at the latitude of origin: the false origin
+    // exactly, no convergence, and the scale factor the standard declares.
+    let o = run(
+        "geodesy.projection.nztm-forward",
+        &json!({"lat": 0.0, "lon": 173.0}),
+    );
+    assert!((val(&o, "easting") - 1_600_000.0).abs() < 1e-6, "{o}");
+    assert!((val(&o, "northing") - 10_000_000.0).abs() < 1e-6, "{o}");
+    assert!(val(&o, "convergence").abs() < 1e-12, "{o}");
+    assert!((val(&o, "scale_factor") - 0.9996).abs() < 1e-12, "{o}");
+    // The convergence is degrees, and roughly -(lambda - lambda0)*sin(phi).
+    // Checking only that the forward and inverse tools agree let a convergence
+    // 57.3 times too large ship on the Irish grid, so check the size here.
+    for (lat, lon) in places {
+        let f = run(
+            "geodesy.projection.nztm-forward",
+            &json!({"lat": lat, "lon": lon}),
+        );
+        let rough = (lon - 173.0) * lat.to_radians().sin();
+        assert!(
+            (val(&f, "convergence") - rough).abs() < 0.01,
+            "convergence at {lat}, {lon} should be about {rough} degrees, not {}",
+            val(&f, "convergence")
+        );
+    }
+
+    // The grid is defined on GRS 80, not WGS 84. The two differ only in the
+    // ninth digit of the flattening, which moved the Beehive's northing by
+    // 0.12 mm -- inside the millimetre the coordinate vectors allow, so
+    // nothing caught it. Pinned against GeographicLib on GRS 80's parameters.
+    let w = run(
+        "geodesy.projection.nztm-forward",
+        &json!({"lat": -41.278611, "lon": 174.776944}),
+    );
+    assert!(
+        (val(&w, "northing") - 5_428_791.056_045_2).abs() < 1e-6,
+        "the Beehive's northing on GRS 80 is 5428791.0560452 m: {}",
+        val(&w, "northing")
+    );
+
+    // East and west of the central meridian the convergence turns the other
+    // way, which is what makes it a correction and not a constant.
+    let w = run(
+        "geodesy.projection.nztm-forward",
+        &json!({"lat": -41.0, "lon": 170.0}),
+    );
+    let e = run(
+        "geodesy.projection.nztm-forward",
+        &json!({"lat": -41.0, "lon": 176.0}),
+    );
+    assert!(
+        val(&w, "convergence") * val(&e, "convergence") < 0.0,
+        "convergence should change sign across the central meridian: {w} vs {e}"
+    );
+    // Its false northing is 10,000 km, so an NZTM northing read as a British
+    // or Irish one is nowhere near either grid: they are separate tools.
+    assert!(val(&w, "northing") > 5_000_000.0, "{w}");
+}

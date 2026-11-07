@@ -1350,13 +1350,22 @@ const OSI_ITM: Reference = Reference {
     url: "https://epsg.org/crs_2157/IRENET95-Irish-Transverse-Mercator.html",
 };
 
+/// GRS 80, which every modern national grid here is defined on. The catalog's
+/// ids are lower case: matching "GRS80" against them found nothing and the
+/// `unwrap_or` behind it handed back the catalog's first entry, WGS 84, which
+/// projected ITM on the wrong ellipsoid for as long as it shipped. It panics
+/// now rather than substituting anything.
+pub(crate) fn grs80() -> gp_geo::ellipsoid::Ellipsoid {
+    gp_geo::ellipsoid::CATALOG
+        .iter()
+        .find(|e| e.id == "grs80")
+        .copied()
+        .expect("the ellipsoid catalog lists grs80")
+}
+
 /// The ITM projection (EPSG 2157), on GRS 80 and ETRS89.
 fn itm_grid() -> gp_geo::proj::TmGrid {
-    let g = gp_geo::ellipsoid::CATALOG
-        .iter()
-        .find(|e| e.id == "GRS80")
-        .copied()
-        .unwrap_or(gp_geo::ellipsoid::CATALOG[0]);
+    let g = grs80();
     gp_geo::proj::TmGrid::new(g.a, g.f, 53.5, -8.0, 0.999_820, 600_000.0, 750_000.0)
 }
 
@@ -1466,7 +1475,7 @@ pub static ITM_FORWARD: ToolDef = ToolDef {
     examples: &[Example {
         id: "primary",
         title: "The Spire of Dublin",
-        source: "PROJ 9.9.0 applying EPSG 2157: 53.349806°N 6.260247°W on ETRS89 gives E 715830.980 N 734697.669",
+        source: "PROJ 9.9.0 applying EPSG 2157: 53.349806°N 6.260247°W on ETRS89 gives E 715830.019 N 734698.346",
         input: r#"{"lat":53.349806,"lon":-6.260247}"#,
     }],
     primary_example: "primary",
@@ -1527,10 +1536,7 @@ fn run_itm_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
     Ok(Json::obj([
         ("easting", ctx.out("easting", q(g.e))),
         ("northing", ctx.out("northing", q(g.n))),
-        (
-            "convergence",
-            ctx.out("convergence", deg(g.convergence.to_degrees())),
-        ),
+        ("convergence", ctx.out("convergence", deg(g.convergence))),
         ("scale_factor", Json::Num(g.k)),
         ("frame", Json::str(ITM_FRAME)),
     ]))
@@ -1560,7 +1566,7 @@ pub static ITM_INVERSE: ToolDef = ToolDef {
         Field::new(
             "easting",
             "Easting",
-            "ITM, from its false origin, like 715830.98 m",
+            "ITM, from its false origin, like 715830.02 m",
             Kind::Quantity {
                 q: QT::Length,
                 unit: "m",
@@ -1572,7 +1578,7 @@ pub static ITM_INVERSE: ToolDef = ToolDef {
         Field::new(
             "northing",
             "Northing",
-            "ITM, from its false origin, like 734697.67 m",
+            "ITM, from its false origin, like 734698.35 m",
             Kind::Quantity {
                 q: QT::Length,
                 unit: "m",
@@ -1640,8 +1646,8 @@ pub static ITM_INVERSE: ToolDef = ToolDef {
     examples: &[Example {
         id: "primary",
         title: "The Spire of Dublin",
-        source: "PROJ 9.9.0 applying EPSG 2157 in reverse: E 715830.980 N 734697.669 gives 53.349806°N 6.260247°W on ETRS89",
-        input: r#"{"easting":"715830.98 m","northing":"734697.669 m"}"#,
+        source: "PROJ 9.9.0 applying EPSG 2157 in reverse: E 715830.018671 N 734698.346164 gives 53.349806°N 6.260247°W on ETRS89",
+        input: r#"{"easting":"715830.018671 m","northing":"734698.346164 m"}"#,
     }],
     primary_example: "primary",
     visualization: &[Layer {
@@ -1713,10 +1719,7 @@ fn run_itm_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
     Ok(Json::obj([
         ("lat", ctx.out("lat", deg(lat))),
         ("lon", ctx.out("lon", deg(lon))),
-        (
-            "convergence",
-            ctx.out("convergence", deg(back.convergence.to_degrees())),
-        ),
+        ("convergence", ctx.out("convergence", deg(back.convergence))),
         ("scale_factor", Json::Num(back.k)),
         ("frame", Json::str(ITM_FRAME)),
     ]))

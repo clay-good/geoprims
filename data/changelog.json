@@ -3,6 +3,36 @@
   "entries": [
     {
       "date": "2026-11-07",
+      "kind": "added",
+      "tools": [
+        "geodesy.projection.nztm-forward",
+        "geodesy.projection.nztm-inverse"
+      ],
+      "vectors": [],
+      "summary": "New Zealand's national grid, both ways. NZTM2000 draws the whole country in one transverse Mercator zone, and every New Zealand map, title, and council dataset is in it. The pair converts between it and latitude and longitude, and returns the grid convergence and the point scale factor beside the coordinates, which is what turns a true bearing into a grid bearing and a ground distance into a grid distance. One zone over 1,600 km means the scale factor reaches 1.2 m per kilometre at the ends, so it is an answer rather than a footnote. Both are experimental."
+    },
+    {
+      "date": "2026-11-07",
+      "kind": "result-change",
+      "tools": [
+        "geodesy.grid-ref.itm-forward",
+        "geodesy.grid-ref.itm-inverse"
+      ],
+      "vectors": [],
+      "summary": "The Irish Transverse Mercator tools reported a grid convergence 57.3 times too large, and projected on the wrong ellipsoid. The series returns the convergence in degrees and the tools converted it to degrees again, so a reader near Dublin was told 79.98 degrees where the answer is 1.40. Separately, the lookup for GRS 80 searched the ellipsoid table for an upper-case name it does not use and silently fell back to the table's first entry, WGS 84; that moved the coordinates by about a micrometre in Ireland, inside the millimetre the vectors allowed. Both are fixed. No golden vector moved, because none of them had pinned either the convergence or the coordinates tightly enough to notice; five vectors per tool now do, from GeographicLib, along with the point scale factor."
+    },
+    {
+      "date": "2026-11-07",
+      "kind": "fixed",
+      "tools": [
+        "geodesy.grid-ref.itm-forward",
+        "geodesy.grid-ref.itm-inverse"
+      ],
+      "vectors": [],
+      "summary": "The worked example on the Irish Transverse Mercator pages named a point 1.1 m from where it said it was. Both pages give the Spire of Dublin as their example; the easting and northing printed with it, and used as the inverse tool's example input, were wrong in their last digits, so the inverse tool's example answered with a place 1.1 m from the Spire while claiming to answer with the Spire. The numbers are now the ones the tools actually produce. A new gate checks the class: where a forward tool and its inverse give their example the same title, carrying one through the other must land back on the same point."
+    },
+    {
+      "date": "2026-11-07",
       "kind": "changed",
       "tools": [
         "geodesy.datum.legacy"

@@ -101,6 +101,8 @@ const DIAGRAMS = Object.fromEntries(
     'survey.reduction.level-network',
     'navigation.piloting.set-and-drift',
     'navigation.vessel.under-keel-clearance',
+    'raster.hydrology.streams',
+    'raster.hydrology.watershed',
   ].map((id) => [id, PARTS[id.split('.')[0]][id]]),
 );
 

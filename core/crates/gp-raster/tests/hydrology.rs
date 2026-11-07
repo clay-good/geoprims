@@ -760,19 +760,24 @@ fn watershed_edges_and_refusals() {
 }
 
 fn longest(input: Value) -> Value {
-    serde_json::from_str(&REGISTRY.invoke(
-        "raster.hydrology.longest-flow-path",
-        &input.to_string(),
-    ))
-    .unwrap()
+    serde_json::from_str(&REGISTRY.invoke("raster.hydrology.longest-flow-path", &input.to_string()))
+        .unwrap()
 }
 
 #[test]
 fn longest_flow_path_scenarios() {
     // The Ramp path scenario: 270 m along the row, falling 9 m.
-    let r = longest(json!({"elevations": ramp(10), "cell_size": "30 m", "pour_row": 1, "pour_column": 10}));
-    assert!((r["result"]["length"]["value"].as_f64().unwrap() - 270.0).abs() < 0.001, "{r}");
-    assert!((r["result"]["drop"]["value"].as_f64().unwrap() - 9.0).abs() < 1e-9, "{r}");
+    let r = longest(
+        json!({"elevations": ramp(10), "cell_size": "30 m", "pour_row": 1, "pour_column": 10}),
+    );
+    assert!(
+        (r["result"]["length"]["value"].as_f64().unwrap() - 270.0).abs() < 0.001,
+        "{r}"
+    );
+    assert!(
+        (r["result"]["drop"]["value"].as_f64().unwrap() - 9.0).abs() < 1e-9,
+        "{r}"
+    );
     assert_eq!(r["result"]["cells"], 10, "{r}");
     assert_eq!(r["result"]["start_column"], 1, "{r}");
     // The path is the row: every step moves one column east, same row.
@@ -792,8 +797,11 @@ fn longest_flow_path_scenarios() {
 fn longest_flow_path_invariants() {
     let grid: Vec<Value> = FORK.iter().map(|x| json!({"row": x})).collect();
     // It agrees with the watershed tool's own longest path, cell for cell.
-    let lfp = longest(json!({"elevations": grid, "cell_size": "30 m", "pour_row": 7, "pour_column": 4}));
-    let ws = watershed(json!({"elevations": grid, "cell_size": "30 m", "pour_row": 7, "pour_column": 4, "snap": "none"}));
+    let lfp =
+        longest(json!({"elevations": grid, "cell_size": "30 m", "pour_row": 7, "pour_column": 4}));
+    let ws = watershed(
+        json!({"elevations": grid, "cell_size": "30 m", "pour_row": 7, "pour_column": 4, "snap": "none"}),
+    );
     assert!(
         (lfp["result"]["length"]["value"].as_f64().unwrap()
             - ws["result"]["longest_path"]["value"].as_f64().unwrap())
@@ -801,17 +809,24 @@ fn longest_flow_path_invariants() {
             < 1e-9,
         "{lfp} vs {ws}"
     );
-    assert_eq!(lfp["result"]["path"], ws["result"]["path"], "the two tools draw different paths");
+    assert_eq!(
+        lfp["result"]["path"], ws["result"]["path"],
+        "the two tools draw different paths"
+    );
 
     // A diagonal step is √2 cells: on a plane falling south-east, a path of n
     // steps is n √2 cells long.
     let diag: Vec<Value> = (0..8)
         .map(|r| json!({"row": (0..8).map(|c| format!("{}", 100 - r - c)).collect::<Vec<_>>().join(", ")}))
         .collect();
-    let d = longest(json!({"elevations": diag, "cell_size": "20 m", "pour_row": 8, "pour_column": 8}));
+    let d =
+        longest(json!({"elevations": diag, "cell_size": "20 m", "pour_row": 8, "pour_column": 8}));
     let steps = d["result"]["cells"].as_f64().unwrap() - 1.0;
     assert!(
-        (d["result"]["length"]["value"].as_f64().unwrap() - steps * 20.0 * std::f64::consts::SQRT_2).abs() < 1e-9,
+        (d["result"]["length"]["value"].as_f64().unwrap()
+            - steps * 20.0 * std::f64::consts::SQRT_2)
+            .abs()
+            < 1e-9,
         "{d}"
     );
 
@@ -829,8 +844,10 @@ fn longest_flow_path_invariants() {
     }
 
     // Given the grid's corner, every vertex carries a place.
-    let placed = longest(json!({"elevations": grid, "cell_size": "30 m", "pour_row": 7, "pour_column": 4,
-                                "north_west_lat": "44.12 deg", "north_west_lon": "-121.45 deg"}));
+    let placed = longest(
+        json!({"elevations": grid, "cell_size": "30 m", "pour_row": 7, "pour_column": 4,
+                                "north_west_lat": "44.12 deg", "north_west_lon": "-121.45 deg"}),
+    );
     for v in placed["result"]["vertices"].as_array().unwrap() {
         assert!(v["lat"]["value"].as_f64().unwrap() < 44.12, "{v}");
         assert!(v["lon"]["value"].as_f64().unwrap() > -121.45, "{v}");

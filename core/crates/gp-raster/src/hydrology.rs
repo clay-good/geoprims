@@ -1815,7 +1815,7 @@ pub static STREAMS: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
+        kind: "vector-diagram",
         map: &[],
     }],
     related: &[
@@ -2585,7 +2585,7 @@ pub static WATERSHED: ToolDef = ToolDef {
     }],
     primary_example: "primary",
     visualization: &[Layer {
-        kind: "table-only",
+        kind: "vector-diagram",
         map: &[],
     }],
     related: &[

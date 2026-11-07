@@ -3,6 +3,16 @@
   "entries": [
     {
       "date": "2026-11-07",
+      "kind": "changed",
+      "tools": [
+        "raster.hydrology.streams",
+        "raster.hydrology.watershed"
+      ],
+      "vectors": [],
+      "summary": "The stream and watershed tools now draw what they found, over the grid you entered and to scale. The stream page draws every link through the cells it runs, thicker as its Strahler order rises, so the main stem reads at a glance and the headwaters read as headwaters, with a dot where the network leaves the window. The watershed page shades the cells that drain to your point and draws the longest flow path down them, from its top to the outlet. Both drawings are your own numbers, not an illustration of the idea."
+    },
+    {
+      "date": "2026-11-07",
       "kind": "added",
       "tools": [
         "raster.hydrology.longest-flow-path"

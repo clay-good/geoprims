@@ -504,6 +504,8 @@ figure.diagram svg { display: block; inline-size: 100%; block-size: auto; max-bl
 .dg-dash { stroke-dasharray: 6 5; }
 /* A footprint or area: a light wash of the accent, so overlaps read darker. */
 .dg-fill { fill: var(--accent); fill-opacity: 0.12; stroke: var(--accent); stroke-width: 1.25; }
+/* A wash of cells with no outline: a raster mask, where every cell's edge would draw a grid. */
+.dg-wash { fill: var(--accent); fill-opacity: 0.16; stroke: none; }
 .dg-grid { stroke: var(--graticule); stroke-width: 1; fill: none; }
 .dg-head-accent { fill: var(--accent); }
 .dg-head-muted { fill: var(--muted); }

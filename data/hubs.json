@@ -2084,6 +2084,12 @@
           "tools": [
             "flow-direction"
           ]
+        },
+        {
+          "want": "find where water collects, and how much ground drains through a point",
+          "tools": [
+            "flow-accumulation"
+          ]
         }
       ]
     },

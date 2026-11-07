@@ -1274,6 +1274,10 @@
       "expect": "raster.hydrology.flow-direction"
     },
     {
+      "query": "flow accumulation upslope area from a DEM",
+      "expect": "raster.hydrology.flow-accumulation"
+    },
+    {
       "query": "under keel clearance with squat",
       "expect": "navigation.vessel.under-keel-clearance"
     },

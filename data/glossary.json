@@ -273,6 +273,7 @@
       "source": "copernicus-dem",
       "relatedTools": [
         "raster.hydrology.fill",
+        "raster.hydrology.flow-accumulation",
         "raster.hydrology.flow-direction",
         "raster.terrain.aspect",
         "raster.terrain.dem-difference-volume",

@@ -1127,3 +1127,362 @@ fn run_flow_direction(ctx: &mut Ctx) -> Result<Json, ToolError> {
     out.push(("encoding_used", Json::str(named)));
     Ok(Json::obj(out))
 }
+
+// ------------------------------------------------------ flow accumulation
+
+/// D8 accumulation: every cell counts itself plus everything that drains
+/// through it, summed in topological order (Kahn), so each cell is added once.
+fn accumulate_d8(z: &[f64], w: usize, h: usize, cell: f64) -> Vec<f64> {
+    let n = z.len();
+    let mut to = vec![usize::MAX; n];
+    let mut indegree = vec![0u32; n];
+    for i in 0..n {
+        if z[i].is_nan() {
+            continue;
+        }
+        if let Some((k, _)) = d8(z, w, h, i, cell) {
+            let (dr, dc, ..) = DIRS[k];
+            let j = ((i / w) as i64 + dr) as usize * w + ((i % w) as i64 + dc) as usize;
+            to[i] = j;
+            indegree[j] += 1;
+        }
+    }
+    let mut acc = vec![0.0; n];
+    for (i, a) in acc.iter_mut().enumerate() {
+        if !z[i].is_nan() {
+            *a = 1.0;
+        }
+    }
+    let mut queue: Vec<usize> = (0..n)
+        .filter(|&i| !z[i].is_nan() && indegree[i] == 0)
+        .collect();
+    while let Some(i) = queue.pop() {
+        let j = to[i];
+        if j == usize::MAX {
+            continue;
+        }
+        acc[j] += acc[i];
+        indegree[j] -= 1;
+        if indegree[j] == 0 {
+            queue.push(j);
+        }
+    }
+    acc
+}
+
+/// D-infinity accumulation (Tarboton 1997): a cell's flow is split between the
+/// two neighbours its angle lies between, in proportion to how close it is to
+/// each. Cells are summed from the highest down, so every contribution is in
+/// before a cell is passed on.
+fn accumulate_dinf(z: &[f64], w: usize, h: usize, cell: f64) -> Vec<f64> {
+    let n = z.len();
+    let mut order: Vec<usize> = (0..n).filter(|&i| !z[i].is_nan()).collect();
+    order.sort_by(|a, b| z[*b].partial_cmp(&z[*a]).unwrap_or(Ordering::Equal));
+    let mut acc = vec![0.0; n];
+    for &i in &order {
+        acc[i] += 1.0;
+    }
+    for &i in &order {
+        let Some((angle, _)) = dinf(z, w, h, i, cell) else {
+            continue;
+        };
+        // The angle sits between two of the eight directions, 45° apart,
+        // counted counterclockwise from east.
+        let step = std::f64::consts::FRAC_PI_4;
+        let k = (angle / step).floor();
+        let frac = angle / step - k;
+        // DIRS is clockwise from east; the angle is counterclockwise.
+        let ccw = |m: i64| DIRS[((8 - m).rem_euclid(8)) as usize];
+        let (first, second) = (ccw(k as i64), ccw(k as i64 + 1));
+        for ((dr, dc, ..), share) in [(first, 1.0 - frac), (second, frac)] {
+            if share <= 0.0 {
+                continue;
+            }
+            let (r, c) = ((i / w) as i64 + dr, (i % w) as i64 + dc);
+            if r < 0 || r >= h as i64 || c < 0 || c >= w as i64 {
+                continue;
+            }
+            let j = r as usize * w + c as usize;
+            if z[j].is_nan() {
+                continue;
+            }
+            acc[j] += acc[i] * share;
+        }
+    }
+    acc
+}
+
+pub static FLOW_ACCUMULATION: ToolDef = ToolDef {
+    id: "raster.hydrology.flow-accumulation",
+    title: "Flow accumulation over a DEM",
+    summary: "How much ground drains through every cell of an elevation grid, as a count of upslope cells and an area, by D8 or by D-infinity's split flow.",
+    aliases: &[
+        "flow accumulation grid",
+        "upslope area",
+        "contributing area",
+        "drainage area from a DEM",
+    ],
+    keywords: &[
+        "accumulation",
+        "upslope",
+        "contributing",
+        "catchment",
+        "drainage",
+        "area",
+        "hydrology",
+        "DEM",
+    ],
+    inputs: &[
+        Field::new(
+            "elevations",
+            "Elevation grid",
+            "Rows of elevations in meters, north row first, west to east, like 101.2, 100.6, 100.2",
+            Kind::List {
+                items: ROW,
+                min: 2,
+                max: MAX_SIDE,
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "cell_size",
+            "Cell size",
+            "The ground size of one cell, like 30 m",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "method",
+            "Method",
+            "One neighbor by steepest descent, or D-infinity's split flow, like d8",
+            Kind::Choice(&["d8", "d-infinity"]),
+        )
+        .core(),
+        Field::new(
+            "no_data",
+            "No-data value",
+            "A value that marks a missing elevation, like -9999",
+            Kind::Number {
+                min: -1e12,
+                max: 1e12,
+            },
+        ),
+    ],
+    outputs: &[
+        Field::new(
+            "max_cells",
+            "Most cells draining through one cell",
+            "Counting the cell itself",
+            Kind::Number {
+                min: 0.0,
+                max: 1e12,
+            },
+        )
+        .precision(Precision::Decimals(2)),
+        Field::new(
+            "max_area",
+            "The area that drains through it",
+            "Cells times the area of one cell",
+            Kind::Quantity {
+                q: QT::Area,
+                unit: "m2",
+            },
+        )
+        .precision(Precision::Decimals(1)),
+        Field::new(
+            "outlet_row",
+            "Its row",
+            "From 1 at the north",
+            Kind::Number { min: 1.0, max: 1e6 },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "outlet_column",
+            "Its column",
+            "From 1 at the west",
+            Kind::Number { min: 1.0, max: 1e6 },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "accumulation",
+            "Accumulation grid",
+            "Cells draining through each cell, north row first",
+            Kind::List {
+                items: ROW,
+                min: 2,
+                max: MAX_SIDE,
+            },
+        ),
+        Field::new(
+            "pits",
+            "Cells with nowhere to go",
+            "Interior cells that trap what reaches them",
+            Kind::Number { min: 0.0, max: 1e9 },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "edge_note",
+            "At the window's edge",
+            "Why an edge value is a lower bound",
+            Kind::Text { max_len: 200 },
+        ),
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::LimitExceeded],
+    warnings: &["PITS_PRESENT", "EXPERIMENTAL_TOOL"],
+    model: "D8: each cell sends its whole count to the neighbour of steepest descent, summed in topological order, so a cell's count is 1 plus the counts of every cell pointing to it. D-infinity (Tarboton 1997): a cell's flow is split between the two neighbours its angle lies between, in proportion to the angle, and cells are summed from the highest down. Area = count × cell size²",
+    accuracy: "Exact in the arithmetic of each rule: the D8 count is an integer and satisfies the conservation identity at every cell, and the D-infinity split is the angle's own proportion",
+    when_to_use: "Use this after conditioning a DEM to find where water collects: the count is how many cells drain through each one, and the area is that count times a cell. Channels show up as the cells with high accumulation, which is what a stream threshold picks out. D8 keeps whole cells and is what a watershed needs; D-infinity splits the flow, which is smoother on a hillslope.",
+    limitations: "The window is all the tool knows: a cell near the edge counts only what drains to it from inside the grid, so its value is a lower bound, and a basin that reaches in from outside is not counted. An unconditioned pit swallows everything that reaches it, so fill or breach the grid first; the result counts the pits it found. The grid is plane: the cell area is the cell size squared, so a geographic grid needs its cell size in meters at the latitude. The window holds at most 25,000 cells.",
+    references: &[OCALLAGHAN, TARBOTON],
+    examples: &[Example {
+        id: "primary",
+        title: "A 10 by 10 ramp falling to the east",
+        source: "add-raster-hydrology raster/hydrology, the East ramp accumulation scenario: each row reads 1, 2, 3 … 10 from west to east, counting the cell itself",
+        input: r#"{"elevations":[{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"},{"row":"100, 99, 98, 97, 96, 95, 94, 93, 92, 91"}],"cell_size":"30 m","method":"d8"}"#,
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "raster.hydrology.flow-direction",
+            reason: "parent",
+        },
+        Related {
+            id: "raster.hydrology.fill",
+            reason: "alternative",
+        },
+        Related {
+            id: "raster.terrain.dem-stats",
+            reason: "next",
+        },
+    ],
+    sentence: "At most {max_cells} cells drain through one cell.",
+    limits: &[("batchRows", 1)],
+    run: run_flow_accumulation,
+    ..ToolDef::BLANK
+};
+
+fn run_flow_accumulation(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let m = units::by_symbol(QT::Length, "m").expect("m");
+    let m2 = units::by_symbol(QT::Area, "m2").expect("m2");
+    let no_data = ctx.number("no_data")?;
+    let grid = read_grid(ctx, "elevations", no_data)?;
+    let (h, w) = (grid.len(), grid[0].len());
+    if h * w > MAX_CELLS {
+        return Err(ToolError::new(
+            ErrorCode::LimitExceeded,
+            format!(
+                "The window holds {} cells; this tool takes {MAX_CELLS}. Clip it smaller.",
+                h * w
+            ),
+        )
+        .at("/elevations"));
+    }
+    let cell = ctx.req_quantity("cell_size")?.to(m);
+    if !(cell.is_finite() && cell > 0.0) {
+        return Err(ToolError::invalid(
+            "/cell_size",
+            "The cell size must be more than zero.",
+        ));
+    }
+    let method = ctx.choice("method")?.unwrap_or("d8");
+    let z: Vec<f64> = grid.iter().flatten().copied().collect();
+    let acc = if method == "d-infinity" {
+        accumulate_dinf(&z, w, h, cell)
+    } else {
+        accumulate_d8(&z, w, h, cell)
+    };
+    let pit_count = pits(&z, w, h).len();
+    if pit_count > 0 {
+        ctx.warnings.push(Warning::new(
+            "PITS_PRESENT",
+            format!(
+                "{pit_count} interior cells have no lower neighbour, so everything reaching them stops there. Condition the grid with the fill tool first."
+            ),
+        ));
+    }
+    let (mut best, mut best_at) = (0.0f64, 0usize);
+    for (i, a) in acc.iter().enumerate() {
+        if !z[i].is_nan() && *a > best {
+            best = *a;
+            best_at = i;
+        }
+    }
+    let rows: Vec<Json> = (0..h)
+        .map(|r| {
+            let text = (0..w)
+                .map(|c| {
+                    let i = r * w + c;
+                    if z[i].is_nan() {
+                        no_data.map_or_else(
+                            || "NaN".to_string(),
+                            |n| gp_base::num::format_f64(n).unwrap_or_else(|| "NaN".to_string()),
+                        )
+                    } else {
+                        gp_base::num::format_f64(acc[i]).unwrap_or_else(|| "NaN".to_string())
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join(", ");
+            Json::obj([("row", Json::str(text))])
+        })
+        .collect();
+    if ctx.explaining() {
+        ctx.step(
+            "Where the water goes",
+            if method == "d-infinity" {
+                "each cell's flow split between the two neighbours its angle lies between"
+            } else {
+                "each cell's flow to the neighbour of steepest descent"
+            },
+            format!("{} cells of {cell} m", h * w),
+            format!("{pit_count} pits"),
+        );
+        ctx.step(
+            "Accumulation",
+            "a cell counts itself plus everything draining through it",
+            format!("{} cells", h * w),
+            // As the answer card shows it: two decimals with the trailing
+            // zeros dropped, so a whole count reads as a whole number.
+            {
+                let s = format!("{:.2}", (best * 100.0).round() / 100.0);
+                if s.contains('.') {
+                    s.trim_end_matches('0').trim_end_matches('.').to_string()
+                } else {
+                    s
+                }
+            },
+        );
+    }
+    Ok(Json::obj([
+        ("max_cells", Json::Num((best * 100.0).round() / 100.0)),
+        (
+            "max_area",
+            ctx.out(
+                "max_area",
+                Q {
+                    value: best * cell * cell,
+                    unit: m2,
+                },
+            ),
+        ),
+        ("outlet_row", Json::Num((best_at / w + 1) as f64)),
+        ("outlet_column", Json::Num((best_at % w + 1) as f64)),
+        ("accumulation", Json::Arr(rows)),
+        ("pits", Json::Num(pit_count as f64)),
+        (
+            "edge_note",
+            Json::str(
+                "A cell near the window's edge counts only what drains to it from inside the grid, so its value is a lower bound.",
+            ),
+        ),
+    ]))
+}

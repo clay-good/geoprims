@@ -5,6 +5,15 @@
       "date": "2026-11-06",
       "kind": "added",
       "tools": [
+        "raster.hydrology.flow-accumulation"
+      ],
+      "vectors": [],
+      "summary": "A third hydrology tool says how much ground drains through each cell of an elevation grid. The count is the cell itself plus everything upslope of it, and the area is that count times one cell, which is how a channel shows itself: it is where the accumulation passes a threshold. D8 sends each cell's water whole to one neighbour, which is what a watershed needs; D-infinity splits it between the two neighbours the slope angle falls between, which is smoother on open hillside. Near the window's edge a value counts only what drains in from inside the grid, so it is a lower bound, and the result says so. A pit keeps whatever reaches it, so fill or breach the grid first; the tool counts the pits it found and warns."
+    },
+    {
+      "date": "2026-11-06",
+      "kind": "added",
+      "tools": [
         "raster.hydrology.flow-direction"
       ],
       "vectors": [],

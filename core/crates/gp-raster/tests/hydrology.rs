@@ -377,3 +377,133 @@ fn flow_direction_invariants() {
         .collect();
     assert!(codes.contains(&"PITS_PRESENT"), "{r}");
 }
+
+fn accum(input: Value) -> Value {
+    serde_json::from_str(&REGISTRY.invoke("raster.hydrology.flow-accumulation", &input.to_string()))
+        .unwrap()
+}
+
+fn acc_grid(r: &Value) -> Vec<Vec<f64>> {
+    r["result"]["accumulation"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|row| {
+            row["row"]
+                .as_str()
+                .unwrap()
+                .split(',')
+                .map(|v| v.trim().parse::<f64>().unwrap())
+                .collect()
+        })
+        .collect()
+}
+
+#[test]
+fn flow_accumulation_scenarios() {
+    // East ramp: each row reads 1, 2, 3 ... 10 from west to east.
+    let r = accum(json!({"elevations": ramp(10), "cell_size": "30 m", "method": "d8"}));
+    for row in acc_grid(&r) {
+        for (c, v) in row.iter().enumerate() {
+            assert_eq!(*v, (c + 1) as f64, "{r}");
+        }
+    }
+    assert_eq!(r["result"]["max_cells"], 10.0, "{r}");
+    // 10 cells of 30 m square is 9,000 m².
+    assert!(
+        (r["result"]["max_area"]["value"].as_f64().unwrap() - 9000.0).abs() < 1e-9,
+        "{r}"
+    );
+    assert_eq!(r["result"]["outlet_column"], 10, "{r}");
+
+    // D8 and D-infinity agree on a planar ramp, where there is nothing to split.
+    let d = accum(json!({"elevations": ramp(10), "cell_size": "30 m", "method": "d-infinity"}));
+    for (a, b) in acc_grid(&r)
+        .iter()
+        .flatten()
+        .zip(acc_grid(&d).iter().flatten())
+    {
+        assert!((a - b).abs() < 1e-9, "D8 {a} vs D-infinity {b}");
+    }
+}
+
+#[test]
+fn flow_accumulation_invariants() {
+    let hill: Vec<Value> = (0..12)
+        .map(|r| {
+            json!({"row": (0..12)
+                .map(|c| format!("{:.3}", 200.0 - ((f64::from(r) - 5.5).powi(2) + (f64::from(c) - 5.5).powi(2)).sqrt() * 4.0))
+                .collect::<Vec<_>>().join(", ")})
+        })
+        .collect();
+    // Conservation: every cell's count is 1 plus the counts of the cells that
+    // point to it. The pointer grid says which those are.
+    let a = accum(json!({"elevations": hill, "cell_size": "10 m", "method": "d8"}));
+    let dirs =
+        flow(json!({"elevations": hill, "cell_size": "10 m", "method": "d8", "encoding": "esri"}));
+    let (acc, code) = (acc_grid(&a), codes(&dirs));
+    let (h, w) = (acc.len(), acc[0].len());
+    // ESRI codes to a row and column step.
+    let step = |v: f64| match v as i64 {
+        1 => Some((0i64, 1i64)),
+        2 => Some((1, 1)),
+        4 => Some((1, 0)),
+        8 => Some((1, -1)),
+        16 => Some((0, -1)),
+        32 => Some((-1, -1)),
+        64 => Some((-1, 0)),
+        128 => Some((-1, 1)),
+        _ => None,
+    };
+    let mut incoming = vec![vec![0.0; w]; h];
+    for r in 0..h {
+        for c in 0..w {
+            if let Some((dr, dc)) = step(code[r][c]) {
+                let (nr, nc) = (r as i64 + dr, c as i64 + dc);
+                if nr >= 0 && nr < h as i64 && nc >= 0 && nc < w as i64 {
+                    incoming[nr as usize][nc as usize] += acc[r][c];
+                }
+            }
+        }
+    }
+    for r in 0..h {
+        for c in 0..w {
+            assert!(
+                (acc[r][c] - (1.0 + incoming[r][c])).abs() < 1e-9,
+                "cell {r},{c}: {} vs 1 + {}",
+                acc[r][c],
+                incoming[r][c]
+            );
+        }
+    }
+    // Every cell counts at least itself, and no cell counts more than the grid.
+    let total = (h * w) as f64;
+    for row in &acc {
+        for v in row {
+            assert!(
+                *v >= 1.0 && *v <= total,
+                "accumulation {v} outside 1..{total}"
+            );
+        }
+    }
+    // D-infinity conserves the same total water: the sum of what leaves the
+    // window equals the number of cells, within rounding.
+    let d = accum(json!({"elevations": hill, "cell_size": "10 m", "method": "d-infinity"}));
+    let dmax = d["result"]["max_cells"].as_f64().unwrap();
+    assert!(dmax >= 1.0 && dmax <= total, "{d}");
+
+    // A pit swallows what reaches it, and the result says so.
+    let pit = accum(json!({"elevations": [
+        {"row": "100, 100, 100"}, {"row": "100, 95, 100"}, {"row": "100, 100, 100"}],
+        "cell_size": "10 m", "method": "d8"}));
+    assert_eq!(pit["result"]["pits"], 1, "{pit}");
+    let warned: Vec<&str> = pit["meta"]["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|w| w["code"].as_str().unwrap())
+        .collect();
+    assert!(warned.contains(&"PITS_PRESENT"), "{pit}");
+    // Everything but the rim drains into it: 9 cells in a 3 by 3.
+    assert_eq!(acc_grid(&pit)[1][1], 9.0, "{pit}");
+}

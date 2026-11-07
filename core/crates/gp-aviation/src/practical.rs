@@ -188,6 +188,7 @@ fn run_va_for_weight(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static HYDROPLANING_SPEED: ToolDef = ToolDef {
     id: "aviation.performance.hydroplaning-speed",
+    stability: gp_base::tool::Stability::Stable,
     title: "Tire hydroplaning speed",
     summary: "The groundspeed at which a tire starts to hydroplane on a flooded runway, from the tire pressure: 9 × √pressure knots (NASA TN D-2056), with the airplane handbook's 8.6 × √pressure as an option.",
     aliases: &[
@@ -235,7 +236,7 @@ pub static HYDROPLANING_SPEED: ToolDef = ToolDef {
         .precision(Precision::Decimals(1)),
     ],
     errors: &[ErrorCode::OutOfDomain],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "V_P = 9 √p knots, p in psi (NASA TN D-2056 eq. 4), or 8.6 √p (Airplane Flying Handbook); valid for 24 to 150 psi",
     accuracy: "The report found reasonable agreement with tests on tires from 925 to 22,000 lb load and 24 to 150 psi; it is an estimate, not a guarantee",
     when_to_use: "Use this to know the speed above which a tire can ride up on standing water and lose braking and steering, before landing or taking off on a wet runway. Enter the tire's inflation pressure; the answer is a groundspeed.",
@@ -329,6 +330,7 @@ const fn ft_field(name: &'static str, title: &'static str, help: &'static str) -
 
 pub static CABIN_ALTITUDE: ToolDef = ToolDef {
     id: "aviation.altimetry.cabin-altitude",
+    stability: gp_base::tool::Stability::Stable,
     title: "Cabin altitude from pressure differential",
     summary: "The cabin altitude a pressurized airplane holds at a flight altitude with its maximum pressure differential, or the differential a chosen cabin altitude needs, through the standard atmosphere.",
     aliases: &[
@@ -400,7 +402,7 @@ pub static CABIN_ALTITUDE: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[ErrorCode::OutOfDomain],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "p_cabin = p_ISA(pressure altitude) + differential; cabin altitude = the ISA altitude of p_cabin, by the site's standard-atmosphere engine (ICAO Doc 7488); a selected cabin altitude needs p_ISA(cabin) − p_ISA(airplane), up to the maximum",
     accuracy: "Exact through the standard atmosphere; real cabins follow the controller's schedule and the airplane's limits",
     when_to_use: "Use this to see what cabin altitude a pressurized airplane can hold at a planned flight altitude with its maximum differential, or how much differential a chosen cabin altitude takes. It helps plan the cruise altitude that keeps the cabin below the oxygen thresholds.",
@@ -571,6 +573,7 @@ fn linear_vcf(beta: f64, t: f64) -> f64 {
 
 pub static FUEL_DENSITY_TEMPERATURE: ToolDef = ToolDef {
     id: "aviation.loading.fuel-density-temperature",
+    stability: gp_base::tool::Stability::Stable,
     title: "Fuel density at a temperature",
     summary: "The density of jet fuel or avgas at the temperature it is loaded, from its density at 15 °C, and the weight of a volume of it, so a hot or cold ramp does not throw off the weight and balance.",
     aliases: &[
@@ -715,12 +718,7 @@ pub static FUEL_DENSITY_TEMPERATURE: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::OutOfDomain, ErrorCode::InvalidInput],
-    warnings: &[
-        "NOMINAL_VALUE_USED",
-        "MODEL_EXTRAPOLATED",
-        "UNIT_ASSUMED",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["NOMINAL_VALUE_USED", "MODEL_EXTRAPOLATED", "UNIT_ASSUMED"],
     model: "VCF = exp(−α ΔT (1 + 0.8 α ΔT)), ΔT = T − 15 °C, α = K0/ρ15² + K1/ρ15 (API MPMS 11.1 Table 54B by density zone, or 54A for wide-cut, as Measurement Canada's V-18 assigns); or VCF = 1 / (1 + β ΔT) with one coefficient; density = ρ15 × VCF",
     accuracy: "The tables' formula matches every printed cell of Measurement Canada's Jet A, Jet B, and avgas tables (−40 to 40 °C) within 0.00006; the result is nominal, because a real batch's density at 15 °C is on its fuel slip",
     when_to_use: "Use this when you load fuel on a hot or cold ramp and want its weight from the gallons or liters pumped. Enter the fuel's temperature and either pick the fuel type or type the density at 15 °C from the fuel slip. It returns the density at that temperature and, with a volume, its weight. Send the density on to the fuel weight tool and the weight and balance.",

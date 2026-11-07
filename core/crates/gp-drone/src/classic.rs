@@ -81,6 +81,7 @@ fn ratio(n: f64) -> String {
 
 pub static PHOTO_SCALE: ToolDef = ToolDef {
     id: "drone.photogrammetry.photo-scale",
+    stability: gp_base::tool::Stability::Stable,
     title: "Photo scale and flying height",
     summary: "The scale of a vertical photo from the focal length and flying height, the flying height for a scale or a GSD, and the ground distance a photo distance stands for.",
     aliases: &[
@@ -196,7 +197,7 @@ pub static PHOTO_SCALE: ToolDef = ToolDef {
         .precision(Precision::Significant(6))
         .optional(),
     ],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "S = f / (H − h) (EM 1110-1-1000 eq. 10-1); D = d (H − h) / f (eq. 10-3); GSD = sensor width × (H − h) / (f × image width), as the GSD tool works it, or pixel pitch × (H − h) / f",
     accuracy: "Exact for a truly vertical photo over ground at the stated elevation; tilt and relief change the scale across the frame",
     when_to_use: "Use this to find the scale of a vertical aerial photo from the camera's focal length and the flying height, or to work back from a wanted scale or GSD to the height to fly. It also turns a distance measured on the photo into the ground distance it stands for, at the photo's scale.",
@@ -317,6 +318,7 @@ fn run_photo_scale(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static RELIEF_DISPLACEMENT: ToolDef = ToolDef {
     id: "drone.photogrammetry.relief-displacement",
+    stability: gp_base::tool::Stability::Stable,
     title: "Relief displacement and object height",
     summary: "How far a tall object's top shifts from its base on a vertical photo, or the object's height from that shift: d = r h / H, solved for whichever one you leave out.",
     aliases: &[
@@ -391,7 +393,7 @@ pub static RELIEF_DISPLACEMENT: ToolDef = ToolDef {
         ground("height_above_base", "Height above the base", "H − h_base")
             .precision(Precision::Decimals(1)),
     ],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "d = r h / (H − h_base), from EM 1110-1-1000 eq. 10-6 and 10-7, solved for whichever of d, r, h, or H is left out",
     accuracy: "Exact for a truly vertical photo; tilt shifts the radial lines, and a 0.1 mm error in d moves the height by about 0.1% per mm of d",
     when_to_use: "Use this to measure the height of a tower, building, or tree from one vertical aerial photo: measure how far its top's image sits from its base's image along the line from the photo center, and the distance from the center to the top. It also works the other way, to show how far a tall object will lean on a photo or an orthophoto that was not corrected for it.",
@@ -518,6 +520,7 @@ fn run_relief_displacement(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static PARALLAX_HEIGHT: ToolDef = ToolDef {
     id: "drone.photogrammetry.parallax-height",
+    stability: gp_base::tool::Stability::Stable,
     title: "Height from stereo parallax",
     summary: "A point's elevation from its parallax on a stereo pair: from the parallax difference to a control point, or from the absolute parallax with the air base and focal length, with its ground X and Y.",
     aliases: &[
@@ -616,7 +619,7 @@ pub static PARALLAX_HEIGHT: ToolDef = ToolDef {
             .precision(Precision::Decimals(2))
             .optional(),
     ],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "h_A = h_C + Δp (H − h_C) / (p_C + Δp) (EM 1110-1-1000 eq. 10-15, with p_A = p_C + Δp); h = H − f B / p, X = x B / p, Y = y B / p (eq. 10-14)",
     accuracy: "Exact for truly vertical photos taken from equal heights; small parallax errors give large height errors in the absolute form, so the difference form near a control point is preferred",
     when_to_use: "Use this to find the height or elevation of a point from a stereo pair of vertical photos: the parallax difference between the point and a nearby control point of known elevation gives the point's elevation, such as the height of a tree whose base is hidden. With the air base and focal length, the absolute parallax gives the elevation and the ground X and Y on its own.",

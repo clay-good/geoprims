@@ -1525,6 +1525,7 @@ fn run_pivotal(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static CLIMB_REQUIREMENT: ToolDef = ToolDef {
     id: "aviation.performance.climb-requirement",
+    stability: gp_base::tool::Stability::Stable,
     title: "Climb requirement check",
     summary: "Whether your rate of climb meets a departure's required gradient at your groundspeed: the rate you need, the gradient you can make, and the margin, with the gradient worked from an altitude and distance when the chart gives those.",
     aliases: &[
@@ -1647,7 +1648,7 @@ pub static CLIMB_REQUIREMENT: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["CLIMB_GRADIENT_SHORT", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["CLIMB_GRADIENT_SHORT", "UNIT_ASSUMED"],
     model: "Rate needed = gradient (ft/NM) × groundspeed (kt) / 60; gradient made = rate × 60 / groundspeed; gradient = (altitude − start) / distance; groundspeed = true airspeed − headwind (IPH ch. 1)",
     accuracy: "Exact for a steady climb at a constant groundspeed; your flight manual's climb rate at today's weight, altitude, and temperature decides the margin",
     when_to_use: "Use this before accepting a departure procedure or obstacle departure with a climb gradient above the standard 200 ft per nautical mile: enter the gradient (or the altitude to reach and the distance), your climb groundspeed, and the rate of climb your flight manual gives for today. It shows the rate you need, the gradient you can make, and the margin.",

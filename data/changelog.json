@@ -2,6 +2,27 @@
   "note": "User-facing changes, newest first. kind is result-change (a published result moved: every superseded golden vector must be listed here), added, fixed, or changed. A result change beyond tolerance also bumps the tool version. Rendered at /changelog/ and checked by tools/trust/changelog.test.mjs.",
   "entries": [
     {
+      "date": "2026-11-06",
+      "kind": "changed",
+      "tools": [
+        "aviation.altimetry.cabin-altitude",
+        "aviation.ifr.approach-category",
+        "aviation.ifr.circling-radius",
+        "aviation.ifr.rvr-visibility",
+        "aviation.loading.fuel-density-temperature",
+        "aviation.performance.climb-requirement",
+        "aviation.performance.hydroplaning-speed",
+        "aviation.physiology.oxygen-requirement",
+        "aviation.physiology.time-of-useful-consciousness",
+        "drone.photogrammetry.parallax-height",
+        "drone.photogrammetry.photo-scale",
+        "drone.photogrammetry.relief-displacement",
+        "time.scale.sidereal"
+      ],
+      "vectors": [],
+      "summary": "Thirteen tools are now marked stable rather than experimental: cabin altitude, approach category, circling radius, RVR to visibility, fuel density with temperature, climb requirement, hydroplaning speed, supplemental oxygen, time of useful consciousness, parallax height, photo scale, relief displacement, and sidereal time. Nothing they compute changed. Stable means each one now carries what the verification bar asks for: a derivation note with its equations and domain, a worked example taken from a published source rather than from our own arithmetic, an invariants test, at least twenty golden vectors, and a page that says when to reach for the tool and where its answer stops. The pages drop the experimental warning, and the tools join their MCP toolsets, so an agent can call them by name."
+    },
+    {
       "date": "2026-10-28",
       "kind": "changed",
       "tools": [

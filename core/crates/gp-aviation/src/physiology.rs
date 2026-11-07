@@ -56,6 +56,7 @@ fn minutes(v: f64) -> Q {
 
 pub static OXYGEN_REQUIREMENT: ToolDef = ToolDef {
     id: "aviation.physiology.oxygen-requirement",
+    stability: gp_base::tool::Stability::Stable,
     title: "Supplemental oxygen requirement",
     summary: "Which supplemental-oxygen rule applies at a cabin altitude, and for how many minutes, quoted from 14 CFR 91.211, or 135.89 or 121.329 when you choose those parts, with the pressurized-airplane rules by flight altitude.",
     aliases: &[
@@ -150,7 +151,7 @@ pub static OXYGEN_REQUIREMENT: ToolDef = ToolDef {
         ),
         Field::new("notice", "Notice", "", Kind::Text { max_len: 120 }),
     ],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Thresholds of 14 CFR 91.211(a) (above 12,500 to 14,000 ft MSL: crew, the part over 30 minutes; above 14,000 ft: crew, the whole time; above 15,000 ft: every occupant provided) and (b) (above FL250: a 10-minute supply each; above FL350: one pilot masked, with the FL410 two-pilot exception), 135.89 (pilots: above 10,000 to 12,000 ft over 30 minutes, above 12,000 ft continuously; pressurized above 25,000 and 35,000 ft), and 121.329 (crew above 10,000 and 12,000 ft; passengers 10%, 30%, and all)",
     accuracy: "Quotes the regulation's thresholds exactly as of the review date; the time over 30 minutes is simple subtraction",
     when_to_use: "Use this to check which oxygen rule applies before a flight at altitude: enter the cabin pressure altitude, how long you will be there, and the operating part. It names the paragraph, says who must use or be provided oxygen and for how long, and for a pressurized airplane adds the rules for its flight altitude.",
@@ -422,6 +423,7 @@ fn rows_text(alts: &[f64], vals: &[&str], (a, b): (usize, usize)) -> String {
 
 pub static TIME_OF_USEFUL_CONSCIOUSNESS: ToolDef = ToolDef {
     id: "aviation.physiology.time-of-useful-consciousness",
+    stability: gp_base::tool::Stability::Stable,
     title: "Time of useful consciousness",
     summary: "How long a pilot stays able to act without oxygen at an altitude, from the FAA's AC 61-107B table, with its after-decompression column and the Pilot's Handbook table beside it, never interpolated.",
     aliases: &[
@@ -477,7 +479,7 @@ pub static TIME_OF_USEFUL_CONSCIOUSNESS: ToolDef = ToolDef {
         Field::new("notice", "Notice", "", Kind::Text { max_len: 120 }),
     ],
     errors: &[gp_base::ErrorCode::OutOfDomain],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Table lookup, no interpolation: AC 61-107B Change 1 Figure 2-3 (18,000 to 50,000 ft, with the rapid-decompression column) and PHAK-25C Figure 17-1 (20,000 to 45,000 ft MSL); an altitude between rows reports both rows",
     accuracy: "Quotes the tables exactly; the tables are averages, and individual times vary widely",
     when_to_use: "Use this to learn how little time you would have to act without oxygen at an altitude, for planning and training. Enter the altitude. It gives the FAA advisory circular's time, the shorter time after a rapid decompression, and the Pilot's Handbook time beside it, each named. Between table rows it shows both rows and does not guess between them.",

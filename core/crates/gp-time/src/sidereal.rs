@@ -53,6 +53,7 @@ const HOURS: f64 = 24.0 / TAU;
 
 pub static SIDEREAL: ToolDef = ToolDef {
     id: "time.scale.sidereal",
+    stability: gp_base::tool::Stability::Stable,
     title: "Sidereal time",
     summary: "Greenwich mean and apparent sidereal time, the Earth rotation angle, and the equation of the equinoxes for a UTC instant by IAU 2006/2000A, with local sidereal time for a longitude.",
     aliases: &[

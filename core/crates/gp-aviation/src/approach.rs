@@ -96,6 +96,7 @@ const CATEGORIES: [(&str, Option<&str>); 5] = [
 
 pub static APPROACH_CATEGORY: ToolDef = ToolDef {
     id: "aviation.ifr.approach-category",
+    stability: gp_base::tool::Stability::Stable,
     title: "Aircraft approach category",
     summary: "The approach category, A to E, that sets an airplane's instrument approach minimums, from VREF or 1.3 × VS0, by the speed bands of 14 CFR 97.3.",
     aliases: &["approach category calculator", "aircraft approach category", "Vref category"],
@@ -111,7 +112,7 @@ pub static APPROACH_CATEGORY: ToolDef = ToolDef {
         Field::new("band", "Speed band", "The category's range", Kind::Text { max_len: 40 }),
         Field::new("rules", "Rules as of", "Citation and review date", Kind::Text { max_len: 120 }),
     ],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Category by speed (VREF, or 1.3 VS0 at maximum certificated landing weight when VREF is not specified): A below 91 kt, B 91 to below 121, C 121 to below 141, D 141 to below 166, E 166 and above (14 CFR 97.3)",
     accuracy: "Exact to the regulation's bands; the speeds are the certificated values from the flight manual",
     when_to_use: "Use this to find which column of an instrument approach chart's minimums applies to your airplane. Enter VREF from the flight manual, or the landing-configuration stall speed VS0 at maximum landing weight when there is no VREF; the tool applies 14 CFR 97.3's bands and shows the speed it used.",
@@ -194,6 +195,7 @@ fn run_approach_category(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static RVR_VISIBILITY: ToolDef = ToolDef {
     id: "aviation.ifr.rvr-visibility",
+    stability: gp_base::tool::Stability::Stable,
     version: "1.1.0",
     title: "RVR to ground visibility",
     summary: "The ground visibility an RVR minimum stands for when RVR is not reported, by the table in 14 CFR 91.175(h)(2): 1,600 ft is 1/4 statute mile up to 6,000 ft at 1 1/4.",
@@ -269,7 +271,7 @@ pub static RVR_VISIBILITY: ToolDef = ToolDef {
             Kind::Text { max_len: 120 },
         ),
     ],
-    warnings: &["RVR_NOT_IN_REGULATION", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["RVR_NOT_IN_REGULATION", "UNIT_ASSUMED"],
     model: "Table lookup, 14 CFR 91.175(h)(2): RVR 1,600, 2,400, 3,200, 4,000, 4,500, 5,000, and 6,000 ft are 1/4, 1/2, 5/8, 3/4, 7/8, 1, and 1 1/4 statute miles; no interpolation. Optionally the chart legend's table of 15 rows from 1,200 to 6,000 ft, taking the next higher listed RVR between rows",
     accuracy: "Exact to the regulation's table; values between rows are not in the rule and are refused",
     when_to_use: "Use this when an approach chart gives an RVR minimum but the runway's RVR is not being reported: 14 CFR 91.175(h)(1) then makes the comparable ground visibility from the table in (h)(2) the minimum. Enter the RVR as charted to read its visibility.",
@@ -666,6 +668,7 @@ const fn nm(name: &'static str, title: &'static str, help: &'static str) -> Fiel
 
 pub static CIRCLING_RADIUS: ToolDef = ToolDef {
     id: "aviation.ifr.circling-radius",
+    stability: gp_base::tool::Stability::Stable,
     version: "1.1.0",
     title: "Circling approach radius",
     summary: "The radius of the protected circling area for an approach category, by the FAA's TERPS formulas from the category's speed, bank, and the true airspeed at the airport's elevation, never less than 1.30 NM.",
@@ -745,7 +748,7 @@ pub static CIRCLING_RADIUS: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[gp_base::ErrorCode::OutOfDomain],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "V_KTAS = V_KIAS × 171233 × √(303 − 0.00198 (elevation + k)) / (288 − 0.00198 (elevation + k))^2.628, k ≥ 1,000 ft (Formula 2-7-1); CAR = 2 (V_KTAS + 25)² / (tan(bank) × 68625.4) + S, at least 1.30 NM (Formula 2-7-2), with Table 2-7-1's speed, bank, and S for the category (Order 8260.3G)",
     accuracy: "Exact to the order's formulas; the 25 kt in the formula is the order's wind allowance",
     when_to_use: "Use this to see how far from the runway a circling approach is protected for your category at a given airport, so you can stay inside it when you circle. Enter the category and the airport elevation, and the circling altitude when it is more than 1,000 ft above the airport. It shows each number the formula used.",

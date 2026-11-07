@@ -1,15 +1,15 @@
 {
   "/": {
-    "hash": "d66c92e9f15cdfe1",
-    "lastmod": "2026-10-28"
+    "hash": "76d0d4c197ae0521",
+    "lastmod": "2026-11-07"
   },
   "/accuracy/": {
     "hash": "c114ed2bae28332d",
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "a5085267bf9b9b7f",
-    "lastmod": "2026-10-20"
+    "hash": "02042428fe231fe4",
+    "lastmod": "2026-11-07"
   },
   "/aviation/": {
     "hash": "4dcbefcaa54954ae",
@@ -44,8 +44,8 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/altimetry/cabin-altitude/": {
-    "hash": "99d26f928f416825",
-    "lastmod": "2026-10-20"
+    "hash": "5e2e9036aef97092",
+    "lastmod": "2026-11-07"
   },
   "/aviation/altimetry/cold-temperature/": {
     "hash": "90b031eb220422f2",
@@ -108,12 +108,12 @@
     "lastmod": "2026-10-21"
   },
   "/aviation/ifr/approach-category/": {
-    "hash": "15e09019095f368d",
-    "lastmod": "2026-10-20"
+    "hash": "bdd6083fa8a8ce61",
+    "lastmod": "2026-11-07"
   },
   "/aviation/ifr/circling-radius/": {
-    "hash": "32deabb3c512e5ce",
-    "lastmod": "2026-10-20"
+    "hash": "54849d142133f524",
+    "lastmod": "2026-11-07"
   },
   "/aviation/ifr/dme-arc-lead/": {
     "hash": "ab786101355dec30",
@@ -144,8 +144,8 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/ifr/rvr-visibility/": {
-    "hash": "6ac11418d7b90cd3",
-    "lastmod": "2026-10-21"
+    "hash": "59ea76e079c09210",
+    "lastmod": "2026-11-07"
   },
   "/aviation/ifr/time-to-station/": {
     "hash": "fc8fd4fb8b7faf3e",
@@ -168,8 +168,8 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/loading/fuel-density-temperature/": {
-    "hash": "08ced1fbc43bacfb",
-    "lastmod": "2026-10-20"
+    "hash": "cdcd9390a9b0c5f0",
+    "lastmod": "2026-11-07"
   },
   "/aviation/loading/fuel-plan/": {
     "hash": "f0de6faba843c6a9",
@@ -204,8 +204,8 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/performance/climb-requirement/": {
-    "hash": "eda166858c7cd6a6",
-    "lastmod": "2026-10-20"
+    "hash": "3f912a953b17c37e",
+    "lastmod": "2026-11-07"
   },
   "/aviation/performance/etp-pnr/": {
     "hash": "aec1ca391344ce20",
@@ -216,8 +216,8 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/performance/hydroplaning-speed/": {
-    "hash": "c833fa90dbd94a28",
-    "lastmod": "2026-10-20"
+    "hash": "b06ef14f8ce0c031",
+    "lastmod": "2026-11-07"
   },
   "/aviation/performance/pivotal-altitude/": {
     "hash": "6a923a34658fb31d",
@@ -248,12 +248,12 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/physiology/oxygen-requirement/": {
-    "hash": "003a5dc831e82e19",
-    "lastmod": "2026-10-20"
+    "hash": "ac1dd6ff5cf0ebbf",
+    "lastmod": "2026-11-07"
   },
   "/aviation/physiology/time-of-useful-consciousness/": {
-    "hash": "9be9b82b2b29ac13",
-    "lastmod": "2026-10-20"
+    "hash": "4f257986b035798f",
+    "lastmod": "2026-11-07"
   },
   "/aviation/weather/": {
     "hash": "71fc3736a9674207",
@@ -472,16 +472,16 @@
     "lastmod": "2026-10-19"
   },
   "/drone/photogrammetry/parallax-height/": {
-    "hash": "4fcd5f11a1882d5c",
-    "lastmod": "2026-10-28"
+    "hash": "6a84a7713a1d5743",
+    "lastmod": "2026-11-07"
   },
   "/drone/photogrammetry/photo-scale/": {
-    "hash": "2245020d027a49e6",
-    "lastmod": "2026-10-20"
+    "hash": "3180bd42c55fd02d",
+    "lastmod": "2026-11-07"
   },
   "/drone/photogrammetry/relief-displacement/": {
-    "hash": "d2755862d0cf5f0e",
-    "lastmod": "2026-10-28"
+    "hash": "8bcb37c01967325a",
+    "lastmod": "2026-11-07"
   },
   "/drone/photogrammetry/stereo-base/": {
     "hash": "5a9a9c89931663b9",
@@ -1436,8 +1436,8 @@
     "lastmod": "2026-10-09"
   },
   "/learn/hypoxia-and-the-oxygen-rules/": {
-    "hash": "72f2decd6f02d071",
-    "lastmod": "2026-10-20"
+    "hash": "5fb21ad4e1c812de",
+    "lastmod": "2026-11-07"
   },
   "/learn/maneuvering-speed-and-weight/": {
     "hash": "8d7e57c60761f53c",
@@ -1480,8 +1480,8 @@
     "lastmod": "2026-10-09"
   },
   "/learn/rvr-and-visibility/": {
-    "hash": "0521bb0b590623f6",
-    "lastmod": "2026-10-21"
+    "hash": "3dc2853bfe2f2d67",
+    "lastmod": "2026-11-07"
   },
   "/learn/set-and-drift/": {
     "hash": "a4581fdbd5f62bb8",
@@ -1552,8 +1552,8 @@
     "lastmod": "2026-10-20"
   },
   "/methodology/": {
-    "hash": "4d38518ff8b25a3d",
-    "lastmod": "2026-10-28"
+    "hash": "6dc9924de1e874b6",
+    "lastmod": "2026-11-07"
   },
   "/navigation/": {
     "hash": "f902b2609daa7117",
@@ -2316,8 +2316,8 @@
     "lastmod": "2026-10-21"
   },
   "/time/scale/sidereal/": {
-    "hash": "abf97d91fa5d6e1c",
-    "lastmod": "2026-10-21"
+    "hash": "d562d7fe6f1fc993",
+    "lastmod": "2026-11-07"
   },
   "/time/scale/unix-time/": {
     "hash": "e101fe262f757800",
@@ -2364,8 +2364,8 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "2b06658cfd72c062",
-    "lastmod": "2026-10-28"
+    "hash": "016d3b915048a80f",
+    "lastmod": "2026-11-07"
   },
   "/units/": {
     "hash": "227e11d074c56226",
@@ -2628,8 +2628,8 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "de61295dae2c780b",
-    "lastmod": "2026-10-28"
+    "hash": "235c7ffcfa8b54b9",
+    "lastmod": "2026-11-07"
   },
   "/workflows/": {
     "hash": "ae01dae8923fdd1d",

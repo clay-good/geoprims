@@ -1513,15 +1513,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/%40cloudflare/workerd-darwin-64@1.20261006.1",
+      "bom-ref": "pkg:npm/%40cloudflare/workerd-darwin-64@1.20261104.1",
       "name": "@cloudflare/workerd-darwin-64",
-      "version": "1.20261006.1",
+      "version": "1.20261104.1",
       "licenses": [
         {
           "expression": "Apache-2.0"
         }
       ],
-      "purl": "pkg:npm/%40cloudflare/workerd-darwin-64@1.20261006.1",
+      "purl": "pkg:npm/%40cloudflare/workerd-darwin-64@1.20261104.1",
       "scope": "optional",
       "properties": [
         {
@@ -1532,15 +1532,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/%40cloudflare/workerd-darwin-arm64@1.20261006.1",
+      "bom-ref": "pkg:npm/%40cloudflare/workerd-darwin-arm64@1.20261104.1",
       "name": "@cloudflare/workerd-darwin-arm64",
-      "version": "1.20261006.1",
+      "version": "1.20261104.1",
       "licenses": [
         {
           "expression": "Apache-2.0"
         }
       ],
-      "purl": "pkg:npm/%40cloudflare/workerd-darwin-arm64@1.20261006.1",
+      "purl": "pkg:npm/%40cloudflare/workerd-darwin-arm64@1.20261104.1",
       "scope": "optional",
       "properties": [
         {
@@ -1551,15 +1551,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/%40cloudflare/workerd-linux-64@1.20261006.1",
+      "bom-ref": "pkg:npm/%40cloudflare/workerd-linux-64@1.20261104.1",
       "name": "@cloudflare/workerd-linux-64",
-      "version": "1.20261006.1",
+      "version": "1.20261104.1",
       "licenses": [
         {
           "expression": "Apache-2.0"
         }
       ],
-      "purl": "pkg:npm/%40cloudflare/workerd-linux-64@1.20261006.1",
+      "purl": "pkg:npm/%40cloudflare/workerd-linux-64@1.20261104.1",
       "scope": "optional",
       "properties": [
         {
@@ -1570,15 +1570,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/%40cloudflare/workerd-linux-arm64@1.20261006.1",
+      "bom-ref": "pkg:npm/%40cloudflare/workerd-linux-arm64@1.20261104.1",
       "name": "@cloudflare/workerd-linux-arm64",
-      "version": "1.20261006.1",
+      "version": "1.20261104.1",
       "licenses": [
         {
           "expression": "Apache-2.0"
         }
       ],
-      "purl": "pkg:npm/%40cloudflare/workerd-linux-arm64@1.20261006.1",
+      "purl": "pkg:npm/%40cloudflare/workerd-linux-arm64@1.20261104.1",
       "scope": "optional",
       "properties": [
         {
@@ -1589,15 +1589,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/%40cloudflare/workerd-windows-64@1.20261006.1",
+      "bom-ref": "pkg:npm/%40cloudflare/workerd-windows-64@1.20261104.1",
       "name": "@cloudflare/workerd-windows-64",
-      "version": "1.20261006.1",
+      "version": "1.20261104.1",
       "licenses": [
         {
           "expression": "Apache-2.0"
         }
       ],
-      "purl": "pkg:npm/%40cloudflare/workerd-windows-64@1.20261006.1",
+      "purl": "pkg:npm/%40cloudflare/workerd-windows-64@1.20261104.1",
       "scope": "optional",
       "properties": [
         {
@@ -3679,15 +3679,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/%40sveltejs/vite-plugin-svelte@7.3.0",
+      "bom-ref": "pkg:npm/%40sveltejs/vite-plugin-svelte@7.3.1",
       "name": "@sveltejs/vite-plugin-svelte",
-      "version": "7.3.0",
+      "version": "7.3.1",
       "licenses": [
         {
           "expression": "MIT"
         }
       ],
-      "purl": "pkg:npm/%40sveltejs/vite-plugin-svelte@7.3.0",
+      "purl": "pkg:npm/%40sveltejs/vite-plugin-svelte@7.3.1",
       "scope": "excluded",
       "properties": [
         {
@@ -5826,15 +5826,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/miniflare@5.20261006.1-alpha",
+      "bom-ref": "pkg:npm/miniflare@5.20261104.0-beta",
       "name": "miniflare",
-      "version": "5.20261006.1-alpha",
+      "version": "5.20261104.0-beta",
       "licenses": [
         {
           "expression": "MIT"
         }
       ],
-      "purl": "pkg:npm/miniflare@5.20261006.1-alpha",
+      "purl": "pkg:npm/miniflare@5.20261104.0-beta",
       "scope": "excluded",
       "properties": [
         {
@@ -7042,15 +7042,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/undici@7.29.1",
+      "bom-ref": "pkg:npm/undici@7.30.1",
       "name": "undici",
-      "version": "7.29.1",
+      "version": "7.30.1",
       "licenses": [
         {
           "expression": "MIT"
         }
       ],
-      "purl": "pkg:npm/undici@7.29.1",
+      "purl": "pkg:npm/undici@7.30.1",
       "scope": "excluded",
       "properties": [
         {
@@ -7061,15 +7061,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/undici@8.10.2",
+      "bom-ref": "pkg:npm/undici@8.12.4",
       "name": "undici",
-      "version": "8.10.2",
+      "version": "8.12.4",
       "licenses": [
         {
           "expression": "MIT"
         }
       ],
-      "purl": "pkg:npm/undici@8.10.2",
+      "purl": "pkg:npm/undici@8.12.4",
       "scope": "excluded",
       "properties": [
         {
@@ -7346,15 +7346,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/workerd@1.20261006.1",
+      "bom-ref": "pkg:npm/workerd@1.20261104.1",
       "name": "workerd",
-      "version": "1.20261006.1",
+      "version": "1.20261104.1",
       "licenses": [
         {
           "expression": "Apache-2.0"
         }
       ],
-      "purl": "pkg:npm/workerd@1.20261006.1",
+      "purl": "pkg:npm/workerd@1.20261104.1",
       "scope": "excluded",
       "properties": [
         {
@@ -7365,15 +7365,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/wrangler@4.149.0",
+      "bom-ref": "pkg:npm/wrangler@4.158.0",
       "name": "wrangler",
-      "version": "4.149.0",
+      "version": "4.158.0",
       "licenses": [
         {
           "expression": "MIT OR Apache-2.0"
         }
       ],
-      "purl": "pkg:npm/wrangler@4.149.0",
+      "purl": "pkg:npm/wrangler@4.158.0",
       "scope": "excluded",
       "properties": [
         {
@@ -7517,15 +7517,15 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/zod@4.6.5",
+      "bom-ref": "pkg:npm/zod@4.6.7",
       "name": "zod",
-      "version": "4.6.5",
+      "version": "4.6.7",
       "licenses": [
         {
           "expression": "MIT"
         }
       ],
-      "purl": "pkg:npm/zod@4.6.5",
+      "purl": "pkg:npm/zod@4.6.7",
       "scope": "excluded",
       "properties": [
         {

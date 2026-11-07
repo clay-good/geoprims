@@ -14,6 +14,12 @@ node_modules/
 /worker/src/catalog-tools.json
 /apps/web/public/vectors/
 
+# The root package.json declares no dependencies -- it is a script runner -- so
+# `npm install` here writes a lockfile with nothing in it. The two lockfiles the
+# SBOM and the audit are built from are apps/web/package-lock.json and
+# core/Cargo.lock, both committed.
+/package-lock.json
+
 # wrangler local state
 .wrangler/
 

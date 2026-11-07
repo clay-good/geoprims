@@ -6,6 +6,13 @@
       "kind": "fixed",
       "tools": [],
       "vectors": [],
+      "summary": "Build-tool dependencies are up to date, clearing every high and medium security advisory the project was carrying. These are development tools, not part of the site or the calculators: no shipped code changes and no answer moves. Three low-severity advisories remain in a build plugin whose only published fix is an older, incompatible version; they affect the build machine rather than any reader, and they are tracked rather than forced."
+    },
+    {
+      "date": "2026-11-07",
+      "kind": "fixed",
+      "tools": [],
+      "vectors": [],
       "summary": "The time-zone boundary data is now delivered in two pieces, which is what the site needed to deploy at all. Cloudflare Workers refuses any single file over 25 MiB and the boundary index is 26.9 MB, so no deploy could start, whatever else was ready. The index is split into two pinned pieces that the runtime joins back before anything reads them, checking each piece against its own fingerprint and the joined file against the one published for the whole, so a reader gets the same bytes as before and a damaged download is refused rather than used. Nothing changes in what any tool answers."
     },
     {

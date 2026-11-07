@@ -37,7 +37,7 @@ Bowditch's sphere. On WGS 84 a minute of longitude is up to about 0.5% longer th
 
 ## Differential tests
 
-- `tools/vectors/gen_sailings.py parallel`: Python at 19 random latitudes in both directions, exact to 1e-9 NM and 1e-11°, and the polar refusal.
+- `tools/vectors/gen_sailings.py` parallel: Python at 19 random latitudes in both directions, exact to 1e-9 NM and 1e-11°, and the polar refusal.
 - `core/vectors/navigation.sailing.parallel.jsonl`: those vectors with Bowditch's example first, run through the core on every build.
 
 ## Invariants

@@ -38,7 +38,7 @@ A steady current; Bowditch solves by plotting, to about 0.5° and 0.1 kn.
 
 ## Differential tests
 
-- `tools/vectors/gen_piloting.py set-and-drift`: Python vector arithmetic at 17 random cases across the three problems (1e-9) and the too-strong-current refusal.
+- `tools/vectors/gen_piloting.py` set-and-drift: Python vector arithmetic at 17 random cases across the three problems (1e-9) and the too-strong-current refusal.
 - `core/vectors/navigation.piloting.set-and-drift.jsonl`: those vectors, run through the core on every build.
 
 ## Invariants

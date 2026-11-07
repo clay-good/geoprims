@@ -53,7 +53,7 @@ A UTC time from 1800-01-01 to 2100-12-31 (OUT_OF_DOMAIN otherwise). Delta T is t
 ## Differential tests
 
 - `core/crates/gp-time/tests/moon.rs` `phases_match_usno` asks the tool, on the morning of each of USNO's 208 published phase instants from 1995 to 2045, for the next instant of that phase. Every one agrees within a minute, which is the precision USNO prints.
-- `tools/vectors/gen_moon.py time.moon.phase` builds the 31 vectors in `core/vectors/time.moon.phase.jsonl`. They do not carry the instants: at a phase instant the lit fraction of the disc is known from the phase itself, with no further source needed, so each vector asks for the fraction and the phase name **at** one of USNO's instants. That tests the illumination against USNO's own timing rather than against this code.
+- `tools/vectors/gen_moon.py` time.moon.phase builds the 31 vectors in `core/vectors/time.moon.phase.jsonl`. They do not carry the instants: at a phase instant the lit fraction of the disc is known from the phase itself, with no further source needed, so each vector asks for the fraction and the phase name **at** one of USNO's instants. That tests the illumination against USNO's own timing rather than against this code.
 
 ## Invariants
 

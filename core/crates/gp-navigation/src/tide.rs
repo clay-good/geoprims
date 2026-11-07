@@ -126,6 +126,7 @@ fn m(v: f64) -> Q {
 
 pub static DATUMS: ToolDef = ToolDef {
     id: "navigation.tide.datums",
+    stability: gp_base::tool::Stability::Stable,
     title: "Tidal datum conversion",
     summary: "Converts a height between the tidal datums of a NOAA station's datum sheet that you paste, such as from MLLW to NAVD88, by the differences the sheet gives.",
     aliases: &["tidal datum converter", "MLLW to NAVD88", "chart datum conversion"],
@@ -170,7 +171,7 @@ pub static DATUMS: ToolDef = ToolDef {
         Field::new("datums", "Datums on the sheet", "Each above the station datum, in meters", Kind::Text { max_len: 2_000 }),
     ],
     errors: &[gp_base::ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Height above the to datum = height above the from datum + (from datum − to datum), each datum's height above the station datum (STND) read from the pasted sheet",
     accuracy: "Exact to the sheet's values, which NOAA publishes to a millimeter or a thousandth of a foot for its datum epoch",
     when_to_use: "Use this to move a height between tidal datums at one station: a charted depth or a tide height on MLLW into NAVD88 for a survey, or a land height into chart datum. Paste the station's datum sheet from NOAA, enter the height and the two datums, and it does the subtraction and shows each datum it used.",
@@ -898,6 +899,7 @@ const SERIES_ROW: &[Field] = &[
 
 pub static PREDICT: ToolDef = ToolDef {
     id: "navigation.tide.predict",
+    stability: gp_base::tool::Stability::Stable,
     title: "Tide prediction from harmonic constituents",
     summary: "Predicts the tide height and the times of high and low water at a NOAA station from the harmonic constituents and datum sheet you paste, by Schureman's harmonic method as NOAA applies it. NOAA's published predictions are authoritative.",
     aliases: &["tide calculator", "tide prediction", "high and low tide times"],
@@ -927,7 +929,7 @@ pub static PREDICT: ToolDef = ToolDef {
         Field::new("notice", "Notice", "", Kind::Text { max_len: 160 }),
     ],
     errors: &[gp_base::ErrorCode::InvalidInput, gp_base::ErrorCode::LimitExceeded],
-    warnings: &["PARTIAL_CONSTITUENTS", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["PARTIAL_CONSTITUENTS", "UNIT_ASSUMED"],
     model: "h(t) = (MSL − datum) + Σ f·H·cos(a·t + V₀ + u − κ): V₀ at 1 January 00:00 UTC of each year from Meeus mean longitudes, f and u at 2 July (NOAA's middle of the year) from Schureman SP 98 Table 2, NOAA's speeds a and Greenwich phases κ from the paste; NOAA's M1 is Schureman's composite (equations 190 to 196) with a measured +20.5° convention offset; highs and lows where dh/dt = 0, found to 1 second",
     accuracy: "Within 0.02 ft of NOAA's own predictions at the stations tested (Boston, Seattle, San Francisco, Key West, Honolulu), from the same 37 constituents; NOAA's published predictions are authoritative",
     when_to_use: "Use this to predict tides offline from a NOAA station's harmonic constituents: paste the constituents and the datum sheet from the station's page once, then predict any day. It gives the heights at your interval and the times and heights of high and low water, above chart datum. Check it against NOAA's published predictions before relying on it.",

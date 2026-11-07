@@ -47,7 +47,7 @@ Hexagons are exact on the UTM plane. On the ground they differ by the plane's sc
 
 ## Differential tests
 
-- `tools/vectors/gen_grid_designs.py hex`: the layout and edge rule reimplemented in Python with PROJ's transverse Mercator, and inside fractions from Shapely (GEOS) intersection areas. It covers 20 cases over five polygons with rotations, extent and clip modes. Counts, rows, and columns agree exactly, centers and corners within 1e-9°, and inside fractions within 1e-7.
+- `tools/vectors/gen_grid_designs.py` hex: the layout and edge rule reimplemented in Python with PROJ's transverse Mercator, and inside fractions from Shapely (GEOS) intersection areas. It covers 20 cases over five polygons with rotations, extent and clip modes. Counts, rows, and columns agree exactly, centers and corners within 1e-9°, and inside fractions within 1e-7.
 - `core/vectors/geometry.sampling.hex-grid.jsonl`: those vectors and the too-many-cells refusal, run through the core on every build.
 
 ## Invariants

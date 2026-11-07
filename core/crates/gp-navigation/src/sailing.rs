@@ -116,6 +116,7 @@ fn nm_in(ctx: &mut Ctx, name: &str) -> Result<Option<f64>, ToolError> {
 
 pub static PLANE: ToolDef = ToolDef {
     id: "navigation.sailing.plane",
+    stability: gp_base::tool::Stability::Stable,
     title: "Plane sailing",
     summary: "Difference of latitude and departure from a course and distance, or the course and distance from them, by Bowditch's plane sailing.",
     aliases: &[
@@ -156,7 +157,7 @@ pub static PLANE: ToolDef = ToolDef {
         text_out("p_label", "p", "As Bowditch labels it"),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "l = D cos C, p = D sin C; or tan C = p / l, D = √(l² + p²) (Bowditch §1302)",
     accuracy: "Exact for the plane triangle; the sailing treats a short run as flat, which Bowditch limits to runs of a few hundred miles",
     when_to_use: "Use this to turn a course and distance run into how far north or south and east or west the ship went, or back again, as in a navigation exam or a quick check of a dead-reckoning plot. Enter a course and distance to get the difference of latitude and the departure, or enter those two to get the course and distance; the answer is labeled N or S and E or W the way Bowditch writes it.",

@@ -58,7 +58,7 @@ The spec's own gyro-error scenario reads "computed azimuth 124.4°, gyro reads 1
 
 ## Differential tests
 
-- `tools/vectors/gen_celestial_checks.py navigation.celestial.sun-azimuth-check` builds the 31 vectors in `core/vectors/navigation.celestial.sun-azimuth-check.jsonl`: Bowditch's worked amplitude, 27 rows of USNO's celnav API, and the magnetic-without-variation, deviation, and no-amplitude scenarios.
+- `tools/vectors/gen_celestial_checks.py` navigation.celestial.sun-azimuth-check builds the 31 vectors in `core/vectors/navigation.celestial.sun-azimuth-check.jsonl`: Bowditch's worked amplitude, 27 rows of USNO's celnav API, and the magnetic-without-variation, deviation, and no-amplitude scenarios.
 - The USNO rows give the Sun's azimuth, declination, and hour angle at 27 instants and places from 1995 to 2045, north and south, with the Sun above and below the horizon; all within 0.05° of azimuth and 0.1′ of declination and hour angle. The azimuth is the same code path the sight-reduction tool runs, where 148 body-instants agree within 0.001°.
 
 ## Invariants

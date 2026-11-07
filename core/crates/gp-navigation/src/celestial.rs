@@ -700,6 +700,7 @@ const LOP_POINT: &[Field] = &[
 
 pub static SIGHT_REDUCTION: ToolDef = ToolDef {
     id: "navigation.celestial.sight-reduction",
+    stability: gp_base::tool::Stability::Stable,
     title: "Sight reduction by the intercept method",
     summary: "Reduces one sextant sight to a line of position: the body's hour angle and declination for the second of the sight, the computed altitude and azimuth at your assumed position, and the intercept toward or away",
     aliases: &[
@@ -1048,6 +1049,7 @@ const CORRECTION_ROW: &[Field] = &[
 
 pub static ALTITUDE_CORRECTION: ToolDef = ToolDef {
     id: "navigation.celestial.altitude-correction",
+    stability: gp_base::tool::Stability::Stable,
     title: "Sextant altitude corrections, step by step",
     summary: "Turns a sextant altitude into an observed altitude and shows every step: index correction, dip of the horizon, refraction for the air you measured, semidiameter for the limb you touched, and parallax",
     aliases: &[

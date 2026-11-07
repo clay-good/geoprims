@@ -46,7 +46,7 @@ Distances are on the UTM plane, as in GIS tools, so they run short or long of th
 
 ## Differential tests
 
-- `tools/vectors/gen_grid_designs.py along`: the method reimplemented in Python with PROJ's transverse Mercator and pyproj.Geod. It covers 20 lines of 2 to 6 corners with start offsets. Counts agree exactly, points within 1e-9°, distances within 1e-9 m, and lengths within 1e-6 m.
+- `tools/vectors/gen_grid_designs.py` along: the method reimplemented in Python with PROJ's transverse Mercator and pyproj.Geod. It covers 20 lines of 2 to 6 corners with start offsets. Counts agree exactly, points within 1e-9°, distances within 1e-9 m, and lengths within 1e-6 m.
 - `core/vectors/geometry.sampling.points-along-line.jsonl`: those vectors and the too-many-points refusal, run through the core on every build.
 
 ## Invariants

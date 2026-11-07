@@ -37,7 +37,7 @@ The mean latitude stands for the true middle latitude, and the Earth is Bowditch
 
 ## Differential tests
 
-- `tools/vectors/gen_sailings.py mid-latitude`: Python at 19 random cases in both directions (to 1e-9 NM, 1e-9° of course, 1e-10° of longitude).
+- `tools/vectors/gen_sailings.py` mid-latitude: Python at 19 random cases in both directions (to 1e-9 NM, 1e-9° of course, 1e-10° of longitude).
 - `core/vectors/navigation.sailing.mid-latitude.jsonl`: those vectors with Bowditch's example first, run through the core on every build.
 
 ## Invariants

@@ -56,7 +56,7 @@ This is the observation the change's spec gives as "Bowditch §1504". That secti
 ## Differential tests
 
 - `core/crates/gp-survey/tests/astro.rs` `azimuth_matches_usno` runs both tools against USNO's celestial-navigation data at 54 places and instants from 1995 to 2045 (34 on Polaris, 20 on the sun), with a single pointing at a zero horizontal angle so the line's azimuth is the body's. The worst disagreement is 0.000346°, which is 1.2 seconds of arc.
-- `tools/vectors/gen_survey_astro.py survey.astro.polaris-azimuth` builds the 37 vectors in `core/vectors/survey.astro.polaris-azimuth.jsonl`: the spec's worked observation, every USNO Polaris row above a degree of altitude, and the out-of-domain and bad-angle scenarios.
+- `tools/vectors/gen_survey_astro.py` survey.astro.polaris-azimuth builds the 37 vectors in `core/vectors/survey.astro.polaris-azimuth.jsonl`: the spec's worked observation, every USNO Polaris row above a degree of altitude, and the out-of-domain and bad-angle scenarios.
 
 ## Invariants
 

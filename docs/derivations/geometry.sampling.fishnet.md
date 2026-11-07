@@ -46,7 +46,7 @@ Cells are exact rectangles on the UTM plane. On the ground their sides differ by
 
 ## Differential tests
 
-- `tools/vectors/gen_grid_designs.py fishnet`: the layout reimplemented in Python with PROJ's transverse Mercator. Inside fractions come independently from Shapely (GEOS) intersection areas, not triangle clipping. It covers 20 cases over five polygons with square and oblong cells, rotations, extent and clip modes.
+- `tools/vectors/gen_grid_designs.py` fishnet: the layout reimplemented in Python with PROJ's transverse Mercator. Inside fractions come independently from Shapely (GEOS) intersection areas, not triangle clipping. It covers 20 cases over five polygons with square and oblong cells, rotations, extent and clip modes.
   - Counts, rows, and columns agree exactly.
   - Centers and the first cell's corners agree within 1e-9°.
   - Inside fractions agree within 1e-7.

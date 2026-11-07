@@ -38,7 +38,7 @@ Standard terrestrial refraction, as the tables assume. Volume I §1209 notes the
 
 ## Differential tests
 
-- `tools/vectors/gen_piloting.py distance-by-vertical-angle`: Python Table 15 formula at 14 random angles and heights (1e-9 NM) with the horizon (1e-12).
+- `tools/vectors/gen_piloting.py` distance-by-vertical-angle: Python Table 15 formula at 14 random angles and heights (1e-9 NM) with the horizon (1e-12).
 - `core/vectors/navigation.piloting.distance-by-vertical-angle.jsonl`: those vectors, run through the core on every build.
 
 ## Invariants

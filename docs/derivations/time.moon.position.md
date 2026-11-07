@@ -53,7 +53,7 @@ A UTC time from 1800-01-01 to 2100-12-31 (OUT_OF_DOMAIN otherwise); any place; a
 
 - `core/crates/gp-time/tests/moon.rs` `position_matches_usno` runs the tool against USNO's celnav data at 129 places and instants from 1995 to 2045. The topocentric altitude is within 0.034′ and the declination within 0.011′.
   - USNO publishes the azimuth of the moon's **geocentric** place. It sits up to 0.36′ from the topocentric azimuth, growing as 1/cos(altitude), because the parallax direction is tilted by the difference between the geodetic and geocentric verticals. The test measures that below 85° of altitude and leaves it alone above, where a hundredth of a degree of altitude swings the azimuth by degrees.
-- `tools/vectors/gen_moon.py time.moon.position` builds the 27 vectors in `core/vectors/time.moon.position.jsonl`: every fifth celnav row, and the out-of-domain scenario.
+- `tools/vectors/gen_moon.py` time.moon.position builds the 27 vectors in `core/vectors/time.moon.position.jsonl`: every fifth celnav row, and the out-of-domain scenario.
 
 ## Invariants
 

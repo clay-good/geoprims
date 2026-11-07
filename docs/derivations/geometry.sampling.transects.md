@@ -50,7 +50,7 @@ Lines are straight on the UTM plane, so they are not geodesics. Over a few kilom
 
 ## Differential tests
 
-- `tools/vectors/gen_grid_designs.py transects`: the method above reimplemented in Python.
+- `tools/vectors/gen_grid_designs.py` transects: the method above reimplemented in Python.
   - The plane comes from PROJ's transverse Mercator, and lengths from pyproj.Geod.
   - The convergence is PROJ's analytic value, checked against a geodesic estimate from points 1 m up and down grid north, so its sign is confirmed independently of the core.
   - It covers 20 cases over five polygons with bearings from 0° to 200°, lines and zigzags. Counts agree exactly, ends within 1e-9°, and lengths, totals, and routes within 1e-5 m.

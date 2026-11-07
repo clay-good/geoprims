@@ -58,7 +58,7 @@ Table 2010b's fourth column, Procyon, is left out of both the test and the vecto
   - Sun, planets, and stars: worst 0.012′ in Hc and 0.001° in Zn.
   - The Moon: within 0.11′; Venus: within 0.19′. Both bodies are where USNO itself departs from JPL, as the almanac note records; the test allows 0.25′ and 0.5′.
   - Azimuth is not compared above 85° of altitude, where a tenth of a minute of altitude swings it degrees.
-- `tools/vectors/gen_celestial_sights.py navigation.celestial.sight-reduction` builds the 29 vectors in `core/vectors/navigation.celestial.sight-reduction.jsonl`: three Bowditch columns, 24 USNO rows, and the below-horizon and unknown-body scenarios.
+- `tools/vectors/gen_celestial_sights.py` navigation.celestial.sight-reduction builds the 29 vectors in `core/vectors/navigation.celestial.sight-reduction.jsonl`: three Bowditch columns, 24 USNO rows, and the below-horizon and unknown-body scenarios.
 
 ## Invariants
 

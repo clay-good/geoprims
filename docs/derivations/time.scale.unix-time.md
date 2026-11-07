@@ -38,7 +38,7 @@ None: integer day arithmetic, exact to the millisecond. Unix time is not a unifo
 
 ## Differential tests
 
-- `tools/vectors/gen_calendar.py unix`: 20 vectors from Python's datetime (an independent POSIX time implementation), from the epoch and negative times to 2100, the 2038 rollover, a UTC offset, milliseconds and nanoseconds, and the leap-second refusal; `core/vectors/time.scale.unix-time.jsonl`.
+- `tools/vectors/gen_calendar.py` unix: 20 vectors from Python's datetime (an independent POSIX time implementation), from the epoch and negative times to 2100, the 2038 rollover, a UTC offset, milliseconds and nanoseconds, and the leap-second refusal; `core/vectors/time.scale.unix-time.jsonl`.
 
 ## Invariants
 

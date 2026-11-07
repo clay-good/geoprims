@@ -37,7 +37,7 @@ The Mercator plot's distance counts a minute of latitude as one nautical mile; t
 
 ## Differential tests
 
-- `tools/vectors/gen_piloting.py dead-reckoning`: Python Mercator sailing at 20 random runs under 100 NM (1e-10° latitude, 1e-9° longitude) and the over-600 NM refusal.
+- `tools/vectors/gen_piloting.py` dead-reckoning: Python Mercator sailing at 20 random runs under 100 NM (1e-10° latitude, 1e-9° longitude) and the over-600 NM refusal.
 - `core/vectors/navigation.piloting.dead-reckoning.jsonl`: those vectors, run through the core on every build.
 
 ## Invariants

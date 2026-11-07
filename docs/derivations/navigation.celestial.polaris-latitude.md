@@ -62,7 +62,7 @@ The example's own GHA Aries, 71°26.9′ for 12h plus 6°19.0′ for 25m12s, is 
 
 ## Differential tests
 
-- `tools/vectors/gen_celestial_checks.py navigation.celestial.polaris-latitude` builds the 36 vectors in `core/vectors/navigation.celestial.polaris-latitude.jsonl`: Bowditch's worked sight, 33 rows of USNO's celnav API read backwards, and the out-of-range and near-the-pole scenarios.
+- `tools/vectors/gen_celestial_checks.py` navigation.celestial.polaris-latitude builds the 36 vectors in `core/vectors/navigation.celestial.polaris-latitude.jsonl`: Bowditch's worked sight, 33 rows of USNO's celnav API read backwards, and the out-of-range and near-the-pole scenarios.
 - The USNO rows are the tool's real check, and they test Polaris's place and the latitude solver together. Each row gives USNO's computed altitude of Polaris at a known position and instant; the vector feeds that altitude back in as the observed altitude with the row's longitude, and expects the row's latitude. 33 instants and places from 1995 to 2045, latitudes 2°N to 72°N, all within 0.1′ of latitude and 0.05° of azimuth.
 
 ## Invariants

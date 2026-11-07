@@ -36,7 +36,7 @@ None in the arithmetic. The sheet is for one station and one epoch (Boston's, fo
 
 ## Differential tests
 
-- `tools/vectors/gen_tide.py datums`: 20 conversions between the datums of NOAA's Boston sheet in meters, by subtraction, and two refusals (LAT, which the sheet lacks, and GT, a range); 22 vectors in `core/vectors/navigation.tide.datums.jsonl`.
+- `tools/vectors/gen_tide.py` datums: 20 conversions between the datums of NOAA's Boston sheet in meters, by subtraction, and two refusals (LAT, which the sheet lacks, and GT, a range); 22 vectors in `core/vectors/navigation.tide.datums.jsonl`.
 
 ## Invariants
 

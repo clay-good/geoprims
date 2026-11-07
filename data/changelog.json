@@ -5,6 +5,22 @@
       "date": "2026-11-06",
       "kind": "changed",
       "tools": [
+        "navigation.celestial.altitude-correction",
+        "navigation.celestial.sight-reduction",
+        "navigation.piloting.set-and-drift",
+        "navigation.sailing.plane",
+        "navigation.tide.datums",
+        "navigation.tide.predict",
+        "time.moon.position",
+        "time.moon.rise-set"
+      ],
+      "vectors": [],
+      "summary": "Eight marine and celestial tools are now stable: sextant altitude corrections, sight reduction, set and drift, plane sailing, tide datum conversion, tide prediction, the moon's position, and moonrise and moonset. Nothing they compute changed. Each was already checked against a published source rather than against itself: Bowditch's own worked examples for the sights, the sailings, and the current triangle, NOAA's published tide predictions and station datums for the tides, and the US Naval Observatory's computed data for the moon. What the stable mark adds is that the build now holds them to the whole bar on every commit, and their pages drop the experimental warning. The navigation MCP toolset grows to 37 tools, still under its cap."
+    },
+    {
+      "date": "2026-11-06",
+      "kind": "changed",
+      "tools": [
         "aviation.altimetry.cabin-altitude",
         "aviation.ifr.approach-category",
         "aviation.ifr.circling-radius",

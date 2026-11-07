@@ -38,7 +38,7 @@ The course is as exact as the meridional parts. The distance l sec C counts a mi
 
 ## Differential tests
 
-- `tools/vectors/gen_sailings.py mercator`: Python at 19 random cases in both directions (course and meridional parts to 1e-9, distance to 1e-10 relative) and the polar refusal.
+- `tools/vectors/gen_sailings.py` mercator: Python at 19 random cases in both directions (course and meridional parts to 1e-9, distance to 1e-10 relative) and the polar refusal.
 - `core/vectors/navigation.sailing.mercator.jsonl`: those vectors with Bowditch's example first, run through the core on every build.
 
 ## Invariants

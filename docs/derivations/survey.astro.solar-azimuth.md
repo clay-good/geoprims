@@ -56,7 +56,7 @@ The spec's own limb scenario is arithmetic rather than an observation: a semidia
 ## Differential tests
 
 - `core/crates/gp-survey/tests/astro.rs` `azimuth_matches_usno` runs both tools against USNO's celestial-navigation data at 54 places and instants from 1995 to 2045 (20 on the sun, 34 on Polaris), with a single pointing at a zero horizontal angle so the line's azimuth is the body's. The worst disagreement is 0.000346°, which is 1.2 seconds of arc, and the worst row is a solar one.
-- `tools/vectors/gen_survey_astro.py survey.astro.solar-azimuth` builds the 23 vectors in `core/vectors/survey.astro.solar-azimuth.jsonl`: every USNO solar row above a degree of altitude, the two limb vectors derived from USNO's own semidiameter and altitude, and the Laplace scenario.
+- `tools/vectors/gen_survey_astro.py` survey.astro.solar-azimuth builds the 23 vectors in `core/vectors/survey.astro.solar-azimuth.jsonl`: every USNO solar row above a degree of altitude, the two limb vectors derived from USNO's own semidiameter and altitude, and the Laplace scenario.
 
 ## Invariants
 

@@ -133,6 +133,7 @@ fn c3(v: f64) -> String {
 
 pub static SET_AND_DRIFT: ToolDef = ToolDef {
     id: "navigation.piloting.set-and-drift",
+    stability: gp_base::tool::Stability::Stable,
     title: "Current triangle (set and drift)",
     summary: "The three current-triangle problems of Bowditch: track and speed made good from course, speed, set, and drift; the course to steer for a course made good; and the course and speed to use for a course and speed made good.",
     aliases: &["set and drift", "course to steer through a current", "current triangle"],
@@ -159,7 +160,7 @@ pub static SET_AND_DRIFT: ToolDef = ToolDef {
         Field::new("current_angle", "Current correction", "Course to steer minus track", Kind::Quantity { q: QT::Angle, unit: "deg" }).precision(Precision::Decimals(1)),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::NoSolution],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "The vector triangle ground = water + current, solved by the same functions as the aviation wind triangle (gp_geo::wind): track from heading, heading for a course, or heading and speed for a ground vector (Bowditch §1008)",
     accuracy: "Exact for a steady current; Bowditch plots to 0.5° and 0.1 kn",
     when_to_use: "Use this to allow for a tidal or ocean current: what track and speed a ship actually makes good, which course to steer to stay on the planned track, or which course and speed to use to arrive on time. It is the marine form of the wind triangle and shares its arithmetic with the aviation tools.",

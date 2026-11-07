@@ -54,7 +54,7 @@ The spacing is exact at the polygon's center. Elsewhere it changes with the UTM 
 
 ## Differential tests
 
-- `tools/vectors/gen_grid_designs.py systematic`: the method above reimplemented in Python, with PROJ's transverse Mercator and its scale factor (pyproj). It covers 20 cases over five polygons with square and triangular grids, random and corner starts, and rotations of 0° to 100°. Counts agree exactly, and the first 12 points within 1e-9°.
+- `tools/vectors/gen_grid_designs.py` systematic: the method above reimplemented in Python, with PROJ's transverse Mercator and its scale factor (pyproj). It covers 20 cases over five polygons with square and triangular grids, random and corner starts, and rotations of 0° to 100°. Counts agree exactly, and the first 12 points within 1e-9°.
 - `core/vectors/geometry.sampling.systematic-points.jsonl`: those vectors and the too-many-points refusal, run through the core on every build.
 
 ## Invariants

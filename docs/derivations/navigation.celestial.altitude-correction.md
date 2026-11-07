@@ -54,7 +54,7 @@ A sextant altitude from −5° to 90°; a height of eye from 0 to 10,000 m; an a
 
 ## Differential tests
 
-- `tools/vectors/gen_celestial_sights.py navigation.celestial.altitude-correction` builds the 35 vectors in `core/vectors/navigation.celestial.altitude-correction.jsonl`: the eight Bowditch examples, 25 rows from USNO's celnav API, and the low-altitude and star-limb scenarios. USNO's refraction, semidiameter, and parallax are evaluated at the apparent altitude ha = hc − refr − sd − pa, so a sight from a zero height of eye with no index error has exactly that sextant altitude and the two can be compared term by term.
+- `tools/vectors/gen_celestial_sights.py` navigation.celestial.altitude-correction builds the 35 vectors in `core/vectors/navigation.celestial.altitude-correction.jsonl`: the eight Bowditch examples, 25 rows from USNO's celnav API, and the low-altitude and star-limb scenarios. USNO's refraction, semidiameter, and parallax are evaluated at the apparent altitude ha = hc − refr − sd − pa, so a sight from a zero height of eye with no index error has exactly that sextant altitude and the two can be compared term by term.
   - Refraction: within 0.02′ over the 1.4° to 89° the rows cover.
   - Semidiameter and parallax for the Sun and the planets: within 0.1′.
   - The observed altitude the chain returns: within 0.0025° (0.15′) of USNO's computed altitude.

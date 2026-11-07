@@ -38,7 +38,7 @@ None: exact calendar arithmetic. Only the ISO rule; calendars that start weeks o
 
 ## Differential tests
 
-- `tools/vectors/gen_calendar.py week`: 17 dates around year ends and in 53-week years from Python's date.isocalendar, four week dates back to dates by date.fromisocalendar, and a refusal (2025 has 52 weeks); 22 vectors in `core/vectors/time.scale.iso-week.jsonl`.
+- `tools/vectors/gen_calendar.py` week: 17 dates around year ends and in 53-week years from Python's date.isocalendar, four week dates back to dates by date.fromisocalendar, and a refusal (2025 has 52 weeks); 22 vectors in `core/vectors/time.scale.iso-week.jsonl`.
 
 ## Invariants
 

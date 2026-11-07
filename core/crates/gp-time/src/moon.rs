@@ -328,6 +328,7 @@ fn delta_t(ctx: &mut Ctx, day: i64) -> Result<f64, ToolError> {
 
 pub static POSITION: ToolDef = ToolDef {
     id: "time.moon.position",
+    stability: gp_base::tool::Stability::Stable,
     title: "Moon position",
     summary: "The moon's azimuth and altitude at a place and instant, with and without refraction, and its right ascension, declination, distance, horizontal parallax, and semidiameter",
     aliases: &[
@@ -710,6 +711,7 @@ const MOON_WORDS: &[(&str, &str)] = &[
 
 pub static RISE_SET: ToolDef = ToolDef {
     id: "time.moon.rise-set",
+    stability: gp_base::tool::Stability::Stable,
     title: "Moonrise, moonset, and transit",
     summary: "Moonrise, moonset, and upper transit for a place and local date by the US Naval Observatory's definition, in local time and Zulu, with the dates a rise or set is skipped and the moon's illuminated fraction",
     aliases: &[

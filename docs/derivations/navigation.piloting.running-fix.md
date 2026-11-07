@@ -38,7 +38,7 @@ The course and speed made good between the bearings must be known; an unknown cu
 
 ## Differential tests
 
-- `tools/vectors/gen_piloting.py running-fix`: Python Table 18 triangle with pyproj.Geod placing the fix at 19 random cases (1e-7°) and the reversed-bearings refusal.
+- `tools/vectors/gen_piloting.py` running-fix: Python Table 18 triangle with pyproj.Geod placing the fix at 19 random cases (1e-7°) and the reversed-bearings refusal.
 - `core/vectors/navigation.piloting.running-fix.jsonl`: those vectors, run through the core on every build.
 
 ## Invariants

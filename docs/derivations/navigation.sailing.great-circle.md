@@ -40,7 +40,7 @@ A sphere of one nautical mile per minute of arc; the WGS 84 geodesic beside it i
 
 ## Differential tests
 
-- `tools/vectors/gen_sailings.py great-circle`: Python at 18 random pairs (spherical distance to 1e-10 relative, course to 1e-8°) with pyproj.Geod's geodesic distance and azimuth beside it (1e-6 NM, 1e-8°), and the antipodal refusal.
+- `tools/vectors/gen_sailings.py` great-circle: Python at 18 random pairs (spherical distance to 1e-10 relative, course to 1e-8°) with pyproj.Geod's geodesic distance and azimuth beside it (1e-6 NM, 1e-8°), and the antipodal refusal.
 - `core/vectors/navigation.sailing.great-circle.jsonl`: those vectors with Bowditch's example first, run through the core on every build.
 
 ## Invariants

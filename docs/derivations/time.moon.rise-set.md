@@ -64,7 +64,7 @@ Any place; a local date; a zone as a fixed offset or a tzdb name. Inside the pol
 - `core/crates/gp-time/tests/moon.rs` `rise_set_matches_usno` runs the tool against USNO's rstt/oneday at 500 places and UTC dates from 1995 to 2045, with the latitudes beyond 60° deliberately over-sampled. All 1,361 rise, set, and transit times agree within one minute, the 29 days the moon never rises or sets are reported as such, and the 32 days the retardation leaves without a rise or a set are caught as `no-moonrise` or `no-moonset`.
   - One event in the sample falls within a minute of midnight, where USNO dates it to the neighbouring day; the test accepts either dating for an event that close to the boundary.
   - 15 of about 450 rows are a minute apart from USNO. They cluster at high latitudes, where the moon crosses the horizon at a shallow angle and a second of arc is many seconds of time. A vector string carries no tolerance, so those rows are checked by this test rather than written as vectors; `tools/vectors/gen_moon.py` lists them.
-- `tools/vectors/gen_moon.py time.moon.rise-set` builds the 26 vectors in `core/vectors/time.moon.rise-set.jsonl`: USNO's own rise and set strings for the rows where the printed minute agrees exactly, its continuously-above and continuously-below days, and its skipped-event days.
+- `tools/vectors/gen_moon.py` time.moon.rise-set builds the 26 vectors in `core/vectors/time.moon.rise-set.jsonl`: USNO's own rise and set strings for the rows where the printed minute agrees exactly, its continuously-above and continuously-below days, and its skipped-event days.
 
 ## Invariants
 

@@ -37,7 +37,7 @@ Plane sailing on every leg. Bowditch works the example with traverse tables roun
 
 ## Differential tests
 
-- `tools/vectors/gen_sailings.py traverse`: Python sums over 19 random traverses of 1 to 8 legs, exact to 1e-9.
+- `tools/vectors/gen_sailings.py` traverse: Python sums over 19 random traverses of 1 to 8 legs, exact to 1e-9.
 - `core/vectors/navigation.sailing.traverse.jsonl`: those vectors with Bowditch's example first, run through the core on every build.
 
 ## Invariants

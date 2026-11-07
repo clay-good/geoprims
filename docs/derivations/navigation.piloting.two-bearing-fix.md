@@ -38,7 +38,7 @@ No current and a steady course and speed, as the result states; Table 18 prints 
 
 ## Differential tests
 
-- `tools/vectors/gen_piloting.py two-bearing-fix`: Python triangle at 19 random bearing pairs (1e-9 NM) and the reversed-order refusal.
+- `tools/vectors/gen_piloting.py` two-bearing-fix: Python triangle at 19 random bearing pairs (1e-9 NM) and the reversed-order refusal.
 - `core/vectors/navigation.piloting.two-bearing-fix.jsonl`: those vectors, run through the core on every build.
 
 ## Invariants

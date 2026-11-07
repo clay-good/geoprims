@@ -37,7 +37,7 @@ Flat: Bowditch limits plane sailing to runs where the Earth's curvature does not
 
 ## Differential tests
 
-- `tools/vectors/gen_sailings.py plane`: Python reimplementation of both directions at 19 random cases (exact to 1e-9 NM) and the missing-input refusal.
+- `tools/vectors/gen_sailings.py` plane: Python reimplementation of both directions at 19 random cases (exact to 1e-9 NM) and the missing-input refusal.
 - `core/vectors/navigation.sailing.plane.jsonl`: those vectors with Bowditch's example first, run through the core on every build.
 
 ## Invariants

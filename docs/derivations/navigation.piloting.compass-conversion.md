@@ -38,7 +38,7 @@ Linear interpolation between the deviation table's rows.
 
 ## Differential tests
 
-- `tools/vectors/gen_piloting.py compass-conversion`: Python TVMDC chain at 16 random headings in each reference (1e-9) and the bad-variation refusal.
+- `tools/vectors/gen_piloting.py` compass-conversion: Python TVMDC chain at 16 random headings in each reference (1e-9) and the bad-variation refusal.
 - `core/vectors/navigation.piloting.compass-conversion.jsonl`: those vectors, run through the core on every build.
 
 ## Invariants

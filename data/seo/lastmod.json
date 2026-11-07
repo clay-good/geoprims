@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "76d0d4c197ae0521",
+    "hash": "925aaa6feeed8f77",
     "lastmod": "2026-11-07"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "02042428fe231fe4",
+    "hash": "62c35be671ba7a54",
     "lastmod": "2026-11-07"
   },
   "/aviation/": {
@@ -44,7 +44,7 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/altimetry/cabin-altitude/": {
-    "hash": "5e2e9036aef97092",
+    "hash": "27fc3fa43b0e44f2",
     "lastmod": "2026-11-07"
   },
   "/aviation/altimetry/cold-temperature/": {
@@ -108,11 +108,11 @@
     "lastmod": "2026-10-21"
   },
   "/aviation/ifr/approach-category/": {
-    "hash": "bdd6083fa8a8ce61",
+    "hash": "6187664aa0b6c9ed",
     "lastmod": "2026-11-07"
   },
   "/aviation/ifr/circling-radius/": {
-    "hash": "54849d142133f524",
+    "hash": "e124784347dce445",
     "lastmod": "2026-11-07"
   },
   "/aviation/ifr/dme-arc-lead/": {
@@ -144,7 +144,7 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/ifr/rvr-visibility/": {
-    "hash": "59ea76e079c09210",
+    "hash": "e6695a91c3818870",
     "lastmod": "2026-11-07"
   },
   "/aviation/ifr/time-to-station/": {
@@ -168,7 +168,7 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/loading/fuel-density-temperature/": {
-    "hash": "cdcd9390a9b0c5f0",
+    "hash": "433967ee521a694f",
     "lastmod": "2026-11-07"
   },
   "/aviation/loading/fuel-plan/": {
@@ -204,7 +204,7 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/performance/climb-requirement/": {
-    "hash": "3f912a953b17c37e",
+    "hash": "66b5a5e2b216094f",
     "lastmod": "2026-11-07"
   },
   "/aviation/performance/etp-pnr/": {
@@ -216,7 +216,7 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/performance/hydroplaning-speed/": {
-    "hash": "b06ef14f8ce0c031",
+    "hash": "eca3f2ca735b4e2a",
     "lastmod": "2026-11-07"
   },
   "/aviation/performance/pivotal-altitude/": {
@@ -248,11 +248,11 @@
     "lastmod": "2026-10-20"
   },
   "/aviation/physiology/oxygen-requirement/": {
-    "hash": "ac1dd6ff5cf0ebbf",
+    "hash": "150424d6ecbb443e",
     "lastmod": "2026-11-07"
   },
   "/aviation/physiology/time-of-useful-consciousness/": {
-    "hash": "4f257986b035798f",
+    "hash": "509e093797e994fe",
     "lastmod": "2026-11-07"
   },
   "/aviation/weather/": {
@@ -316,8 +316,8 @@
     "lastmod": "2026-10-19"
   },
   "/changelog/": {
-    "hash": "98cd2abe5976753d",
-    "lastmod": "2026-10-28"
+    "hash": "16ad29d6d33f8832",
+    "lastmod": "2026-11-07"
   },
   "/disclaimer/": {
     "hash": "e80b39ff27cd55c5",
@@ -472,15 +472,15 @@
     "lastmod": "2026-10-19"
   },
   "/drone/photogrammetry/parallax-height/": {
-    "hash": "6a84a7713a1d5743",
+    "hash": "55aa78950357b165",
     "lastmod": "2026-11-07"
   },
   "/drone/photogrammetry/photo-scale/": {
-    "hash": "3180bd42c55fd02d",
+    "hash": "351121ceaff74573",
     "lastmod": "2026-11-07"
   },
   "/drone/photogrammetry/relief-displacement/": {
-    "hash": "8bcb37c01967325a",
+    "hash": "d65ed58b0d594ec9",
     "lastmod": "2026-11-07"
   },
   "/drone/photogrammetry/stereo-base/": {
@@ -1452,8 +1452,8 @@
     "lastmod": "2026-10-09"
   },
   "/learn/moonlight-for-night-work/": {
-    "hash": "7683c1ff5c7f34c8",
-    "lastmod": "2026-10-28"
+    "hash": "3d3b1bd3c2a6a144",
+    "lastmod": "2026-11-07"
   },
   "/learn/nad83-vs-wgs84/": {
     "hash": "60ee8ffd9e944eed",
@@ -1484,12 +1484,12 @@
     "lastmod": "2026-11-07"
   },
   "/learn/set-and-drift/": {
-    "hash": "a4581fdbd5f62bb8",
-    "lastmod": "2026-10-21"
+    "hash": "bb7602ef74c099ac",
+    "lastmod": "2026-11-07"
   },
   "/learn/sight-reduction/": {
-    "hash": "21d79665068571e6",
-    "lastmod": "2026-10-28"
+    "hash": "0af2c2d6f351d655",
+    "lastmod": "2026-11-07"
   },
   "/learn/state-plane-coordinates/": {
     "hash": "1ea1f7afb98f6287",
@@ -1504,8 +1504,8 @@
     "lastmod": "2026-10-21"
   },
   "/learn/tidal-datums/": {
-    "hash": "467837c79be6c85e",
-    "lastmod": "2026-10-21"
+    "hash": "af247d10a08007c4",
+    "lastmod": "2026-11-07"
   },
   "/learn/top-of-descent/": {
     "hash": "4d592ef15df4ee9c",
@@ -1552,7 +1552,7 @@
     "lastmod": "2026-10-20"
   },
   "/methodology/": {
-    "hash": "6dc9924de1e874b6",
+    "hash": "34cd05ddd02fe469",
     "lastmod": "2026-11-07"
   },
   "/navigation/": {
@@ -1568,16 +1568,16 @@
     "lastmod": "2026-10-28"
   },
   "/navigation/celestial/altitude-correction/": {
-    "hash": "d32d7abcfd9b427a",
-    "lastmod": "2026-10-28"
+    "hash": "fa37f05c7a1a647d",
+    "lastmod": "2026-11-07"
   },
   "/navigation/celestial/polaris-latitude/": {
     "hash": "1fa32619eaac7bed",
     "lastmod": "2026-10-28"
   },
   "/navigation/celestial/sight-reduction/": {
-    "hash": "4f922fa21b942430",
-    "lastmod": "2026-10-28"
+    "hash": "1d2dac0b38aee016",
+    "lastmod": "2026-11-07"
   },
   "/navigation/celestial/sun-azimuth-check/": {
     "hash": "399e9b3ddf1ce642",
@@ -1676,8 +1676,8 @@
     "lastmod": "2026-10-20"
   },
   "/navigation/piloting/set-and-drift/": {
-    "hash": "1bd1a36a5a55f673",
-    "lastmod": "2026-10-21"
+    "hash": "70d1b72d41823d95",
+    "lastmod": "2026-11-07"
   },
   "/navigation/piloting/two-bearing-fix/": {
     "hash": "b3bdde54872d0c6d",
@@ -1756,8 +1756,8 @@
     "lastmod": "2026-10-20"
   },
   "/navigation/sailing/plane/": {
-    "hash": "133231cb663232ac",
-    "lastmod": "2026-10-21"
+    "hash": "2e7ebd95fdb12f3c",
+    "lastmod": "2026-11-07"
   },
   "/navigation/sailing/traverse/": {
     "hash": "6d2fb5b3bd085006",
@@ -1768,12 +1768,12 @@
     "lastmod": "2026-10-21"
   },
   "/navigation/tide/datums/": {
-    "hash": "c825a073f2b05174",
-    "lastmod": "2026-10-21"
+    "hash": "bbb9a7aa74c05e41",
+    "lastmod": "2026-11-07"
   },
   "/navigation/tide/predict/": {
-    "hash": "f84983ade9243196",
-    "lastmod": "2026-10-21"
+    "hash": "d135e37d441fae25",
+    "lastmod": "2026-11-07"
   },
   "/navigation/vector/": {
     "hash": "b4632ebf29994bf8",
@@ -1800,8 +1800,8 @@
     "lastmod": "2026-10-20"
   },
   "/quality/": {
-    "hash": "31d2882dc1166698",
-    "lastmod": "2026-10-28"
+    "hash": "ff39ab9098c56805",
+    "lastmod": "2026-11-07"
   },
   "/raster/": {
     "hash": "986dc66df9693519",
@@ -2280,12 +2280,12 @@
     "lastmod": "2026-10-28"
   },
   "/time/moon/position/": {
-    "hash": "5178ad12c764a2f3",
-    "lastmod": "2026-10-28"
+    "hash": "c00afb207766a149",
+    "lastmod": "2026-11-07"
   },
   "/time/moon/rise-set/": {
-    "hash": "9a8da1732be37750",
-    "lastmod": "2026-10-28"
+    "hash": "393d2790e654c83a",
+    "lastmod": "2026-11-07"
   },
   "/time/scale/": {
     "hash": "24b3d20bf0d74e26",
@@ -2316,7 +2316,7 @@
     "lastmod": "2026-10-21"
   },
   "/time/scale/sidereal/": {
-    "hash": "d562d7fe6f1fc993",
+    "hash": "13b7b590f3908283",
     "lastmod": "2026-11-07"
   },
   "/time/scale/unix-time/": {
@@ -2364,7 +2364,7 @@
     "lastmod": "2026-10-19"
   },
   "/tools/": {
-    "hash": "016d3b915048a80f",
+    "hash": "d513cfe6bac6d54c",
     "lastmod": "2026-11-07"
   },
   "/units/": {
@@ -2628,7 +2628,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "235c7ffcfa8b54b9",
+    "hash": "488ae326491903a5",
     "lastmod": "2026-11-07"
   },
   "/workflows/": {

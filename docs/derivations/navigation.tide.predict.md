@@ -40,7 +40,7 @@ The tide is astronomical only: wind, pressure, and river flow are not modeled. N
 ## Differential tests
 
 - `core/crates/gp-navigation/tests/tide.rs` `predictions_match_noaa_within_0_02_ft_and_2_minutes`: October 2026 at Boston, Seattle, San Francisco, Key West, and Honolulu, from fixtures of NOAA's own constituents, datums, and predictions (`tests/data/tides/`): all 3,720 hourly heights within 0.0085 ft of NOAA's, and all 600 highs and lows matched one for one within 2 minutes and 0.0085 ft.
-- `tools/vectors/gen_tide.py predict`: 20 vectors expecting NOAA's published hourly heights (four a day, four days at each station) within 0.02 ft, and two refusals; 22 vectors in `core/vectors/navigation.tide.predict.jsonl`.
+- `tools/vectors/gen_tide.py` predict: 20 vectors expecting NOAA's published hourly heights (four a day, four days at each station) within 0.02 ft, and two refusals; 22 vectors in `core/vectors/navigation.tide.predict.jsonl`.
 - `core/crates/gp-navigation/tests/tide.rs` `node_factors_match_pytides_1990_to_2040`: f and V₀ + u of M2, S2, N2, K1, and O1 for every year from 1990 to 2040 within 1e-6 and 0.001° of pytides2 0.0.5 (`tests/data/tides/pytides_fu.json`, generated from its source).
 - During development, a Python reimplementation on pytides2 was checked against full years of NOAA's hourly predictions (Seattle 2019 to 2029), which isolated the M1, 2MK3, RHO, and 2Q1 conventions.
 

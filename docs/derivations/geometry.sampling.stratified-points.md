@@ -48,7 +48,7 @@ Points are uniform within each stratum by plane area, as in the random-points no
 
 ## Differential tests
 
-- `tools/vectors/gen_grid_designs.py stratified`: the method above reimplemented in Python with PROJ's transverse Mercator and scale factor, sharing the stream and ear clipping of `gen_random_points.py`. It covers 20 cases over five polygons (holes, the southern hemisphere, the equator) with 1 to 3 points per stratum. Counts and strata agree exactly, and the first 12 points within 1e-9° with their stratum labels.
+- `tools/vectors/gen_grid_designs.py` stratified: the method above reimplemented in Python with PROJ's transverse Mercator and scale factor, sharing the stream and ear clipping of `gen_random_points.py`. It covers 20 cases over five polygons (holes, the southern hemisphere, the equator) with 1 to 3 points per stratum. Counts and strata agree exactly, and the first 12 points within 1e-9° with their stratum labels.
 - `core/vectors/geometry.sampling.stratified-points.jsonl`: those vectors and the too-many-cells refusal, run through the core on every build.
 
 ## Invariants

@@ -2090,6 +2090,12 @@
           "tools": [
             "flow-accumulation"
           ]
+        },
+        {
+          "want": "pull the channels out and see how they branch",
+          "tools": [
+            "streams"
+          ]
         }
       ]
     },

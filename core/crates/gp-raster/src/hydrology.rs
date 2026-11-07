@@ -1486,3 +1486,656 @@ fn run_flow_accumulation(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ),
     ]))
 }
+
+// ------------------------------------------------------------- streams
+
+const STRAHLER: Reference = Reference {
+    title: "Quantitative analysis of watershed geomorphology",
+    issuer: "Strahler, A. N., Transactions, American Geophysical Union",
+    year: 1957,
+    edition: "Volume 38, issue 6, pages 913-920 (DOI 10.1029/TR038i006p00913)",
+    locator: "The stream-order rule: a channel with no tributary is first order, two channels of the same order join into the next order, and a channel joined by a lower order keeps its own",
+    url: "https://doi.org/10.1029/TR038i006p00913",
+};
+
+const LINK_ROW: &[Field] = &[
+    Field::new(
+        "link",
+        "Link",
+        "Its number, from 1, like 3",
+        Kind::Number { min: 1.0, max: 1e6 },
+    )
+    .precision(Precision::Decimals(0)),
+    Field::new(
+        "order",
+        "Strahler order",
+        "1 for a headwater, like 2",
+        Kind::Number {
+            min: 1.0,
+            max: 20.0,
+        },
+    )
+    .precision(Precision::Decimals(0)),
+    Field::new(
+        "length",
+        "Length",
+        "Along the cells it runs through",
+        Kind::Quantity {
+            q: QT::Length,
+            unit: "m",
+        },
+    )
+    .precision(Precision::Decimals(2)),
+    Field::new(
+        "outlet_area",
+        "Drainage area at its outlet",
+        "Cells draining through its last cell, times the cell area",
+        Kind::Quantity {
+            q: QT::Area,
+            unit: "m2",
+        },
+    )
+    .precision(Precision::Decimals(1)),
+    Field::new(
+        "cells",
+        "Cells",
+        "How many channel cells it runs through",
+        Kind::Number { min: 1.0, max: 1e6 },
+    )
+    .precision(Precision::Decimals(0)),
+];
+const VERTEX_ROW: &[Field] = &[
+    Field::new(
+        "link",
+        "Link",
+        "The link this vertex belongs to, like 3",
+        Kind::Number { min: 1.0, max: 1e6 },
+    )
+    .precision(Precision::Decimals(0)),
+    Field::new(
+        "east",
+        "Distance east",
+        "From the north-west grid point, like 45.5 m",
+        Kind::Quantity {
+            q: QT::Length,
+            unit: "m",
+        },
+    )
+    .precision(Precision::Decimals(3)),
+    Field::new(
+        "south",
+        "Distance south",
+        "From the north-west grid point, like 12.25 m",
+        Kind::Quantity {
+            q: QT::Length,
+            unit: "m",
+        },
+    )
+    .precision(Precision::Decimals(3)),
+    Field::new(
+        "lat",
+        "Latitude",
+        "Present when the grid's north-west corner is given, north positive",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .optional()
+    .precision(Precision::Decimals(7))
+    .angle_range("[-90,90]"),
+    Field::new(
+        "lon",
+        "Longitude",
+        "Present when the grid's north-west corner is given, east positive",
+        Kind::Quantity {
+            q: QT::Angle,
+            unit: "deg",
+        },
+    )
+    .optional()
+    .precision(Precision::Decimals(7))
+    .angle_range("[-180,180)"),
+];
+const ORDER_ROW: &[Field] = &[
+    Field::new(
+        "order",
+        "Strahler order",
+        "1 for a headwater, like 2",
+        Kind::Number {
+            min: 1.0,
+            max: 20.0,
+        },
+    )
+    .precision(Precision::Decimals(0)),
+    Field::new(
+        "links",
+        "Links of this order",
+        "How many, like 7",
+        Kind::Number { min: 0.0, max: 1e6 },
+    )
+    .precision(Precision::Decimals(0)),
+    Field::new(
+        "length",
+        "Their length in all",
+        "Added along the cells",
+        Kind::Quantity {
+            q: QT::Length,
+            unit: "m",
+        },
+    )
+    .precision(Precision::Decimals(2)),
+];
+
+pub static STREAMS: ToolDef = ToolDef {
+    id: "raster.hydrology.streams",
+    title: "Stream network and Strahler order",
+    summary: "The channels in an elevation grid: the cells where enough ground drains through, split into links, each with its Strahler order, its length, and the area draining through its outlet.",
+    aliases: &[
+        "stream network from a DEM",
+        "Strahler stream order",
+        "channel extraction",
+        "drainage network",
+    ],
+    keywords: &[
+        "stream",
+        "channel",
+        "Strahler",
+        "order",
+        "network",
+        "drainage",
+        "hydrology",
+        "DEM",
+    ],
+    inputs: &[
+        Field::new(
+            "elevations",
+            "Elevation grid",
+            "Rows of elevations in meters, north row first, west to east, like 101.2, 100.6, 100.2",
+            Kind::List {
+                items: ROW,
+                min: 2,
+                max: MAX_SIDE,
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "cell_size",
+            "Cell size",
+            "The ground size of one cell, like 30 m",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .required()
+        .core(),
+        Field::new(
+            "threshold_cells",
+            "Threshold, in cells",
+            "How many cells must drain through a cell for it to be a channel, like 20",
+            Kind::Number { min: 1.0, max: 1e9 },
+        )
+        .core()
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "threshold_area",
+            "Threshold, as an area",
+            "The same threshold as ground area instead, like 0.02 km2",
+            Kind::Quantity {
+                q: QT::Area,
+                unit: "m2",
+            },
+        )
+        .core(),
+        Field::new(
+            "north_west_lat",
+            "North-west latitude",
+            "Of the grid's first cell center, if you want the links placed, like 44.12",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        ),
+        Field::new(
+            "north_west_lon",
+            "North-west longitude",
+            "Of the grid's first cell center, like -121.45",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        ),
+        Field::new(
+            "no_data",
+            "No-data value",
+            "A value that marks a missing elevation, like -9999",
+            Kind::Number {
+                min: -1e12,
+                max: 1e12,
+            },
+        ),
+    ],
+    outputs: &[
+        Field::new(
+            "highest_order",
+            "Highest order",
+            "The main stem's Strahler order",
+            Kind::Number {
+                min: 0.0,
+                max: 20.0,
+            },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "links_found",
+            "Links",
+            "Stretches between junctions",
+            Kind::Number { min: 0.0, max: 1e6 },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "channel_cells",
+            "Channel cells",
+            "Cells at or above the threshold",
+            Kind::Number { min: 0.0, max: 1e9 },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "network_length",
+            "Network length",
+            "Every link added together",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(2)),
+        Field::new(
+            "threshold_used",
+            "Threshold used",
+            "In cells, whichever way you gave it",
+            Kind::Number { min: 1.0, max: 1e9 },
+        )
+        .precision(Precision::Decimals(2)),
+        Field::new(
+            "max_accumulation",
+            "Most cells draining through one cell",
+            "So a threshold past this finds nothing",
+            Kind::Number {
+                min: 0.0,
+                max: 1e12,
+            },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "by_order",
+            "Links by order",
+            "How many links of each order, and their length",
+            Kind::List {
+                items: ORDER_ROW,
+                min: 0,
+                max: 20,
+            },
+        ),
+        Field::new(
+            "links",
+            "The links",
+            "Each stretch between junctions",
+            Kind::List {
+                items: LINK_ROW,
+                min: 0,
+                max: 5_000,
+            },
+        ),
+        Field::new(
+            "vertices",
+            "Link vertices",
+            "The cell centers each link runs through, in order",
+            Kind::List {
+                items: VERTEX_ROW,
+                min: 0,
+                max: 25_000,
+            },
+        ),
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::LimitExceeded],
+    warnings: &["PITS_PRESENT", "EMPTY_NETWORK", "EXPERIMENTAL_TOOL"],
+    model: "Channel cells are those whose D8 accumulation reaches the threshold. Strahler (1957): a channel cell with no channel cell draining into it is order 1; where channels meet, two of the same order make the next order and a lower one leaves the order alone. A link runs from a source or a junction down to the next junction or the network's outlet; its length adds the cell size along sides and √2 times it along diagonals, and its outlet area is the accumulation at its last cell times the cell area",
+    accuracy: "Exact in the arithmetic of the rules: the order follows Strahler's definition cell by cell, and the length is the walked path of cell centers",
+    when_to_use: "Use this to pull the channels out of a conditioned DEM and see how the network branches: which stretches are headwaters, which are the main stem, how long each is, and how much ground drains through its outlet. Set the threshold by how much upslope area makes a channel in your landscape, as cells or as an area; raise it for fewer, longer streams.",
+    limitations: "The threshold is the whole model of what a channel is: there is no rule here for picking it, and a different threshold gives a different network. Links are the cells themselves, so a length is the walked path of cell centers and reads longer than a smooth channel, especially where the path staircases. The window is all the tool knows, so a stream entering from outside starts at the edge. An unconditioned pit ends a channel in the middle of the grid; condition the grid first. The window holds at most 25,000 cells.",
+    references: &[OCALLAGHAN, STRAHLER],
+    examples: &[Example {
+        id: "primary",
+        title: "Two headwaters joining into one stream",
+        source: "add-raster-hydrology raster/hydrology, the Order rule scenario: two first-order links join into a second-order link",
+        input: r#"{"elevations":[{"row":"60, 48, 60, 60, 60, 48, 60"},{"row":"60, 60, 47, 60, 47, 60, 60"},{"row":"60, 60, 60, 46, 60, 60, 60"},{"row":"60, 60, 60, 45, 60, 60, 60"},{"row":"60, 60, 60, 44, 60, 60, 60"},{"row":"60, 60, 60, 43, 60, 60, 60"},{"row":"60, 60, 60, 42, 60, 60, 60"}],"cell_size":"30 m","threshold_cells":3}"#,
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "raster.hydrology.flow-accumulation",
+            reason: "parent",
+        },
+        Related {
+            id: "raster.hydrology.fill",
+            reason: "alternative",
+        },
+        Related {
+            id: "raster.terrain.contours",
+            reason: "next",
+        },
+    ],
+    sentence: "The network reaches Strahler order {highest_order}.",
+    limits: &[("batchRows", 1)],
+    run: run_streams,
+    ..ToolDef::BLANK
+};
+
+fn run_streams(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let m = units::by_symbol(QT::Length, "m").expect("m");
+    let m2 = units::by_symbol(QT::Area, "m2").expect("m2");
+    let deg = units::by_symbol(QT::Angle, "deg").expect("deg");
+    let no_data = ctx.number("no_data")?;
+    let grid = read_grid(ctx, "elevations", no_data)?;
+    let (h, w) = (grid.len(), grid[0].len());
+    if h * w > MAX_CELLS {
+        return Err(ToolError::new(
+            ErrorCode::LimitExceeded,
+            format!(
+                "The window holds {} cells; this tool takes {MAX_CELLS}. Clip it smaller.",
+                h * w
+            ),
+        )
+        .at("/elevations"));
+    }
+    let cell = ctx.req_quantity("cell_size")?.to(m);
+    if !(cell.is_finite() && cell > 0.0) {
+        return Err(ToolError::invalid(
+            "/cell_size",
+            "The cell size must be more than zero.",
+        ));
+    }
+    let by_cells = ctx.number("threshold_cells")?;
+    let by_area = ctx.quantity("threshold_area")?.map(|q| q.to(m2));
+    let threshold = match (by_cells, by_area) {
+        (Some(_), Some(_)) => {
+            return Err(ToolError::invalid(
+                "/threshold_area",
+                "Give the threshold as cells or as an area, not both.",
+            ));
+        }
+        (Some(c), None) => c,
+        (None, Some(a)) => a / (cell * cell),
+        (None, None) => {
+            return Err(ToolError::invalid(
+                "/threshold_cells",
+                "Give the threshold: how many cells, or how much ground, must drain through a cell for it to count as a channel.",
+            ));
+        }
+    };
+    if !(threshold.is_finite() && threshold >= 1.0) {
+        return Err(ToolError::invalid(
+            "/threshold_cells",
+            "The threshold is at least one cell.",
+        ));
+    }
+    let lat0 = ctx.quantity("north_west_lat")?.map(|q| q.to(deg));
+    let lon0 = ctx.quantity("north_west_lon")?.map(|q| q.to(deg));
+    if lat0.is_some() != lon0.is_some() {
+        return Err(ToolError::invalid(
+            "/north_west_lon",
+            "Give both the latitude and the longitude of the north-west cell, or neither.",
+        ));
+    }
+
+    let z: Vec<f64> = grid.iter().flatten().copied().collect();
+    let acc = accumulate_d8(&z, w, h, cell);
+    let pit_count = pits(&z, w, h).len();
+    if pit_count > 0 {
+        ctx.warnings.push(Warning::new(
+            "PITS_PRESENT",
+            format!(
+                "{pit_count} interior cells have no lower neighbour, so a channel can end in the middle of the grid. Condition it with the fill tool first."
+            ),
+        ));
+    }
+    let max_acc = acc
+        .iter()
+        .zip(&z)
+        .filter(|(_, e)| !e.is_nan())
+        .map(|(a, _)| *a)
+        .fold(0.0, f64::max);
+    let channel: Vec<bool> = (0..z.len())
+        .map(|i| !z[i].is_nan() && acc[i] >= threshold)
+        .collect();
+    // Where each channel cell sends its water, and what drains into it.
+    let mut to = vec![usize::MAX; z.len()];
+    let mut upstream = vec![0u32; z.len()];
+    for i in 0..z.len() {
+        if !channel[i] {
+            continue;
+        }
+        if let Some((k, _)) = d8(&z, w, h, i, cell) {
+            let (dr, dc, ..) = DIRS[k];
+            let j = ((i / w) as i64 + dr) as usize * w + ((i % w) as i64 + dc) as usize;
+            if channel[j] {
+                to[i] = j;
+                upstream[j] += 1;
+            }
+        }
+    }
+    // Strahler order, upstream first: Kahn over the channel graph.
+    let mut order = vec![0u32; z.len()];
+    let mut best_in: Vec<(u32, u32)> = vec![(0, 0); z.len()]; // highest order seen, how many times
+    let mut left = upstream.clone();
+    let mut ready: Vec<usize> = (0..z.len())
+        .filter(|&i| channel[i] && left[i] == 0)
+        .collect();
+    let mut sorted = vec![];
+    while let Some(i) = ready.pop() {
+        let (top, count) = best_in[i];
+        order[i] = if top == 0 {
+            1
+        } else if count >= 2 {
+            top + 1
+        } else {
+            top
+        };
+        sorted.push(i);
+        let j = to[i];
+        if j == usize::MAX {
+            continue;
+        }
+        let (top_j, count_j) = best_in[j];
+        best_in[j] = match order[i].cmp(&top_j) {
+            Ordering::Greater => (order[i], 1),
+            Ordering::Equal => (top_j, count_j + 1),
+            Ordering::Less => (top_j, count_j),
+        };
+        left[j] -= 1;
+        if left[j] == 0 {
+            ready.push(j);
+        }
+    }
+    // Links: from a source or a junction down to the next junction, or to the
+    // network's outlet.
+    let head = |i: usize| channel[i] && (upstream[i] == 0 || upstream[i] >= 2);
+    let mut links: Vec<Json> = vec![];
+    let mut vertices: Vec<Json> = vec![];
+    let mut by_order: Vec<(u32, u32, f64)> = vec![];
+    let mut total_length = 0.0;
+    let place = |i: usize| -> (f64, f64) {
+        (
+            (i % w) as f64 * cell + cell / 2.0,
+            (i / w) as f64 * cell + cell / 2.0,
+        )
+    };
+    for start in (0..z.len()).filter(|&i| head(i)) {
+        let number = links.len() + 1;
+        let (mut at, mut length, mut cells) = (start, 0.0, 1usize);
+        let push_vertex = |at: usize, vertices: &mut Vec<Json>| {
+            let (east, south) = place(at);
+            let mut row = vec![
+                ("link", Json::Num(number as f64)),
+                (
+                    "east",
+                    Q {
+                        value: east,
+                        unit: m,
+                    }
+                    .to_json(),
+                ),
+                (
+                    "south",
+                    Q {
+                        value: south,
+                        unit: m,
+                    }
+                    .to_json(),
+                ),
+            ];
+            if let (Some(la), Some(lo)) = (lat0, lon0) {
+                // Degrees of latitude and longitude at the grid's own latitude,
+                // the placement the contour tool uses.
+                let dlat = south / 111_132.0;
+                let lat = la - dlat;
+                let dlon = east / (111_320.0 * la.to_radians().cos()).max(1e-9);
+                row.push((
+                    "lat",
+                    Q {
+                        value: lat,
+                        unit: deg,
+                    }
+                    .to_json(),
+                ));
+                row.push((
+                    "lon",
+                    Q {
+                        value: lo + dlon,
+                        unit: deg,
+                    }
+                    .to_json(),
+                ));
+            }
+            vertices.push(Json::obj(row));
+        };
+        push_vertex(at, &mut vertices);
+        loop {
+            let next = to[at];
+            if next == usize::MAX {
+                break;
+            }
+            let (dr, dc) = (
+                (next / w) as i64 - (at / w) as i64,
+                (next % w) as i64 - (at % w) as i64,
+            );
+            length += if dr.abs() + dc.abs() == 2 {
+                cell * std::f64::consts::SQRT_2
+            } else {
+                cell
+            };
+            at = next;
+            cells += 1;
+            push_vertex(at, &mut vertices);
+            if head(at) {
+                break; // the next junction ends this link
+            }
+        }
+        let ord = order[start];
+        total_length += length;
+        match by_order.iter_mut().find(|(o, ..)| *o == ord) {
+            Some((_, n, l)) => {
+                *n += 1;
+                *l += length;
+            }
+            None => by_order.push((ord, 1, length)),
+        }
+        links.push(Json::obj([
+            ("link", Json::Num(number as f64)),
+            ("order", Json::Num(f64::from(ord))),
+            (
+                "length",
+                Q {
+                    value: length,
+                    unit: m,
+                }
+                .to_json(),
+            ),
+            (
+                "outlet_area",
+                Q {
+                    value: acc[at] * cell * cell,
+                    unit: m2,
+                }
+                .to_json(),
+            ),
+            ("cells", Json::Num(cells as f64)),
+        ]));
+    }
+    by_order.sort_by_key(|(o, ..)| *o);
+    let highest = order.iter().copied().max().unwrap_or(0);
+    let channel_cells = channel.iter().filter(|c| **c).count();
+    if channel_cells == 0 {
+        ctx.warnings.push(Warning::new(
+            "EMPTY_NETWORK",
+            format!(
+                "No cell reaches the threshold of {threshold} cells; the most that drains through any cell here is {max_acc}."
+            ),
+        ));
+    }
+    if ctx.explaining() {
+        ctx.step(
+            "Channel cells",
+            "cells whose accumulation reaches the threshold",
+            format!("threshold {threshold} cells of {}", h * w),
+            format!("{channel_cells} cells"),
+        );
+        ctx.step(
+            "Strahler order",
+            "two channels of one order make the next; a lower one leaves it alone",
+            format!("{} links", links.len()),
+            format!("{highest}"),
+        );
+    }
+    Ok(Json::obj([
+        ("highest_order", Json::Num(f64::from(highest))),
+        ("links_found", Json::Num(links.len() as f64)),
+        ("channel_cells", Json::Num(channel_cells as f64)),
+        (
+            "network_length",
+            ctx.out(
+                "network_length",
+                Q {
+                    value: total_length,
+                    unit: m,
+                },
+            ),
+        ),
+        ("threshold_used", Json::Num(threshold)),
+        ("max_accumulation", Json::Num(max_acc)),
+        (
+            "by_order",
+            Json::Arr(
+                by_order
+                    .iter()
+                    .map(|(o, n, l)| {
+                        Json::obj([
+                            ("order", Json::Num(f64::from(*o))),
+                            ("links", Json::Num(f64::from(*n))),
+                            ("length", Q { value: *l, unit: m }.to_json()),
+                        ])
+                    })
+                    .collect(),
+            ),
+        ),
+        ("links", Json::Arr(links)),
+        ("vertices", Json::Arr(vertices)),
+    ]))
+}

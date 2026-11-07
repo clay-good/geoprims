@@ -507,3 +507,124 @@ fn flow_accumulation_invariants() {
     // Everything but the rim drains into it: 9 cells in a 3 by 3.
     assert_eq!(acc_grid(&pit)[1][1], 9.0, "{pit}");
 }
+
+fn streams(input: Value) -> Value {
+    serde_json::from_str(&REGISTRY.invoke("raster.hydrology.streams", &input.to_string())).unwrap()
+}
+
+/// Two headwaters joining a valley, the tool's own example.
+const FORK: [&str; 7] = [
+    "60, 48, 60, 60, 60, 48, 60",
+    "60, 60, 47, 60, 47, 60, 60",
+    "60, 60, 60, 46, 60, 60, 60",
+    "60, 60, 60, 45, 60, 60, 60",
+    "60, 60, 60, 44, 60, 60, 60",
+    "60, 60, 60, 43, 60, 60, 60",
+    "60, 60, 60, 42, 60, 60, 60",
+];
+
+#[test]
+fn stream_order_rule() {
+    let r = streams(json!({
+        "elevations": FORK.iter().map(|x| json!({"row": x})).collect::<Vec<_>>(),
+        "cell_size": "30 m", "threshold_cells": 3}));
+    // Two first-order links join into a second-order one.
+    assert_eq!(r["result"]["highest_order"], 2, "{r}");
+    let by: Vec<(i64, i64)> = r["result"]["by_order"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|o| (o["order"].as_i64().unwrap(), o["links"].as_i64().unwrap()))
+        .collect();
+    assert_eq!(by[0].0, 1, "{r}");
+    assert!(by[0].1 >= 2, "two headwaters: {r}");
+    assert_eq!(
+        by.iter().find(|(o, _)| *o == 2).map(|(_, n)| *n),
+        Some(1),
+        "{r}"
+    );
+    // Every link carries a length and an outlet area, and the lengths add up.
+    let links = r["result"]["links"].as_array().unwrap();
+    let sum: f64 = links
+        .iter()
+        .map(|l| l["length"]["value"].as_f64().unwrap())
+        .sum();
+    assert!(
+        (sum - r["result"]["network_length"]["value"].as_f64().unwrap()).abs() < 1e-9,
+        "{r}"
+    );
+    for l in links {
+        assert!(l["outlet_area"]["value"].as_f64().unwrap() > 0.0, "{l}");
+        assert!(l["cells"].as_i64().unwrap() >= 1, "{l}");
+    }
+    // The vertices are the cells of the links, in order, and their count
+    // matches the cells each link runs through.
+    let verts = r["result"]["vertices"].as_array().unwrap();
+    let cells: i64 = links.iter().map(|l| l["cells"].as_i64().unwrap()).sum();
+    assert_eq!(verts.len() as i64, cells, "{r}");
+}
+
+#[test]
+fn stream_threshold_and_placement() {
+    let grid: Vec<Value> = FORK.iter().map(|x| json!({"row": x})).collect();
+    // A threshold past the window's own maximum finds nothing, and says what
+    // the maximum was.
+    let empty = streams(json!({"elevations": grid, "cell_size": "30 m", "threshold_cells": 10000}));
+    assert_eq!(empty["result"]["channel_cells"], 0, "{empty}");
+    assert_eq!(empty["result"]["links_found"], 0, "{empty}");
+    assert!(
+        empty["result"]["max_accumulation"].as_f64().unwrap() > 0.0,
+        "{empty}"
+    );
+    let codes: Vec<&str> = empty["meta"]["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|w| w["code"].as_str().unwrap())
+        .collect();
+    assert!(codes.contains(&"EMPTY_NETWORK"), "{empty}");
+
+    // Raising the threshold never adds channel cells.
+    let mut last = f64::INFINITY;
+    for t in [1, 2, 4, 8, 16] {
+        let r = streams(json!({"elevations": grid, "cell_size": "30 m", "threshold_cells": t}));
+        let n = r["result"]["channel_cells"].as_f64().unwrap();
+        assert!(
+            n <= last,
+            "threshold {t} gave {n} cells, more than the one before"
+        );
+        last = n;
+    }
+
+    // The threshold as an area is the same threshold: 9 cells of 30 m is
+    // 8,100 m².
+    let by_cells = streams(json!({"elevations": grid, "cell_size": "30 m", "threshold_cells": 9}));
+    let by_area =
+        streams(json!({"elevations": grid, "cell_size": "30 m", "threshold_area": "8100 m2"}));
+    assert_eq!(
+        by_cells["result"]["channel_cells"], by_area["result"]["channel_cells"],
+        "{by_cells} vs {by_area}"
+    );
+    // Both at once is a refusal, and so is neither.
+    let both = streams(
+        json!({"elevations": grid, "cell_size": "30 m", "threshold_cells": 9, "threshold_area": "8100 m2"}),
+    );
+    assert_eq!(both["error"]["code"], "INVALID_INPUT", "{both}");
+    let neither = streams(json!({"elevations": grid, "cell_size": "30 m"}));
+    assert_eq!(neither["error"]["code"], "INVALID_INPUT", "{neither}");
+
+    // Given the grid's north-west corner, every vertex carries a place; the
+    // first link's first vertex sits half a cell east and south of it.
+    let placed = streams(
+        json!({"elevations": grid, "cell_size": "30 m", "threshold_cells": 3,
+                                "north_west_lat": "44.12 deg", "north_west_lon": "-121.45 deg"}),
+    );
+    let v = &placed["result"]["vertices"].as_array().unwrap()[0];
+    assert!(v["lat"]["value"].as_f64().unwrap() < 44.12, "{v}");
+    assert!(v["lon"]["value"].as_f64().unwrap() > -121.45, "{v}");
+    // One corner without the other is a refusal.
+    let half = streams(
+        json!({"elevations": grid, "cell_size": "30 m", "threshold_cells": 3, "north_west_lat": "44.12 deg"}),
+    );
+    assert_eq!(half["error"]["code"], "INVALID_INPUT", "{half}");
+}

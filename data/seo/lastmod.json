@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "165f6a6c2c8f7d0c",
+    "hash": "675d2a51e9fb4ece",
     "lastmod": "2026-11-07"
   },
   "/accuracy/": {
@@ -316,7 +316,7 @@
     "lastmod": "2026-10-19"
   },
   "/changelog/": {
-    "hash": "094dafb40410a97d",
+    "hash": "a119912c5ed3937b",
     "lastmod": "2026-11-07"
   },
   "/disclaimer/": {
@@ -1552,7 +1552,7 @@
     "lastmod": "2026-10-20"
   },
   "/methodology/": {
-    "hash": "2df9c8b8b3cb0d9a",
+    "hash": "cb25ae5e9340bfd9",
     "lastmod": "2026-11-07"
   },
   "/navigation/": {
@@ -1808,15 +1808,15 @@
     "lastmod": "2026-10-20"
   },
   "/quality/": {
-    "hash": "5c7cced02ca771b4",
+    "hash": "e5b64ae4d590521f",
     "lastmod": "2026-11-07"
   },
   "/raster/": {
-    "hash": "c2a735d3f4400633",
+    "hash": "84adda11558217a5",
     "lastmod": "2026-11-07"
   },
   "/raster/hydrology/": {
-    "hash": "d492b48b4a6f7039",
+    "hash": "7101d6afe9c16637",
     "lastmod": "2026-11-07"
   },
   "/raster/hydrology/fill/": {
@@ -1828,7 +1828,11 @@
     "lastmod": "2026-11-07"
   },
   "/raster/hydrology/flow-direction/": {
-    "hash": "b62b7f436a7b03a1",
+    "hash": "1ff83c6bdba0f899",
+    "lastmod": "2026-11-07"
+  },
+  "/raster/hydrology/streams/": {
+    "hash": "acbaac0a65bf5e4d",
     "lastmod": "2026-11-07"
   },
   "/raster/index/": {
@@ -1952,7 +1956,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "ae14ebf5e99497b3",
+    "hash": "55ff48599814fab4",
     "lastmod": "2026-11-07"
   },
   "/survey/": {
@@ -2388,7 +2392,7 @@
     "lastmod": "2026-11-07"
   },
   "/tools/": {
-    "hash": "7a3440a5cd1fa1db",
+    "hash": "866caafb4ce6fc83",
     "lastmod": "2026-11-07"
   },
   "/units/": {
@@ -2652,7 +2656,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "fa693c122762832f",
+    "hash": "9d23c9b1bd5a0d17",
     "lastmod": "2026-11-07"
   },
   "/workflows/": {

@@ -5,6 +5,15 @@
       "date": "2026-11-06",
       "kind": "added",
       "tools": [
+        "raster.hydrology.streams"
+      ],
+      "vectors": [],
+      "summary": "A fourth hydrology tool pulls the channels out of an elevation grid. You set what counts as a channel, as the number of cells or the area of ground that must drain through one, and the tool returns the network split into links: the stretch from one junction to the next, with its Strahler order, its length, how many cells it runs through, and the ground draining through its lower end. Order follows Strahler's own rule, where two streams of the same order make the next order up and a smaller tributary leaves the order alone, so the main stem is the highest number on the page. Give the grid's north-west corner and every link carries latitudes and longitudes, ready to draw. Set the threshold too high and the answer is an empty network with the most that drains through any cell, so you know what to ask for instead."
+    },
+    {
+      "date": "2026-11-06",
+      "kind": "added",
+      "tools": [
         "raster.hydrology.flow-accumulation"
       ],
       "vectors": [],

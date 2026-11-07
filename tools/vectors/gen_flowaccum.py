@@ -71,10 +71,8 @@ def js(v):
     return str(int(v)) if v == int(v) and abs(v) < 1e21 else repr(v)
 
 
-rows = []
 
-
-def case(grid, cell, method, source, no_data=None, check_grid=False):
+def case(rows, grid, cell, method, source, no_data=None, check_grid=False):
     acc = accumulate_dinf(grid, cell) if method == "d-infinity" else accumulate_d8(grid, cell)
     h, w = len(grid), len(grid[0])
     best, at_rc = 0.0, (1, 1)
@@ -107,49 +105,55 @@ def case(grid, cell, method, source, no_data=None, check_grid=False):
                  "tolerance": tol})
 
 
-SPEC = "add-raster-hydrology raster/hydrology scenario"
-PAPERS = "D8 accumulation walked downhill, and Tarboton's (1997) split, reimplemented in Python"
+def main():
+    rows = []
+    SPEC = "add-raster-hydrology raster/hydrology scenario"
+    PAPERS = "D8 accumulation walked downhill, and Tarboton's (1997) split, reimplemented in Python"
 
-ramp = [[100.0 - c for c in range(10)] for _ in range(10)]
-case(ramp, 30.0, "d8", SPEC + ": East ramp accumulation, each row 1 to 10", check_grid=True)
-case(ramp, 30.0, "d-infinity", SPEC + ": the same ramp by D-infinity, which has nothing to split", check_grid=True)
+    ramp = [[100.0 - c for c in range(10)] for _ in range(10)]
+    case(rows, ramp, 30.0, "d8", SPEC + ": East ramp accumulation, each row 1 to 10", check_grid=True)
+    case(rows, ramp, 30.0, "d-infinity", SPEC + ": the same ramp by D-infinity, which has nothing to split", check_grid=True)
 
-south = [[100.0 - r for _ in range(6)] for r in range(6)]
-case(south, 20.0, "d8", PAPERS + ": a ramp falling south", check_grid=True)
+    south = [[100.0 - r for _ in range(6)] for r in range(6)]
+    case(rows, south, 20.0, "d8", PAPERS + ": a ramp falling south", check_grid=True)
 
-diag = [[100.0 - r - c for c in range(7)] for r in range(7)]
-case(diag, 10.0, "d8", PAPERS + ": a plane falling south-east", check_grid=True)
-case(diag, 10.0, "d-infinity", PAPERS + ": the same plane by D-infinity")
+    diag = [[100.0 - r - c for c in range(7)] for r in range(7)]
+    case(rows, diag, 10.0, "d8", PAPERS + ": a plane falling south-east", check_grid=True)
+    case(rows, diag, 10.0, "d-infinity", PAPERS + ": the same plane by D-infinity")
 
-valley = [[100.0 - r + abs(c - 4) * 2.0 for c in range(9)] for r in range(9)]
-case(valley, 25.0, "d8", PAPERS + ": a valley draining south, which gathers along its floor", check_grid=True)
-case(valley, 25.0, "d-infinity", PAPERS + ": the same valley by D-infinity")
+    valley = [[100.0 - r + abs(c - 4) * 2.0 for c in range(9)] for r in range(9)]
+    case(rows, valley, 25.0, "d8", PAPERS + ": a valley draining south, which gathers along its floor", check_grid=True)
+    case(rows, valley, 25.0, "d-infinity", PAPERS + ": the same valley by D-infinity")
 
-cone = [[200.0 - math.hypot(r - 7.5, c - 7.5) * 10.0 for c in range(16)] for r in range(16)]
-case(cone, 10.0, "d8", PAPERS + ": an outward draining cone, where every cell keeps its own water")
-case(cone, 10.0, "d-infinity", PAPERS + ": the cone by D-infinity")
+    cone = [[200.0 - math.hypot(r - 7.5, c - 7.5) * 10.0 for c in range(16)] for r in range(16)]
+    case(rows, cone, 10.0, "d8", PAPERS + ": an outward draining cone, where every cell keeps its own water")
+    case(rows, cone, 10.0, "d-infinity", PAPERS + ": the cone by D-infinity")
 
-pit = [[100.0, 100.0, 100.0], [100.0, 95.0, 100.0], [100.0, 100.0, 100.0]]
-case(pit, 10.0, "d8", SPEC + ": a pit swallows everything that reaches it", check_grid=True)
+    pit = [[100.0, 100.0, 100.0], [100.0, 95.0, 100.0], [100.0, 100.0, 100.0]]
+    case(rows, pit, 10.0, "d8", SPEC + ": a pit swallows everything that reaches it", check_grid=True)
 
-hole = [[100.0, 99.0, 98.0, 97.0], [100.0, None, 98.0, 97.0],
-        [100.0, 99.0, 98.0, 97.0], [100.0, 99.0, 98.0, 97.0]]
-case(hole, 10.0, "d8", PAPERS + ": a no-data hole takes no water and gives none", no_data=-9999, check_grid=True)
+    hole = [[100.0, 99.0, 98.0, 97.0], [100.0, None, 98.0, 97.0],
+            [100.0, 99.0, 98.0, 97.0], [100.0, 99.0, 98.0, 97.0]]
+    case(rows, hole, 10.0, "d8", PAPERS + ": a no-data hole takes no water and gives none", no_data=-9999, check_grid=True)
 
-rng = random.Random(11)
-for n, method in [(8, "d8"), (10, "d8"), (13, "d8"), (8, "d-infinity"), (10, "d-infinity"), (13, "d-infinity")]:
-    grid = [[round(150.0 - r * 2.0 + 6.0 * math.cos(c / 2.5) + rng.uniform(-1.5, 1.5), 3)
-             for c in range(n)] for r in range(n)]
-    case(grid, 15.0, method, f"{PAPERS}: {n} by {n} of seeded random terrain, {method}")
+    rng = random.Random(11)
+    for n, method in [(8, "d8"), (10, "d8"), (13, "d8"), (8, "d-infinity"), (10, "d-infinity"), (13, "d-infinity")]:
+        grid = [[round(150.0 - r * 2.0 + 6.0 * math.cos(c / 2.5) + rng.uniform(-1.5, 1.5), 3)
+                 for c in range(n)] for r in range(n)]
+        case(rows, grid, 15.0, method, f"{PAPERS}: {n} by {n} of seeded random terrain, {method}")
 
-rows.append({"input": {"elevations": [{"row": "1, 2"}, {"row": "3, 4"}], "cell_size": "0 m"},
-             "expect": {"ok": False, "error.code": "INVALID_INPUT"},
-             "source": SPEC + ": the cell size must be more than zero",
-             "sourceVersion": "2026", "tolerance": {}})
-rows.append({"input": {"elevations": [{"row": ", ".join(["1"] * 200)} for _ in range(200)], "cell_size": "10 m"},
-             "expect": {"ok": False, "error.code": "LIMIT_EXCEEDED"},
-             "source": SPEC + ": a window of 40,000 cells is past the 25,000 the tool takes",
-             "sourceVersion": "2026", "tolerance": {}})
+    rows.append({"input": {"elevations": [{"row": "1, 2"}, {"row": "3, 4"}], "cell_size": "0 m"},
+                 "expect": {"ok": False, "error.code": "INVALID_INPUT"},
+                 "source": SPEC + ": the cell size must be more than zero",
+                 "sourceVersion": "2026", "tolerance": {}})
+    rows.append({"input": {"elevations": [{"row": ", ".join(["1"] * 200)} for _ in range(200)], "cell_size": "10 m"},
+                 "expect": {"ok": False, "error.code": "LIMIT_EXCEEDED"},
+                 "source": SPEC + ": a window of 40,000 cells is past the 25,000 the tool takes",
+                 "sourceVersion": "2026", "tolerance": {}})
 
-for i, r in enumerate(rows, 1):
-    print(json.dumps({"id": f"v{i:03d}", **r}, ensure_ascii=False, separators=(",", ":")))
+    for i, r in enumerate(rows, 1):
+        print(json.dumps({"id": f"v{i:03d}", **r}, ensure_ascii=False, separators=(",", ":")))
+
+
+if __name__ == "__main__":
+    main()

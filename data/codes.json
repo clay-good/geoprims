@@ -433,6 +433,10 @@
     "PITS_PRESENT": {
       "severity": "accuracy",
       "message": "Interior cells have no lower neighbor, so water stops there; condition the grid first."
+    },
+    "EMPTY_NETWORK": {
+      "severity": "info",
+      "message": "No cell reaches the stream threshold, so the network is empty."
     }
   }
 }

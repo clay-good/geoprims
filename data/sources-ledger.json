@@ -4216,6 +4216,26 @@
       "editionCheck": true
     },
     {
+      "id": "strahler-1957",
+      "name": "Quantitative analysis of watershed geomorphology",
+      "issuer": "Strahler, A. N., Transactions, American Geophysical Union",
+      "currentEdition": "Volume 38, issue 6 (1957), pages 913-920",
+      "currentReleaseDate": "1957-12-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-11-06",
+      "verificationNote": "The stream-order rule, cited for the definition rather than read at the publisher: the 1957 paper is behind the AGU paywall. The rule as implemented here (a channel with no tributary is first order; two of one order join into the next; a lower tributary leaves the order alone) is the definition every hydrology text and the WhiteboxTools and TauDEM documentation give. DOI 10.1029/TR038i006p00913.",
+      "freeAccessUrl": "https://doi.org/10.1029/TR038i006p00913",
+      "matchTerms": [
+        "Quantitative analysis of watershed geomorphology"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "ocallaghan-mark-1984",
       "name": "The extraction of drainage networks from digital elevation data",
       "issuer": "O'Callaghan, J. F., and Mark, D. M., Computer Vision, Graphics, and Image Processing",

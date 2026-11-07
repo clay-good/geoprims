@@ -1278,6 +1278,10 @@
       "expect": "raster.hydrology.flow-accumulation"
     },
     {
+      "query": "Strahler stream order from a DEM",
+      "expect": "raster.hydrology.streams"
+    },
+    {
       "query": "under keel clearance with squat",
       "expect": "navigation.vessel.under-keel-clearance"
     },

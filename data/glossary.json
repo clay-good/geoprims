@@ -1406,6 +1406,16 @@
       ]
     },
     {
+      "id": "nzgd49",
+      "term": "NZGD49",
+      "expansion": "New Zealand Geodetic Datum 1949",
+      "definition": "The datum behind New Zealand mapping until 2000, on the International 1924 ellipsoid, about 200 m from WGS 84.",
+      "source": "epsg",
+      "relatedTools": [
+        "geodesy.datum.legacy"
+      ]
+    },
+    {
       "id": "opus",
       "term": "OPUS",
       "expansion": "Online Positioning User Service",

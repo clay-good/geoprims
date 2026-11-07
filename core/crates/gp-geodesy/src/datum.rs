@@ -1219,6 +1219,22 @@ const LEGACY: &[Legacy] = &[
         area_name: "Australia",
     },
     Legacy {
+        id: "NZGD49",
+        name: "New Zealand Geodetic Datum 1949",
+        epsg: 1564,
+        a: 6_378_388.0,
+        rf: 297.0,
+        params: Params {
+            t: [59.47, -5.04, 187.44],
+            r: [-0.47, 0.1, -1.024],
+            ds: -4.5993,
+        },
+        convention: Convention::CoordinateFrame,
+        accuracy: 4.0,
+        area: [166.37, -47.65, 178.63, -34.1],
+        area_name: "New Zealand",
+    },
+    Legacy {
         id: "Pulkovo1942",
         name: "Pulkovo 1942",
         epsg: 1267,
@@ -1266,6 +1282,7 @@ const LEGACY_IDS: &[&str] = &[
     "OSGB36",
     "Tokyo",
     "AGD66",
+    "NZGD49",
     "Pulkovo1942",
     "SAD69",
     "Arc1960",
@@ -1275,7 +1292,7 @@ pub static LEGACY_SHIFT: ToolDef = ToolDef {
     id: "geodesy.datum.legacy",
     stability: gp_base::tool::Stability::Stable,
     title: "Legacy datum to or from WGS 84",
-    summary: "Converts a latitude and longitude between a legacy datum (ED50, NAD27, OSGB36, Tokyo, AGD66, Pulkovo 1942, SAD69, or Arc 1960) and WGS 84 with the published EPSG transformation, and states its accuracy, which is meters, not centimeters.",
+    summary: "Converts a latitude and longitude between a legacy datum (ED50, NAD27, OSGB36, Tokyo, AGD66, NZGD49, Pulkovo 1942, SAD69, or Arc 1960) and WGS 84 with the published EPSG transformation, and states its accuracy, which is meters, not centimeters.",
     aliases: &[
         "ED50 to WGS84",
         "NAD27 to WGS84",
@@ -1291,7 +1308,7 @@ pub static LEGACY_SHIFT: ToolDef = ToolDef {
         Field::new(
             "datum",
             "Legacy datum",
-            "ED50, NAD27, OSGB36, Tokyo, AGD66, Pulkovo1942, SAD69, or Arc1960",
+            "ED50, NAD27, OSGB36, Tokyo, AGD66, NZGD49, Pulkovo1942, SAD69, or Arc1960",
             Kind::Choice(LEGACY_IDS),
         )
         .required()

@@ -316,7 +316,7 @@
     "lastmod": "2026-10-19"
   },
   "/changelog/": {
-    "hash": "e2887716004e7b64",
+    "hash": "157dfdeda8900d24",
     "lastmod": "2026-11-07"
   },
   "/disclaimer/": {
@@ -576,7 +576,7 @@
     "lastmod": "2026-10-19"
   },
   "/geodesy/": {
-    "hash": "15d5b5006e6199ac",
+    "hash": "30a824d416145df2",
     "lastmod": "2026-11-07"
   },
   "/geodesy/crs/": {
@@ -592,7 +592,7 @@
     "lastmod": "2026-10-19"
   },
   "/geodesy/datum/": {
-    "hash": "3fc8793883d2c9ca",
+    "hash": "21d39a7f76a94208",
     "lastmod": "2026-11-07"
   },
   "/geodesy/datum/etrf/": {
@@ -612,8 +612,8 @@
     "lastmod": "2026-10-19"
   },
   "/geodesy/datum/legacy/": {
-    "hash": "9a1d8588b6f07260",
-    "lastmod": "2026-10-19"
+    "hash": "746cd452bcc95924",
+    "lastmod": "2026-11-07"
   },
   "/geodesy/datum/nad83/": {
     "hash": "bcac9b58e6c17090",
@@ -1488,8 +1488,8 @@
     "lastmod": "2026-11-07"
   },
   "/learn/nad83-vs-wgs84/": {
-    "hash": "60ee8ffd9e944eed",
-    "lastmod": "2026-10-09"
+    "hash": "c42888c769d27889",
+    "lastmod": "2026-11-07"
   },
   "/learn/night-in-aviation/": {
     "hash": "c5fd461f9e689f5e",
@@ -1584,7 +1584,7 @@
     "lastmod": "2026-10-20"
   },
   "/methodology/": {
-    "hash": "2c4b2275236ac490",
+    "hash": "9e812a8b595ee4fe",
     "lastmod": "2026-11-07"
   },
   "/navigation/": {
@@ -2432,7 +2432,7 @@
     "lastmod": "2026-11-07"
   },
   "/tools/": {
-    "hash": "c1c32350c46f71c6",
+    "hash": "a4b6d78998e508bc",
     "lastmod": "2026-11-07"
   },
   "/units/": {
@@ -2696,7 +2696,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "33cbd32eb0ed8fc9",
+    "hash": "07fa412b6b2d7fea",
     "lastmod": "2026-11-07"
   },
   "/workflows/": {

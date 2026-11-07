@@ -2,7 +2,10 @@
 """Golden vectors for geodesy.datum.legacy from PROJ's implementation of the
 same EPSG operations (EPSG dataset v10.094 in pyproj's proj.db).
 
-Writes core/vectors/geodesy.datum.legacy.jsonl.
+Writes core/vectors/geodesy.datum.legacy.jsonl. Note that v021 onward (the
+NZGD49 rows, EPSG operation 1564) were made with the PROJ 9.9.0 command-line
+tools instead, because pyproj is not installed on every machine this runs on;
+re-running this script would drop them, so append rather than overwrite.
 """
 import json
 from pathlib import Path

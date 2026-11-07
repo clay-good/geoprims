@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-11-07",
+      "kind": "changed",
+      "tools": [
+        "geodesy.datum.legacy"
+      ],
+      "vectors": [],
+      "summary": "The legacy datum tool now knows New Zealand's. NZGD49 was the datum behind New Zealand mapping until 2000, and a position read from an older map or plan as if it were WGS 84 is about 200 metres out. The tool converts either way by the seven-parameter transformation EPSG publishes, states its four-metre accuracy like the others, and points at the grid that does better where centimetres matter."
+    },
+    {
+      "date": "2026-11-07",
       "kind": "added",
       "tools": [
         "geodesy.datum.etrf"

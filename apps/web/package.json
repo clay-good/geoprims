@@ -14,7 +14,7 @@
     "smoke:headers": "node scripts/header-smoke.mjs"
   },
   "devDependencies": {
-    "@astrojs/svelte": "9.0.1",
+    "@astrojs/svelte": "9.1.2",
     "@luma.gl/core": "9.4.2",
     "@luma.gl/engine": "9.4.2",
     "@luma.gl/webgl": "9.4.2",

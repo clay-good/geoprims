@@ -102,6 +102,21 @@
       "reason": "HTDP prints heights to the millimeter; the tolerance is that rounding plus a millimeter for HTDP's own arithmetic."
     },
     {
+      "tool": "geodesy.height.convert",
+      "source": "NGS HTDP",
+      "reason": "The frame step between NAD 83 (2011) and WGS 84 comes from HTDP, which prints heights to the millimeter; the tolerance is that rounding plus a millimeter for HTDP's own arithmetic, as for geodesy.datum.nad83."
+    },
+    {
+      "tool": "geodesy.height.ellipsoidal-to-orthometric",
+      "source": "NGS HTDP",
+      "reason": "The frame step between NAD 83 (2011) and WGS 84 comes from HTDP, which prints heights to the millimeter; the tolerance is that rounding plus a millimeter for HTDP's own arithmetic, as for geodesy.datum.nad83."
+    },
+    {
+      "tool": "geodesy.height.orthometric-to-ellipsoidal",
+      "source": "NGS HTDP",
+      "reason": "The frame step between NAD 83 (2011) and WGS 84 comes from HTDP, which prints heights to the millimeter; the tolerance is that rounding plus a millimeter for HTDP's own arithmetic, as for geodesy.datum.nad83."
+    },
+    {
       "tool": "geodesy.datum.transform",
       "source": "NGS HTDP",
       "reason": "HTDP prints heights to the millimeter; the tolerance is that rounding plus a millimeter for HTDP's own arithmetic."

@@ -9,6 +9,8 @@ use gp_base::tool::{
     Ctx, Example, Field, Kind, Layer, Precision, Q, Reference, Related, Stability, ToolDef,
 };
 use gp_base::units::{self, Quantity as QT};
+use gp_geo::ellipsoid::CATALOG;
+use gp_geo::frames as fr;
 use gp_geo::geoid::Grid;
 use gp_geo::point;
 
@@ -83,6 +85,159 @@ fn msl_note(ctx: &mut Ctx) {
         "ORTHOMETRIC_AS_ELLIPSOIDAL",
         "EGM96 heights approximate global mean sea level. They are not NAVD 88 (use GEOID18 in the US) and can differ from local vertical datums by a meter or more.",
     ));
+}
+
+// ------------------------------------------------------------ frame of h
+
+/// The frame an ellipsoidal height is on. EGM96 is referred to WGS 84, and a
+/// US survey height (an OPUS solution, a CORS position) is on NAD 83 (2011):
+/// across the conterminous United States the two differ in height by about
+/// 0.24 m in the northwest to 1.72 m in the southeast (measured at 2026.0).
+const FRAME_IN: Field = Field::new(
+    "frame",
+    "Frame of the ellipsoidal height",
+    "WGS84 (the default: a satellite receiver or a drone) or NAD83(2011) (an OPUS or a US survey height), like NAD83(2011)",
+    Kind::Choice(&["WGS84", "NAD83(2011)"]),
+);
+
+const EPOCH_IN: Field = Field::new(
+    "epoch",
+    "Epoch",
+    "With NAD83(2011), the date the step to WGS 84 is computed for: a date or a decimal year, like 2026.87",
+    Kind::Text { max_len: 40 },
+);
+
+const FRAME_STEP_OUT: Field = Field::new(
+    "frame_step",
+    "Frame step",
+    "WGS 84 ellipsoidal height less NAD 83 (2011) ellipsoidal height at the point and epoch, applied before using EGM96",
+    Kind::Quantity {
+        q: QT::Length,
+        unit: "m",
+    },
+)
+.precision(Precision::Decimals(3))
+.optional();
+
+/// NAD 83 (2011)'s reference epoch, at which a mismatch is sized when the
+/// caller gives no epoch.
+const NAD83_REFERENCE_EPOCH: f64 = 2010.0;
+
+/// What to do about the height's frame: nothing (it is WGS 84), apply the
+/// step at an epoch, or warn that the frames differ.
+enum FrameStep {
+    Wgs84,
+    Applied(f64),
+    Mismatch,
+}
+
+fn frame_step(ctx: &mut Ctx) -> Result<FrameStep, ToolError> {
+    let nad83 = ctx.choice("frame")? == Some("NAD83(2011)");
+    let t = super::datum::epoch(ctx, "epoch")?;
+    if let Some(t) = t
+        && !(1980.0..=2100.0).contains(&t)
+    {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "The epoch must be between 1980 and 2100.",
+        )
+        .at("/epoch"));
+    }
+    Ok(match (nad83, t) {
+        (false, Some(_)) => {
+            ctx.warnings.push(Warning::new(
+                "INPUT_NORMALIZED",
+                "The epoch only matters for a NAD 83 (2011) height, so it was not used.",
+            ));
+            FrameStep::Wgs84
+        }
+        (false, None) => FrameStep::Wgs84,
+        (true, Some(t)) => {
+            ctx.context.push(("epoch", Json::Num(t)));
+            FrameStep::Applied(t)
+        }
+        (true, None) => FrameStep::Mismatch,
+    })
+}
+
+/// An ellipsoidal height moved between NAD 83 (2011) and WGS 84 (G2296),
+/// which is aligned with ITRF2020, by NGS's HTDP parameters at epoch `t`.
+fn shift_height(lat: f64, lon: f64, h: f64, from: &str, to: &str, t: f64) -> f64 {
+    let grs80 = CATALOG
+        .iter()
+        .find(|e| e.id == "grs80")
+        .copied()
+        .expect("the ellipsoid catalog lists grs80");
+    let (phi, lam) = (lat.to_radians(), lon.to_radians());
+    let p = fr::to_ecef(&grs80, phi, lam, h);
+    let q = gp_geo::htdp::transform(from, to, [p.0, p.1, p.2], t)
+        .expect("both frames are in HTDP's table");
+    fr::from_ecef(&grs80, q[0], q[1], q[2])
+        .expect("not the Earth's center")
+        .2
+}
+
+/// The WGS 84 height of a NAD 83 (2011) one.
+fn nad83_to_wgs84(lat: f64, lon: f64, h: f64, t: f64) -> f64 {
+    shift_height(lat, lon, h, "NAD83(2011)", "ITRF2020", t)
+}
+
+/// The NAD 83 (2011) height of a WGS 84 one.
+fn wgs84_to_nad83(lat: f64, lon: f64, h: f64, t: f64) -> f64 {
+    shift_height(lat, lon, h, "ITRF2020", "NAD83(2011)", t)
+}
+
+/// The FRAME_MISMATCH warning, sized at NAD 83 (2011)'s reference epoch.
+fn mismatch(ctx: &mut Ctx, lat: f64, lon: f64, h: f64) {
+    let dh = nad83_to_wgs84(lat, lon, h, NAD83_REFERENCE_EPOCH) - h;
+    ctx.warnings.push(
+        Warning::new(
+            "FRAME_MISMATCH",
+            format!(
+                "EGM96 is referred to WGS 84, and this height is on NAD 83 (2011). Here the two ellipsoidal heights differ by about {:.2} m (computed for 2010.0, NAD 83 (2011)'s reference epoch), and the answer treats the height as WGS 84, so it is off by about that much. Give the epoch and the tool applies the step instead.",
+                dh.abs()
+            ),
+        )
+        .at("/frame"),
+    );
+}
+
+/// The WGS 84 height to subtract N from, given an ellipsoidal height on the
+/// caller's frame, and the frame step applied (WGS 84 less NAD 83 (2011)).
+fn wgs84_from(ctx: &mut Ctx, lat: f64, lon: f64, h: f64, step: &FrameStep) -> (f64, Option<f64>) {
+    match *step {
+        FrameStep::Wgs84 => (h, None),
+        FrameStep::Applied(t) => {
+            let wgs = nad83_to_wgs84(lat, lon, h, t);
+            (wgs, Some(wgs - h))
+        }
+        FrameStep::Mismatch => {
+            mismatch(ctx, lat, lon, h);
+            (h, None)
+        }
+    }
+}
+
+/// The ellipsoidal height on the caller's frame, given the WGS 84 one that
+/// H + N makes, and the frame step applied (WGS 84 less NAD 83 (2011)).
+fn ellipsoidal_from(
+    ctx: &mut Ctx,
+    lat: f64,
+    lon: f64,
+    wgs: f64,
+    step: &FrameStep,
+) -> (f64, Option<f64>) {
+    match *step {
+        FrameStep::Wgs84 => (wgs, None),
+        FrameStep::Applied(t) => {
+            let nad = wgs84_to_nad83(lat, lon, wgs, t);
+            (nad, Some(wgs - nad))
+        }
+        FrameStep::Mismatch => {
+            mismatch(ctx, lat, lon, wgs);
+            (wgs, None)
+        }
+    }
 }
 
 // ---------------------------------------------------------------- geoid height
@@ -214,7 +369,7 @@ fn run_geoid(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static HEIGHT_CONVERT: ToolDef = ToolDef {
     id: "geodesy.height.convert",
-    version: "1.0.1",
+    version: "1.1.0",
     title: "Ellipsoidal and orthometric height",
     summary: "Converts a GPS ellipsoidal height to height above mean sea level (orthometric) or back, with h = H + N and the EGM96 geoid height N.",
     aliases: &[
@@ -265,6 +420,8 @@ pub static HEIGHT_CONVERT: ToolDef = ToolDef {
         .core(),
         MODEL,
         INTERP,
+        FRAME_IN,
+        EPOCH_IN,
     ],
     outputs: &[
         Field::new(
@@ -280,7 +437,7 @@ pub static HEIGHT_CONVERT: ToolDef = ToolDef {
         Field::new(
             "ellipsoidal",
             "Ellipsoidal height h",
-            "Above the WGS 84 ellipsoid",
+            "Above the ellipsoid, on the frame given (WGS 84 unless NAD 83 (2011) is chosen)",
             Kind::Quantity {
                 q: QT::Length,
                 unit: "m",
@@ -317,9 +474,11 @@ pub static HEIGHT_CONVERT: ToolDef = ToolDef {
             },
         )
         .precision(Precision::Decimals(3)),
+        FRAME_STEP_OUT,
     ],
     errors: &[
         ErrorCode::InvalidInput,
+        ErrorCode::OutOfDomain,
         ErrorCode::AssetUnavailable,
         ErrorCode::AssetIntegrity,
     ],
@@ -328,6 +487,7 @@ pub static HEIGHT_CONVERT: ToolDef = ToolDef {
         "ORTHOMETRIC_AS_ELLIPSOIDAL",
         "INPUT_NORMALIZED",
         "UNIT_ASSUMED",
+        "FRAME_MISMATCH",
     ],
     stability: Stability::Stable,
     when_to_use: "Use this whenever a GPS height has to be compared with anything on a map. A receiver gives height above the ellipsoid; a benchmark, a chart, a flood map and an airfield elevation all give height above sea level, and the two differ by tens of metres. Give it either and it returns both, with the geoid height it used.",
@@ -376,6 +536,7 @@ pub static HEIGHT_CONVERT: ToolDef = ToolDef {
 };
 
 pub static ELLIPSOIDAL_TO_ORTHOMETRIC: ToolDef = ToolDef {
+    version: "1.1.0",
     stability: gp_base::tool::Stability::Stable,
     id: "geodesy.height.ellipsoidal-to-orthometric",
     title: "Ellipsoidal height to orthometric height",
@@ -400,7 +561,7 @@ pub static ELLIPSOIDAL_TO_ORTHOMETRIC: ToolDef = ToolDef {
         Field::new(
             "height",
             "Ellipsoidal height h",
-            "Height above the WGS 84 ellipsoid, like 312.6 m",
+            "Height above the ellipsoid, on WGS 84 unless the frame says otherwise, like 312.6 m",
             Kind::Quantity {
                 q: QT::Length,
                 unit: "m",
@@ -410,18 +571,25 @@ pub static ELLIPSOIDAL_TO_ORTHOMETRIC: ToolDef = ToolDef {
         .core(),
         HEIGHT_CONVERT.inputs[5],
         HEIGHT_CONVERT.inputs[6],
+        FRAME_IN,
+        EPOCH_IN,
     ],
     outputs: &[
         HEIGHT_CONVERT.outputs[2],
         HEIGHT_CONVERT.outputs[3],
         HEIGHT_CONVERT.outputs[1],
+        FRAME_STEP_OUT,
     ],
     errors: HEIGHT_CONVERT.errors,
-    warnings: &["ORTHOMETRIC_AS_ELLIPSOIDAL"],
+    warnings: &[
+        "ORTHOMETRIC_AS_ELLIPSOIDAL",
+        "FRAME_MISMATCH",
+        "INPUT_NORMALIZED",
+    ],
     model: "H = h − N, with N the EGM96 geoid height at the point, interpolated from the 15-minute grid",
     accuracy: HEIGHT_CONVERT.accuracy,
     when_to_use: "Use this when a GNSS receiver, a drone log, or a lidar point cloud gives height above the ellipsoid and you need it against sea level, a map, or an airfield elevation. Enter the latitude, longitude, and ellipsoidal height. The tool returns the orthometric height above the EGM96 geoid and the geoid height N it subtracted.",
-    limitations: "A GNSS height is ellipsoidal unless the receiver says otherwise, and some apps already show MSL, so check before converting twice. EGM96 is a global geoid model good to about half a meter to a meter against leveled benchmarks, worse in mountains, and it is not a national vertical datum: in the United States, NAVD 88 heights need GEOID18 and NAD 83 ellipsoid heights, which differ by up to a couple of meters.",
+    limitations: "A GNSS height is ellipsoidal unless the receiver says otherwise, and some apps already show MSL, so check before converting twice. EGM96 is a global geoid model good to about half a meter to a meter against leveled benchmarks, worse in mountains, and it is not a national vertical datum: in the United States, NAVD 88 heights need GEOID18, which this does not use. A NAD 83 (2011) ellipsoidal height, the kind OPUS returns, differs from a WGS 84 one by about 0.2 m to 1.7 m across the lower 48: name its frame and give the epoch and the tool moves it to WGS 84 by NGS's HTDP parameters, or name the frame alone and it warns you by how much the answer is off.",
     references: HEIGHT_CONVERT.references,
     examples: &[Example {
         id: "primary",
@@ -456,6 +624,7 @@ pub static ELLIPSOIDAL_TO_ORTHOMETRIC: ToolDef = ToolDef {
 };
 
 pub static ORTHOMETRIC_TO_ELLIPSOIDAL: ToolDef = ToolDef {
+    version: "1.1.0",
     stability: gp_base::tool::Stability::Stable,
     id: "geodesy.height.orthometric-to-ellipsoidal",
     title: "Orthometric height to ellipsoidal height",
@@ -490,18 +659,25 @@ pub static ORTHOMETRIC_TO_ELLIPSOIDAL: ToolDef = ToolDef {
         .core(),
         HEIGHT_CONVERT.inputs[5],
         HEIGHT_CONVERT.inputs[6],
+        FRAME_IN,
+        EPOCH_IN,
     ],
     outputs: &[
         HEIGHT_CONVERT.outputs[1],
         HEIGHT_CONVERT.outputs[3],
         HEIGHT_CONVERT.outputs[2],
+        FRAME_STEP_OUT,
     ],
     errors: HEIGHT_CONVERT.errors,
-    warnings: &["ORTHOMETRIC_AS_ELLIPSOIDAL"],
+    warnings: &[
+        "ORTHOMETRIC_AS_ELLIPSOIDAL",
+        "FRAME_MISMATCH",
+        "INPUT_NORMALIZED",
+    ],
     model: "h = H + N, with N the EGM96 geoid height at the point, interpolated from the 15-minute grid",
     accuracy: HEIGHT_CONVERT.accuracy,
     when_to_use: "Use this to give a GNSS system a height it understands: a waypoint altitude for a drone that flies in ellipsoidal height, a control point from a map elevation, or a terrain height for a ground-clearance check against GNSS. Enter the latitude, longitude, and height above sea level. The tool returns the ellipsoidal height and the geoid height N it added.",
-    limitations: "A map or chart elevation is usually on a national vertical datum, not EGM96, so the result can be off by the difference between the two. EGM96 is a global geoid model good to about half a meter to a meter against leveled benchmarks, worse in mountains, and it is not a national vertical datum: in the United States, NAVD 88 heights need GEOID18 and NAD 83 ellipsoid heights, which differ by up to a couple of meters.",
+    limitations: "A map or chart elevation is usually on a national vertical datum, not EGM96, so the result can be off by the difference between the two. EGM96 is a global geoid model good to about half a meter to a meter against leveled benchmarks, worse in mountains, and it is not a national vertical datum: in the United States, NAVD 88 heights need GEOID18, which this does not use. A NAD 83 (2011) ellipsoidal height, the kind OPUS returns, differs from a WGS 84 one by about 0.2 m to 1.7 m across the lower 48: name its frame and give the epoch and the tool moves it to WGS 84 by NGS's HTDP parameters, or name the frame alone and it warns you by how much the answer is off.",
     references: HEIGHT_CONVERT.references,
     examples: &[Example {
         id: "primary",
@@ -555,21 +731,28 @@ fn convert(ctx: &mut Ctx, orthometric_in: Option<bool>) -> Result<Json, ToolErro
     let h = ctx.req_quantity("height")?;
     let (n, _) = geoid_height(ctx, lat, lon)?;
     msl_note(ctx);
+    let step = frame_step(ctx)?;
     if let Some(orthometric) = orthometric_in {
-        let (ell, orth) = if orthometric {
-            (h.base() + n, h.base())
+        let (ell, orth, shift) = if orthometric {
+            let (e, s) = ellipsoidal_from(ctx, lat, lon, h.base() + n, &step);
+            (e, h.base(), s)
         } else {
-            (h.base(), h.base() - n)
+            let (wgs, s) = wgs84_from(ctx, lat, lon, h.base(), &step);
+            (h.base(), wgs - n, s)
         };
         let unit = h.unit;
         let geoid = ("geoid_height", ctx.out("geoid_height", m(n)));
         let ell = ("ellipsoidal", ctx.emit("ellipsoidal", m(ell), unit));
         let orth = ("orthometric", ctx.emit("orthometric", m(orth), unit));
-        return Ok(Json::obj(if orthometric {
+        let mut out = if orthometric {
             vec![ell, geoid, orth]
         } else {
             vec![orth, geoid, ell]
-        }));
+        };
+        if let Some(s) = shift {
+            out.push(("frame_step", ctx.out("frame_step", m(s))));
+        }
+        return Ok(Json::obj(out));
     }
     let from = ctx.choice("from")?;
     let terrain = ctx.quantity("terrain")?.map(|t| t.base());
@@ -581,13 +764,20 @@ fn convert(ctx: &mut Ctx, orthometric_in: Option<bool>) -> Result<Json, ToolErro
         )
         .hint("Give the ground elevation above mean sea level, like 250 m."));
     }
-    let (ell, orth) = match from {
-        Some("orthometric") => (h.base() + n, h.base()),
+    let (ell, orth, shift) = match from {
+        Some("orthometric") => {
+            let (e, s) = ellipsoidal_from(ctx, lat, lon, h.base() + n, &step);
+            (e, h.base(), s)
+        }
         Some("agl") => {
             let g = terrain.expect("checked");
-            (h.base() + g + n, h.base() + g)
+            let (e, s) = ellipsoidal_from(ctx, lat, lon, h.base() + g + n, &step);
+            (e, h.base() + g, s)
         }
-        _ => (h.base(), h.base() - n),
+        _ => {
+            let (wgs, s) = wgs84_from(ctx, lat, lon, h.base(), &step);
+            (h.base(), wgs - n, s)
+        }
     };
     let unit = h.unit;
     let conv = match from {
@@ -601,6 +791,9 @@ fn convert(ctx: &mut Ctx, orthometric_in: Option<bool>) -> Result<Json, ToolErro
         ("orthometric", ctx.emit("orthometric", m(orth), unit)),
         ("geoid_height", ctx.out("geoid_height", m(n))),
     ];
+    if let Some(s) = shift {
+        out.push(("frame_step", ctx.out("frame_step", m(s))));
+    }
     if let Some(g) = terrain {
         let agl = orth - g;
         out.push(("agl", ctx.emit("agl", m(agl), unit)));

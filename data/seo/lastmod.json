@@ -316,7 +316,7 @@
     "lastmod": "2026-11-14"
   },
   "/changelog/": {
-    "hash": "0225f38235160a1e",
+    "hash": "641c0021ae4f71cd",
     "lastmod": "2026-11-14"
   },
   "/disclaimer/": {
@@ -772,15 +772,15 @@
     "lastmod": "2026-10-14"
   },
   "/geodesy/height/convert/": {
-    "hash": "6ddc284ed32a68b3",
+    "hash": "a00c169d8075b109",
     "lastmod": "2026-11-14"
   },
   "/geodesy/height/ellipsoidal-to-orthometric/": {
-    "hash": "d4bdc9f2814b77f8",
+    "hash": "614ca56ea7b5febb",
     "lastmod": "2026-11-14"
   },
   "/geodesy/height/orthometric-to-ellipsoidal/": {
-    "hash": "e931442d33654fbe",
+    "hash": "5fc928b1bf0d40ea",
     "lastmod": "2026-11-14"
   },
   "/geodesy/magnetic/": {
@@ -1452,7 +1452,7 @@
     "lastmod": "2026-11-14"
   },
   "/learn/geoid-vs-ellipsoid/": {
-    "hash": "5f340b70d37a7472",
+    "hash": "815f19293c809d7f",
     "lastmod": "2026-11-14"
   },
   "/learn/grid-vs-ground/": {
@@ -1600,7 +1600,7 @@
     "lastmod": "2026-11-14"
   },
   "/methodology/": {
-    "hash": "6abe0fd9c40a5b10",
+    "hash": "6d158a60ebdb9aa4",
     "lastmod": "2026-11-14"
   },
   "/navigation/": {
@@ -2712,7 +2712,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "15907258996134b7",
+    "hash": "6581dffa0387e16a",
     "lastmod": "2026-11-14"
   },
   "/workflows/": {
@@ -2732,7 +2732,7 @@
     "lastmod": "2026-11-14"
   },
   "/workflows/gnss-to-state-plane/": {
-    "hash": "bea1e4cc70167afe",
+    "hash": "19f68bd9241b0557",
     "lastmod": "2026-11-14"
   },
   "/workflows/ifr-approach-brief/": {

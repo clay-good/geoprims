@@ -3,6 +3,17 @@
   "entries": [
     {
       "date": "2026-11-14",
+      "kind": "changed",
+      "tools": [
+        "geodesy.height.convert",
+        "geodesy.height.ellipsoidal-to-orthometric",
+        "geodesy.height.orthometric-to-ellipsoidal"
+      ],
+      "vectors": [],
+      "summary": "The height converters now take the frame of an ellipsoidal height. EGM96 is referred to WGS 84, and a US survey height, such as an OPUS solution, is on NAD 83 (2011), which sits 0.24 m to 1.72 m higher across the lower 48. Until now such a height went in as if it were WGS 84, and the answer was off by that much with nothing said. Name the frame and give the epoch, and the tool moves the height to WGS 84 by NGS's HTDP parameters and reports the step. Name the frame alone, and it warns how far off the answer is rather than guessing a date. A WGS 84 height converts exactly as before, so no earlier result moves."
+    },
+    {
+      "date": "2026-11-14",
       "kind": "added",
       "tools": [
         "geodesy.grid-ref.latlon-to-bng",

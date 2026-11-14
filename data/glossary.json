@@ -1244,6 +1244,9 @@
       "definition": "The North American datum on the GRS 80 ellipsoid, fixed to the North American plate. Realizations include NAD 83(2011).",
       "source": "nadcon5",
       "relatedTools": [
+        "geodesy.height.convert",
+        "geodesy.height.ellipsoidal-to-orthometric",
+        "geodesy.height.orthometric-to-ellipsoidal",
         "geodesy.spcs.spcs83-inverse"
       ]
     },
@@ -1483,6 +1486,9 @@
       "definition": "The free NGS service that computes a precise position from GNSS data you upload, tied to nearby continuously operating reference stations.",
       "source": "ngs-opus",
       "relatedTools": [
+        "geodesy.height.convert",
+        "geodesy.height.ellipsoidal-to-orthometric",
+        "geodesy.height.orthometric-to-ellipsoidal",
         "survey.gnss.opus-plan"
       ]
     },
@@ -2265,7 +2271,9 @@
         "geodesy.grid-ref.bng-forward",
         "geodesy.grid-ref.bng-inverse",
         "geodesy.grid-ref.bng-to-latlon",
+        "geodesy.height.convert",
         "geodesy.height.ellipsoidal-to-orthometric",
+        "geodesy.height.orthometric-to-ellipsoidal",
         "geodesy.magnetic.declination",
         "geodesy.magnetic.grivation",
         "geodesy.magnetic.magnetic-to-true",
@@ -2283,7 +2291,11 @@
       "expansion": "World Geodetic System 1984",
       "definition": "The WGS ellipsoid and frame defined in 1984 and refined since in realizations such as G2139. GPS positions are in WGS 84.",
       "source": "nga-wgs84",
-      "relatedTools": []
+      "relatedTools": [
+        "geodesy.height.convert",
+        "geodesy.height.ellipsoidal-to-orthometric",
+        "geodesy.height.orthometric-to-ellipsoidal"
+      ]
     },
     {
       "id": "wmm",

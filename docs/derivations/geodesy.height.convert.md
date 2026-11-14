@@ -18,6 +18,7 @@ N comes from a gravimetric model on a grid, EGM96 at 15 arcminutes here, interpo
 - h = H + N; H = h − N.
 - N from the EGM96 15′ grid, interpolated bicubically or bilinearly.
 - With a terrain height, the height above ground follows from whichever of h and H the terrain is quoted in.
+- With `frame` NAD83(2011) and an `epoch`, the ellipsoidal height is moved between NAD 83 (2011) and WGS 84 (G2296, aligned with ITRF2020) through ECEF on GRS 80 by NGS's HTDP parameters at that epoch before or after the geoid step, and `frame_step` reports h(WGS 84) − h(NAD 83 (2011)).
 
 ## Symbols and units
 
@@ -30,6 +31,8 @@ Anywhere on Earth, including the poles and the antimeridian, where the grid wrap
 ## Approximations
 
 EGM96 is a model of the geoid, not the geoid: it is quoted at about 0.5 to 1 m against GPS-levelled benchmarks, better in well-surveyed regions and worse in mountains. The grid interpolation adds a few centimetres at 15′ spacing. For survey work a national geoid model — GEOID18 in the United States, for instance — is the right reference and this is not it.
+
+EGM96 is referred to WGS 84. A NAD 83 (2011) ellipsoidal height, the kind OPUS returns, sits 0.24 m (the northwest) to 1.72 m (the southeast) above the WGS 84 one across the lower 48 at 2026.0, measured with this tool over a 1° grid; NAD 83 is tilted against ITRF, so the gap grows from northwest to southeast. Named with an epoch, the height is moved by HTDP's parameters and the step is reported. Named without one, it is not moved, because the step depends on the date and guessing it would hide that; the answer carries FRAME_MISMATCH with the gap sized at 2010.0, NAD 83 (2011)'s reference epoch. GEOID18, which NAVD 88 needs, is not used: it waits on the asset pipeline.
 
 ## Worked example
 
@@ -51,7 +54,9 @@ The geoid heights come from `GeoidEval`, GeographicLib's own evaluator, run over
 - `core/crates/gp-geodesy/tests/geoid.rs`: the full 2,010-point fixture, both interpolation schemes
 - `tools/vectors/gen_geodesy_last.py`: 18 of the 26 vectors, from that same fixture
 - `core/vectors/geodesy.height.convert.jsonl`: 26 conversions across the globe and six height bands, and two (v027, v028) that pin the result sentence when the geoid or the point is below
+- `tools/vectors/gen_height_frames.py`: the frame step from NGS HTDP 3.6.0 itself, compiled from its Fortran source by `gen_htdp.py`'s own functions (menu option 4, NAD83(2011) and WGS84(G2296) at equal dates), and N from GeoidEval on the egm96-15 grid, at five places from Seattle to Miami; within 1.5 mm, HTDP's printed millimetre plus its arithmetic. Also the no-epoch FRAME_MISMATCH case.
 
 ## Invariants
 
 - `core/crates/gp-geodesy/tests/geodesy.rs` `height_convert_invariants`: the two directions are exact inverses, so a height converted and converted back is the height it started as, to the last bit; h − H is the reported geoid height at every point, which is h = H + N stated as an identity rather than assumed; the geoid height does not depend on the height given, only on the place; it agrees with `geodesy.geoid.geoid-height` at the same point, so the two tools share one model rather than carrying copies; the two interpolation schemes differ by centimetres and not metres; and the sign is the right way round — where the geoid is above the ellipsoid, the sea-level height is the smaller of the two
+- `core/crates/gp-geodesy/tests/height_frames.rs`: a WGS 84 height, named or not, takes no step and no frame warning, so every earlier result stands; a NAD 83 (2011) height round-trips through H to a micrometre with the same step both ways; the step lies in the measured band and grows from Seattle to Miami; and without an epoch FRAME_MISMATCH names WGS 84 and the size in metres.

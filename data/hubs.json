@@ -1013,6 +1013,13 @@
           ]
         },
         {
+          "want": "go straight between GPS latitude and longitude and a National Grid reference",
+          "tools": [
+            "latlon-to-bng",
+            "bng-to-latlon"
+          ]
+        },
+        {
           "want": "convert Irish Transverse Mercator coordinates",
           "tools": [
             "itm-forward",
@@ -1158,6 +1165,13 @@
           "tools": [
             "geodesy.projection.mga-forward",
             "geodesy.projection.mga-inverse"
+          ]
+        },
+        {
+          "want": "go straight from Australian or New Zealand grid coordinates to latitude and longitude",
+          "tools": [
+            "geodesy.projection.mga-to-latlon",
+            "geodesy.projection.nztm-to-latlon"
           ]
         },
         {

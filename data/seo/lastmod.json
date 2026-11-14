@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "1c63f6afced8f278",
+    "hash": "8cb44c2ffaf1e4d4",
     "lastmod": "2026-11-14"
   },
   "/accuracy/": {
@@ -316,7 +316,7 @@
     "lastmod": "2026-10-19"
   },
   "/changelog/": {
-    "hash": "cd8700f4874a14fb",
+    "hash": "0225f38235160a1e",
     "lastmod": "2026-11-14"
   },
   "/disclaimer/": {
@@ -700,20 +700,20 @@
     "lastmod": "2026-10-19"
   },
   "/geodesy/grid-ref/": {
-    "hash": "6de8d62f78f16202",
-    "lastmod": "2026-11-07"
+    "hash": "d5a472189502c005",
+    "lastmod": "2026-11-14"
   },
   "/geodesy/grid-ref/bng-forward/": {
     "hash": "bae3b6290726f0da",
     "lastmod": "2026-11-07"
   },
   "/geodesy/grid-ref/bng-inverse/": {
-    "hash": "23e0f68216e458a8",
-    "lastmod": "2026-11-07"
+    "hash": "6fd7023628e83dbf",
+    "lastmod": "2026-11-14"
   },
   "/geodesy/grid-ref/gars-forward/": {
-    "hash": "b2dcc3493ebf7a4e",
-    "lastmod": "2026-11-07"
+    "hash": "0ea192ea766f9a75",
+    "lastmod": "2026-11-14"
   },
   "/geodesy/grid-ref/gars-inverse/": {
     "hash": "036630d7d0b33786",
@@ -736,12 +736,12 @@
     "lastmod": "2026-11-07"
   },
   "/geodesy/grid-ref/itm-inverse/": {
-    "hash": "95f5f69051215d79",
-    "lastmod": "2026-11-07"
+    "hash": "b97da84c41e09f31",
+    "lastmod": "2026-11-14"
   },
   "/geodesy/grid-ref/maidenhead-forward/": {
-    "hash": "caf6dc17aee97d5a",
-    "lastmod": "2026-11-07"
+    "hash": "a8c7cb19af8d7185",
+    "lastmod": "2026-11-14"
   },
   "/geodesy/grid-ref/maidenhead-inverse/": {
     "hash": "470da5105d9660d5",
@@ -856,7 +856,7 @@
     "lastmod": "2026-10-19"
   },
   "/geodesy/projection/": {
-    "hash": "2fd7e33d2470e232",
+    "hash": "f5fb08b596b92321",
     "lastmod": "2026-11-14"
   },
   "/geodesy/projection/albers-forward/": {
@@ -928,20 +928,20 @@
     "lastmod": "2026-11-14"
   },
   "/geodesy/projection/mga-inverse/": {
-    "hash": "aea3c8159f8f8a5c",
+    "hash": "c4c76075103038bd",
     "lastmod": "2026-11-14"
   },
   "/geodesy/projection/nztm-forward/": {
-    "hash": "1121fe468a2592da",
+    "hash": "7951d59bfb4dd38a",
     "lastmod": "2026-11-14"
   },
   "/geodesy/projection/nztm-inverse/": {
-    "hash": "d8ca57047eb01bd8",
-    "lastmod": "2026-11-07"
+    "hash": "5b7db8acb2b63518",
+    "lastmod": "2026-11-14"
   },
   "/geodesy/projection/orthographic-forward/": {
-    "hash": "f2ea28ae3a00194b",
-    "lastmod": "2026-11-07"
+    "hash": "50663c492f9d04e6",
+    "lastmod": "2026-11-14"
   },
   "/geodesy/projection/orthographic-inverse/": {
     "hash": "e88f50e7eb92736a",
@@ -1600,7 +1600,7 @@
     "lastmod": "2026-11-07"
   },
   "/methodology/": {
-    "hash": "f9b381e4f892e915",
+    "hash": "6abe0fd9c40a5b10",
     "lastmod": "2026-11-14"
   },
   "/navigation/": {
@@ -1856,7 +1856,7 @@
     "lastmod": "2026-10-20"
   },
   "/quality/": {
-    "hash": "d239df44d9cd0e4e",
+    "hash": "283e0bd238c952de",
     "lastmod": "2026-11-14"
   },
   "/raster/": {
@@ -2012,7 +2012,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "a374661b3abf5c1d",
+    "hash": "d8a8c1f84166c71c",
     "lastmod": "2026-11-14"
   },
   "/survey/": {
@@ -2712,7 +2712,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "eed412c8dde5b4a7",
+    "hash": "15907258996134b7",
     "lastmod": "2026-11-14"
   },
   "/workflows/": {

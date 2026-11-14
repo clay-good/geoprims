@@ -489,6 +489,7 @@
         "geodesy.datum.helmert",
         "geodesy.projection.mga-forward",
         "geodesy.projection.mga-inverse",
+        "geodesy.projection.mga-to-latlon",
         "geodesy.spcs.spcs83-forward",
         "survey.cogo.helmert-3d-fit"
       ]
@@ -635,7 +636,8 @@
       "relatedTools": [
         "geodesy.datum.gda2020",
         "geodesy.projection.mga-forward",
-        "geodesy.projection.mga-inverse"
+        "geodesy.projection.mga-inverse",
+        "geodesy.projection.mga-to-latlon"
       ]
     },
     {
@@ -700,6 +702,8 @@
       "definition": "The US satellite navigation system. Its time scale runs a fixed number of seconds ahead of UTC (18 s since 2017) because it never adds leap seconds.",
       "source": "is-gps-200",
       "relatedTools": [
+        "geodesy.grid-ref.bng-to-latlon",
+        "geodesy.grid-ref.latlon-to-bng",
         "survey.gnss.dop",
         "time.scale.gps-to-utc",
         "time.scale.gps-week",
@@ -1131,7 +1135,8 @@
       "source": "ga-mga2020",
       "relatedTools": [
         "geodesy.projection.mga-forward",
-        "geodesy.projection.mga-inverse"
+        "geodesy.projection.mga-inverse",
+        "geodesy.projection.mga-to-latlon"
       ]
     },
     {
@@ -1142,7 +1147,8 @@
       "source": "ga-mga2020",
       "relatedTools": [
         "geodesy.projection.mga-forward",
-        "geodesy.projection.mga-inverse"
+        "geodesy.projection.mga-inverse",
+        "geodesy.projection.mga-to-latlon"
       ]
     },
     {
@@ -2258,6 +2264,7 @@
         "geodesy.datum.nad83",
         "geodesy.grid-ref.bng-forward",
         "geodesy.grid-ref.bng-inverse",
+        "geodesy.grid-ref.bng-to-latlon",
         "geodesy.height.ellipsoidal-to-orthometric",
         "geodesy.magnetic.declination",
         "geodesy.magnetic.grivation",

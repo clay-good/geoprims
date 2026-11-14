@@ -3,6 +3,18 @@
   "entries": [
     {
       "date": "2026-11-14",
+      "kind": "added",
+      "tools": [
+        "geodesy.grid-ref.latlon-to-bng",
+        "geodesy.grid-ref.bng-to-latlon",
+        "geodesy.projection.mga-to-latlon",
+        "geodesy.projection.nztm-to-latlon"
+      ],
+      "vectors": [],
+      "summary": "Four national-grid conversions under the names people search for: GPS latitude and longitude to a British National Grid reference and back, MGA2020 to latitude and longitude, and NZTM2000 to latitude and longitude. Each is an existing tool with its datum fixed to the one the question implies: WGS 84 for the British pair, since a phone or a GPS reads WGS 84, and MGA2020 for the Australian one. They run the same calculation as the tools they come from and give the same answers. A datum passed to one of them is refused rather than quietly replaced. These four are experimental, as the tools they come from are."
+    },
+    {
+      "date": "2026-11-14",
       "kind": "fixed",
       "tools": [
         "geometry.shape.enclosing"

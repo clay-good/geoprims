@@ -8,6 +8,7 @@ pub mod geoid;
 pub mod gridref;
 pub mod magnetic;
 pub mod methods;
+pub mod pairs;
 pub mod spcs;
 pub mod spcs2022;
 
@@ -3275,6 +3276,10 @@ pub static TOOLS: &[&ToolDef] = &[
     &methods::NZTM_INVERSE,
     &methods::MGA_FORWARD,
     &methods::MGA_INVERSE,
+    &pairs::LATLON_TO_BNG,
+    &pairs::BNG_TO_LATLON,
+    &pairs::MGA_TO_LATLON,
+    &pairs::NZTM_TO_LATLON,
     &methods::WEB_MERCATOR_FORWARD,
     &methods::WEB_MERCATOR_INVERSE,
     &methods::LCC_FORWARD,

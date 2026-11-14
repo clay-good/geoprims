@@ -1,0 +1,64 @@
+name: e2e
+
+# The browser suite and the Chromium benchmark, moved out of ci.yml because
+# together they took about 27 of its 35 minutes on every push. They still
+# guard things nothing else does: the 90 KB shell-JS budget, diagram labels
+# inside their drawings, accessibility, and every live golden vector
+# serializing identically in Chromium, Firefox, WebKit, and Node.
+#
+# They run every night against main, and on demand: run this workflow by hand
+# (Actions → e2e → Run workflow, or `gh workflow run e2e`) before a deploy.
+
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned Rust (rust-toolchain.toml)
+        run: rustup show active-toolchain || rustup toolchain install
+      - name: Install pinned wasm-opt
+        run: |
+          v=$(node -p "require('./tools/toolchain.json').wasmOpt")
+          curl -fsSL "https://github.com/WebAssembly/binaryen/releases/download/version_${v}/binaryen-version_${v}-x86_64-linux.tar.gz" | tar xz
+          echo "$PWD/binaryen-version_${v}/bin" >> "$GITHUB_PATH"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Pin the build date to this commit
+        run: echo "SOURCE_DATE_EPOCH=$(git show -s --format=%ct HEAD)" >> "$GITHUB_ENV"
+      - name: Build the core, the catalog, and the MCP release directory
+        run: |
+          npm run build
+          node tools/mcp/build-dist.mjs
+      - name: Install the website's dependencies and all three browsers
+        run: |
+          npm ci --prefix apps/web
+          npm exec --prefix apps/web -- playwright install --with-deps chromium firefox webkit
+      - name: Website build
+        run: npm run build --prefix apps/web
+      - name: Browser checks
+        run: npm run test:browser --prefix apps/web
+      - name: Chromium reference benchmark
+        run: npm run bench:browser --prefix apps/web -- --baseline ../../data/performance-baselines/chromium-1.1.0.json --output ../../chromium-benchmark.json > chromium-benchmark.md
+      # The benchmark writes its report before it judges it, so a failing run
+      # still has the table and the JSON a baseline refresh is built from.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chromium-benchmark
+          path: |
+            chromium-benchmark.json
+            chromium-benchmark.md

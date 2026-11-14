@@ -39,9 +39,17 @@ test('every test file in the repository is run by a test script', () => {
 });
 
 test('continuous integration runs those same scripts, not its own copy of the globs', () => {
+  // Every push runs the JS and website suites; the browser suite takes most
+  // of the time, so it runs every night and on demand in e2e.yml instead.
+  // Between them every declared script still runs, and neither spells out
+  // its own globs.
   const ci = readFileSync(join(root, '.github/workflows/ci.yml'), 'utf8');
+  const e2e = readFileSync(join(root, '.github/workflows/e2e.yml'), 'utf8');
   assert.match(ci, /run: npm run test:js$/m);
   assert.match(ci, /npm test --prefix apps\/web$/m);
-  assert.match(ci, /run: npm run test:browser --prefix apps\/web$/m);
-  assert.doesNotMatch(ci, /node --test/, 'CI spells out globs that can drift from the scripts');
+  assert.match(e2e, /run: npm run test:browser --prefix apps\/web$/m);
+  assert.match(e2e, /^\s+schedule:/m, 'the browser suite must still run on a schedule');
+  for (const [name, text] of [['ci.yml', ci], ['e2e.yml', e2e]]) {
+    assert.doesNotMatch(text, /node --test/, `${name} spells out globs that can drift from the scripts`);
+  }
 });

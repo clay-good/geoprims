@@ -15,7 +15,7 @@ is what the gates read; this page explains it and records its history.
 | Network, cold load | 9 Mbps down, 1.5 Mbps up, 150 ms round trip, no cache |
 | Warm load | Service worker installed, same network |
 | Engines | Chromium, WebKit, and Firefox, current stable; Node.js active LTS for the MCP server and the core |
-| Measurement | Median of three runs per route, from Playwright traces and web-vitals, in CI only |
+| Measurement | Median of three runs per route, from Playwright traces and web-vitals, in the nightly e2e workflow only |
 
 ## Viewports
 
@@ -54,7 +54,9 @@ calculation runs in a worker.
 
 ## What is measured today
 
-The Playwright suite checks cancellation and cross-host result equality in CI.
+The Playwright suite checks cancellation and cross-host result equality in the
+e2e workflow (`.github/workflows/e2e.yml`), which runs every night and on
+demand rather than on every push.
 The page budgets now have a gate: `apps/web/test/browser/perf.test.mjs` loads
 50 sampled routes (the home page, the tool index, every domain, a few groups,
 and tools spread across the catalog) three times each, cold, under profile

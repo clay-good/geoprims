@@ -8,6 +8,11 @@ on:
 permissions:
   contents: read
 
+# A newer push to the same branch supersedes the run in progress.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   reference-container:
     runs-on: ubuntu-24.04
@@ -55,10 +60,10 @@ jobs:
         run: |
           docker build -f mcp/Dockerfile.release-test -t geoprims-mcp-release .
           docker run --rm --network none geoprims-mcp-release
-      - name: Install the website's dependencies and browsers (share cards render in Chromium; cross-host checks use all three)
+      - name: Install the website's dependencies and Chromium (share cards render in it)
         run: |
           npm ci --prefix apps/web
-          npm exec --prefix apps/web -- playwright install --with-deps chromium firefox webkit
+          npm exec --prefix apps/web -- playwright install --with-deps chromium
       - name: Audit npm advisories and licenses
         run: |
           npm audit --prefix apps/web --audit-level=high
@@ -76,19 +81,9 @@ jobs:
           VECTOR_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || 'HEAD~1' }}
       - name: Website checks
         run: npm test --prefix apps/web
-      - name: Browser checks
-        run: npm run test:browser --prefix apps/web
-      - name: Chromium reference benchmark
-        run: npm run bench:browser --prefix apps/web -- --baseline ../../data/performance-baselines/chromium-1.1.0.json --output ../../chromium-benchmark.json > chromium-benchmark.md
-      # The benchmark writes its report before it judges it, so a failing run
-      # still has the table and the JSON a baseline refresh is built from.
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: chromium-benchmark
-          path: |
-            chromium-benchmark.json
-            chromium-benchmark.md
+      # The browser suite (three engines, the 90 KB shell budget, diagram
+      # labels, accessibility) and the Chromium benchmark took about 27 of
+      # this job's 35 minutes. They run nightly and on demand in e2e.yml.
       - name: Hash shipped artifacts
         run: node tools/wasm/artifact-digests.mjs > artifact-digests.txt
       - uses: actions/upload-artifact@v4

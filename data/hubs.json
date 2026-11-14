@@ -1154,6 +1154,13 @@
           ]
         },
         {
+          "want": "convert Australian national grid (MGA) coordinates",
+          "tools": [
+            "geodesy.projection.mga-forward",
+            "geodesy.projection.mga-inverse"
+          ]
+        },
+        {
           "want": "find the grid convergence or the scale factor at a point in UTM",
           "tools": [
             "convergence",

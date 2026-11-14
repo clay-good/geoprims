@@ -662,6 +662,19 @@ fn run_enclosing(ctx: &mut Ctx) -> Result<Json, ToolError> {
             )
             .at(&format!("/points/{i}/lat")));
         }
+        // Planar longitudes are taken as written, and may run past 180 to
+        // cross the antimeridian, but not past a second turn of the globe.
+        // The hull is built on those raw values and its edges are densified
+        // at a hundredth of a degree, so a longitude thousands of degrees out
+        // turns one edge into millions of points: the same guard the boolean
+        // overlay already carries, with the same bound.
+        if planar && !(-540.0..=540.0).contains(&lon) {
+            return Err(ToolError::new(
+                ErrorCode::OutOfDomain,
+                "With planar edges, longitude must be between -540° and 540°.",
+            )
+            .at(&format!("/points/{i}/lon")));
+        }
         pts.push((lat, norm180(lon)));
         raw.push((lon, lat));
     }

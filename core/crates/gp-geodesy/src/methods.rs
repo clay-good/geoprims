@@ -2889,3 +2889,541 @@ fn run_nztm_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("frame", Json::str(NZTM_FRAME)),
     ]))
 }
+
+// ------------------------------------------------- Australia (MGA2020, MGA94)
+
+const GA_MGA: Reference = Reference {
+    title: "Map Grid of Australia 2020 (MGA2020), Geoscience Australia's datums and projections guidance",
+    issuer: "Geoscience Australia",
+    year: 2026,
+    edition: "As published, read 2026-11-14",
+    locator: "The grid is the Universal Transverse Mercator system on the GRS80 ellipsoid applied to GDA2020 latitudes and longitudes: 60 zones six degrees of longitude wide, zone 1 beginning at 177 degrees west, a central meridian in the middle of each; Table 1 gives the central scale factor 0.9996, the false easting 500,000 m, and the false northing 10,000,000 m in the southern hemisphere",
+    url: "https://www.ga.gov.au/scientific-topics/positioning-navigation/geodesy/datums-projections/grid2020",
+};
+
+const EPSG_MGA: Reference = Reference {
+    title: "EPSG Geodetic Parameter Dataset (EPSG v13.102 CRS registry)",
+    issuer: "IOGP, from the Intergovernmental Committee on Surveying and Mapping (ICSM)",
+    year: 2026,
+    edition: "v13.102, as shipped in PROJ 9.9.0",
+    locator: "GDA2020 / MGA zones 46 to 59 as EPSG 7846 to 7859, and GDA94 / MGA zones 48 to 58 as EPSG 28348 to 28358; each declares transverse Mercator on GRS 80, scale 0.9996 on the central meridian, false easting 500,000 m and false northing 10,000,000 m, with the zone's own area of use",
+    url: "https://epsg.org/crs/7856",
+};
+
+/// The MGA zones EPSG registers on GDA2020: 46 through 59.
+const MGA_ZONE_MIN: i32 = 46;
+const MGA_ZONE_MAX: i32 = 59;
+
+/// An MGA zone's central meridian, degrees east. Zone 1 is centred on 177 W,
+/// and each zone is six degrees wide, so zone n is centred on 6n - 183.
+fn mga_central_meridian(zone: i32) -> f64 {
+    6.0 * f64::from(zone) - 183.0
+}
+
+/// The zone whose six-degree band holds this longitude.
+fn mga_zone_for(lon: f64) -> i32 {
+    let wrapped = ((lon + 180.0).rem_euclid(360.0)) / 6.0;
+    (wrapped.floor() as i32) + 1
+}
+
+/// MGA zone `zone`: UTM on GRS 80, the same projection for MGA2020 and MGA94.
+fn mga_grid(zone: i32) -> TmGrid {
+    let g = crate::gridref::grs80();
+    TmGrid::new(
+        g.a,
+        g.f,
+        0.0,
+        mga_central_meridian(zone),
+        0.9996,
+        500_000.0,
+        10_000_000.0,
+    )
+}
+
+const MGA2020_FRAME: &str = "MGA2020 is the Universal Transverse Mercator grid on GRS 80 applied to GDA2020 coordinates. The projection is taken to be given GDA2020 latitude and longitude; a GDA94 position put through it is MGA94, not MGA2020, and the two datums place the same ground point about 1.8 m apart.";
+
+const MGA94_FRAME: &str = "MGA94 is the same Universal Transverse Mercator grid on GRS 80, applied to GDA94 coordinates instead. MGA94 and MGA2020 share every projection parameter, so the same latitude and longitude gives the same easting and northing on both; what differs is the datum the latitude and longitude are on, and the same ground point is about 1.8 m apart on the two. Moving between the grids is a datum step, not a projection.";
+
+const MGA_AREA: &str = "The point is outside the area EPSG publishes for the MGA zones, which runs from 90 degrees to 174 degrees east and from 60 degrees to 8 degrees south. The arithmetic still holds, but this is not Australian national grid territory.";
+
+const MGA_DATUM_IN: Field = Field::new(
+    "datum",
+    "Grid",
+    "MGA2020 on GDA2020, or MGA94 on GDA94; the default is MGA2020",
+    Kind::Choice(&["MGA2020", "MGA94"]),
+);
+
+const MGA_ZONE_OUT: Field = Field::new(
+    "zone",
+    "Zone",
+    "The MGA zone the coordinates are on",
+    Kind::Number {
+        min: MGA_ZONE_MIN as f64,
+        max: MGA_ZONE_MAX as f64,
+    },
+)
+.precision(Precision::Decimals(0));
+
+const MGA_CM_OUT: Field = Field::new(
+    "central_meridian",
+    "Central meridian",
+    "The meridian the zone is drawn about, east positive",
+    Kind::Quantity {
+        q: QT::Angle,
+        unit: "deg",
+    },
+)
+.precision(Precision::Decimals(0))
+.angle_range("[-180,180]");
+
+const MGA_EPSG_OUT: Field = Field::new(
+    "epsg",
+    "EPSG code",
+    "The CRS code for this zone and grid, where one is registered",
+    Kind::Text { max_len: 80 },
+);
+
+const MGA_EASTING_OUT: Field = Field::new(
+    "easting",
+    "Easting",
+    "Metres, with the 500,000 m false easting",
+    Kind::Quantity {
+        q: QT::Length,
+        unit: "m",
+    },
+)
+.precision(Precision::Decimals(3));
+
+const MGA_NORTHING_OUT: Field = Field::new(
+    "northing",
+    "Northing",
+    "Metres, with the 10,000,000 m southern false northing",
+    Kind::Quantity {
+        q: QT::Length,
+        unit: "m",
+    },
+)
+.precision(Precision::Decimals(3));
+
+const MGA_CONVERGENCE: Field = Field::new(
+    "convergence",
+    "Grid convergence",
+    "Grid north minus true north at the point",
+    Kind::Quantity {
+        q: QT::Angle,
+        unit: "deg",
+    },
+)
+.precision(Precision::Decimals(6))
+.angle_range("[-90,90]");
+
+const MGA_SCALE: Field = Field::new(
+    "scale_factor",
+    "Point scale factor",
+    "Grid distance over ground distance at the point",
+    Kind::Number { min: 0.0, max: 2.0 },
+)
+.precision(Precision::Decimals(9));
+
+const MGA_FRAME_OUT: Field = Field::new(
+    "frame",
+    "Reference frame",
+    "What the coordinates are taken to be",
+    Kind::Text { max_len: 420 },
+);
+
+/// Reads the `datum` choice, returning the grid's name, its frame note, and
+/// the EPSG code base for a zone (`None` where the grid has no registered
+/// code for that zone).
+fn mga_which(ctx: &Ctx) -> Result<(&'static str, &'static str), ToolError> {
+    Ok(match ctx.choice("datum")? {
+        Some("MGA94") => ("MGA94", MGA94_FRAME),
+        _ => ("MGA2020", MGA2020_FRAME),
+    })
+}
+
+/// The EPSG code for a grid and zone, as a sentence. MGA2020 is registered
+/// for zones 46 to 59; MGA94 only for 48 to 58, which is why this is text
+/// rather than a number.
+fn mga_epsg(grid: &str, zone: i32) -> String {
+    if grid == "MGA94" {
+        if (48..=58).contains(&zone) {
+            return format!("EPSG:{} (GDA94 / MGA zone {zone})", 28_300 + zone);
+        }
+        return format!("none: EPSG registers GDA94 / MGA only for zones 48 to 58, not {zone}");
+    }
+    format!("EPSG:{} (GDA2020 / MGA zone {zone})", 7_800 + zone)
+}
+
+/// Checks a zone against the registered range, naming it on failure.
+fn mga_check_zone(zone: i32, at: &str) -> Result<(), ToolError> {
+    if (MGA_ZONE_MIN..=MGA_ZONE_MAX).contains(&zone) {
+        return Ok(());
+    }
+    Err(ToolError::new(
+        ErrorCode::OutOfDomain,
+        format!(
+            "MGA zone {zone} is not one of the Australian zones. The Map Grid of Australia runs from zone {MGA_ZONE_MIN} to zone {MGA_ZONE_MAX}."
+        ),
+    )
+    .at(at))
+}
+
+/// Warns when the point sits outside the published Australian extent.
+fn mga_area_warning(ctx: &mut Ctx, lat: f64, lon: f64) {
+    let inside = (-60.0..=-8.0).contains(&lat) && (90.0..=174.0).contains(&lon);
+    if !inside {
+        ctx.warnings
+            .push(Warning::new("OUTSIDE_AREA_OF_USE", MGA_AREA));
+    }
+}
+
+pub static MGA_FORWARD: ToolDef = ToolDef {
+    id: "geodesy.projection.mga-forward",
+    title: "Latitude and longitude to MGA2020",
+    summary: "Converts a GDA2020 latitude and longitude to Map Grid of Australia easting and northing, picking the zone or taking yours, with the grid convergence and the point scale factor; takes MGA94 on GDA94 too.",
+    aliases: &[
+        "lat long to MGA",
+        "MGA2020 converter",
+        "Australian grid coordinates",
+        "latlon to MGA2020",
+    ],
+    keywords: &[
+        "MGA2020",
+        "MGA",
+        "MGA94",
+        "GDA2020",
+        "Australia",
+        "transverse Mercator",
+        "UTM",
+        "EPSG 7856",
+    ],
+    inputs: &[
+        Field::new(
+            "lat",
+            "Latitude",
+            "North positive, so Australia is negative, like -33.858611",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(9))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "East positive, like 151.214167",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(9))
+        .angle_range("[-180,180)"),
+        Field::new(
+            "zone",
+            "Force zone",
+            "Optional: an MGA zone 46 to 59 to use instead of the one the longitude falls in",
+            Kind::Number {
+                min: MGA_ZONE_MIN as f64,
+                max: MGA_ZONE_MAX as f64,
+            },
+        ),
+        MGA_DATUM_IN,
+    ],
+    outputs: &[
+        // The coordinates are the answer and lead; the zone is the context
+        // needed to read them, and follows. The last explain step ends on
+        // the easting, which the trace gate requires to be this first output.
+        MGA_EASTING_OUT,
+        MGA_NORTHING_OUT,
+        MGA_ZONE_OUT,
+        MGA_CONVERGENCE,
+        MGA_SCALE,
+        MGA_CM_OUT,
+        MGA_EPSG_OUT,
+        MGA_FRAME_OUT,
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &[
+        "REALIZATION_ASSUMED",
+        "NONSTANDARD_ZONE",
+        "OUTSIDE_AREA_OF_USE",
+        "EXPERIMENTAL_TOOL",
+    ],
+    model: "Universal Transverse Mercator on GRS 80 with the parameters Geoscience Australia states and EPSG registers for the MGA zones: origin latitude 0°, the zone's central meridian at 6n − 183, scale 0.9996 on it, false easting 500,000 m and false northing 10,000,000 m, by Karney's series",
+    accuracy: "The projection is exact to the series' nanometre over Australia, and agrees with PROJ applying the zone's own EPSG record within a millimetre at every test place. The coordinates are taken to be on the datum named: a GDA94 latitude and longitude run as MGA2020 is out by the 1.8 m between the datums",
+    when_to_use: "Use this to put a latitude and longitude onto the grid Australian survey plans, cadastral datasets, and state spatial services are drawn in. It picks the zone from the longitude, or takes a zone you name when a job runs across a boundary, and returns the grid convergence and the point scale factor beside the coordinates, which is what turns a true bearing into a grid bearing and a ground distance into a grid distance.",
+    limitations: "MGA94 and MGA2020 are the same projection on two different datums, so this tool does not move a position between them: the same latitude and longitude gives the same easting and northing under either name, and the ground point moves about 1.8 m when the datum changes. The datum step is geodesy.datum.gda2020. The tool does not apply the conformal-plus-distortion grid, and it leaves heights untouched: AUSGeoid2020 is a separate asset. Coordinates far outside Australia are arithmetic rather than a national grid.",
+    references: &[GA_MGA, EPSG_MGA],
+    examples: &[Example {
+        id: "primary",
+        title: "The Sydney Opera House",
+        source: "PROJ 9.9.0 applying EPSG:7856 (GDA2020 / MGA zone 56): 33.858611°S 151.214167°E gives E 334799.233 N 6252086.100",
+        input: r#"{"lat":-33.858611,"lon":151.214167}"#,
+    }],
+    primary_example: "primary",
+    visualization: FORWARD_LAYER,
+    related: &[
+        Related {
+            id: "geodesy.projection.mga-inverse",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.datum.gda2020",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.utm.forward",
+            reason: "parent",
+        },
+    ],
+    sentence: "That point is E {easting}, N {northing} in MGA zone {zone}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_mga_forward,
+    ..ToolDef::BLANK
+};
+
+fn run_mga_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let (grid_name, frame) = mga_which(ctx)?;
+    let standard = mga_zone_for(lon);
+    let zone = match ctx.number("zone")? {
+        Some(z) => {
+            // The field declares 46 to 59, so the input validator has already
+            // refused anything outside it by the time this runs.
+            let z = z.round() as i32;
+            if z != standard {
+                ctx.warnings.push(Warning::new(
+                    "NONSTANDARD_ZONE",
+                    format!(
+                        "The longitude {lon:.6}° falls in MGA zone {standard}, and the answer is on zone {z} as asked. Coordinates on a forced zone are further from its central meridian, so the point scale factor is further from 1."
+                    ),
+                ));
+            }
+            z
+        }
+        None => {
+            mga_check_zone(standard, "/lon")?;
+            standard
+        }
+    };
+    let g = mga_grid(zone).forward(lat, lon);
+    ctx.warnings
+        .push(Warning::new("REALIZATION_ASSUMED", frame));
+    mga_area_warning(ctx, lat, lon);
+    let cm = mga_central_meridian(zone);
+    if ctx.explaining() {
+        ctx.step(
+            "The zone",
+            "the zones are six degrees wide, and zone n is drawn about the meridian 6n − 183",
+            format!("{lon:.6}° east"),
+            format!("zone {zone}, central meridian {cm:.0}°E"),
+        );
+        ctx.step(
+            "Off the central meridian",
+            "the projection measures the longitude from the zone's meridian",
+            format!("{lon:.6}° against {cm:.0}°"),
+            format!("{:.6}°", lon - cm),
+        );
+        ctx.step(
+            "On the grid",
+            "transverse Mercator, GRS 80, scale 0.9996 on the central meridian, false origin 500 km east and 10,000 km north",
+            format!("{lat:.6}°, {lon:.6}°"),
+            format!(
+                "{} m",
+                gp_base::display::number(g.e, Precision::Decimals(3), ctx.options.format)
+            ),
+        );
+    }
+    Ok(Json::obj([
+        ("zone", Json::Num(f64::from(zone))),
+        ("easting", ctx.out("easting", meters(g.e))),
+        ("northing", ctx.out("northing", meters(g.n))),
+        ("convergence", ctx.out("convergence", deg(g.convergence))),
+        ("scale_factor", Json::Num(g.k)),
+        ("central_meridian", ctx.out("central_meridian", deg(cm))),
+        ("epsg", Json::str(mga_epsg(grid_name, zone))),
+        ("frame", Json::str(frame)),
+    ]))
+}
+
+pub static MGA_INVERSE: ToolDef = ToolDef {
+    id: "geodesy.projection.mga-inverse",
+    title: "MGA2020 to latitude and longitude",
+    summary: "Converts a Map Grid of Australia zone, easting, and northing back to a GDA2020 latitude and longitude, with the grid convergence and the point scale factor there; reads MGA94 on GDA94 too.",
+    aliases: &[
+        "MGA to lat long",
+        "MGA2020 to latitude longitude",
+        "read Australian grid coordinates",
+        "MGA easting northing to coordinates",
+    ],
+    keywords: &[
+        "MGA2020",
+        "MGA",
+        "MGA94",
+        "GDA2020",
+        "Australia",
+        "transverse Mercator",
+        "inverse",
+        "EPSG 7856",
+    ],
+    inputs: &[
+        Field::new(
+            "zone",
+            "Zone",
+            "The MGA zone the coordinates are on, 46 to 59, like 56",
+            Kind::Number {
+                min: MGA_ZONE_MIN as f64,
+                max: MGA_ZONE_MAX as f64,
+            },
+        )
+        .required()
+        .core(),
+        length(
+            "easting",
+            "Easting",
+            "On the zone, from its false origin, like 334799.233 m",
+        )
+        .required()
+        .core(),
+        length(
+            "northing",
+            "Northing",
+            "On the zone, from its false origin, like 6252086.100 m",
+        )
+        .required()
+        .core(),
+        MGA_DATUM_IN,
+    ],
+    outputs: &[
+        Field::new(
+            "lat",
+            "Latitude",
+            "On the datum named, north positive",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "On the datum named, east positive",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .angle_range("[-180,180)"),
+        MGA_CONVERGENCE,
+        MGA_SCALE,
+        MGA_CM_OUT,
+        MGA_EPSG_OUT,
+        MGA_FRAME_OUT,
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &[
+        "REALIZATION_ASSUMED",
+        "OUTSIDE_AREA_OF_USE",
+        "EXPERIMENTAL_TOOL",
+    ],
+    model: "The inverse Universal Transverse Mercator on GRS 80 with the MGA zone's parameters (origin 0°, central meridian 6n − 183, scale 0.9996, false easting 500,000 m, false northing 10,000,000 m), by Karney's series",
+    accuracy: "The inverse is the forward's own inverse rather than a separate approximation, and the round trip returns every test place to within a nanodegree. The answer is on the datum named: read as the other one it is out by the 1.8 m between GDA94 and GDA2020",
+    when_to_use: "Use this to read an easting and northing off an Australian survey plan, title, or council dataset and get the latitude and longitude a phone or a web map wants. MGA coordinates do not carry their zone, so the zone is asked for; the answer returns the convergence and the point scale factor as well, which is what turns a grid bearing back into a true one.",
+    limitations: "An MGA easting and northing without its zone is ambiguous, and nothing in the numbers says which of the fourteen zones they belong to, so the zone is an input rather than a guess. MGA94 and MGA2020 read the same numbers to the same latitude and longitude, on two datums about 1.8 m apart; moving between the datums is geodesy.datum.gda2020, not this tool. Heights are untouched.",
+    references: &[GA_MGA, EPSG_MGA],
+    examples: &[Example {
+        id: "primary",
+        title: "The Sydney Opera House",
+        source: "PROJ 9.9.0 applying EPSG:7856 in reverse: zone 56, E 334799.233 N 6252086.100 gives 33.858611°S 151.214167°E on GDA2020",
+        input: r#"{"zone":56,"easting":"334799.2334757 m","northing":"6252086.0999992 m"}"#,
+    }],
+    primary_example: "primary",
+    visualization: INVERSE_LAYER,
+    related: &[
+        Related {
+            id: "geodesy.projection.mga-forward",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.datum.gda2020",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.utm.inverse",
+            reason: "parent",
+        },
+    ],
+    sentence: "That is {lat}, {lon}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_mga_inverse,
+    ..ToolDef::BLANK
+};
+
+fn run_mga_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let zone = ctx
+        .number("zone")?
+        .ok_or_else(|| ToolError::invalid("/zone", "Name the MGA zone, 46 to 59."))?
+        .round() as i32;
+    mga_check_zone(zone, "/zone")?;
+    let (grid_name, frame) = mga_which(ctx)?;
+    let (e, n) = grid_in(ctx)?;
+    if !e.is_finite() || !n.is_finite() {
+        return Err(ToolError::invalid(
+            "/easting",
+            "The easting and northing are metres on an MGA zone.",
+        ));
+    }
+    let grid = mga_grid(zone);
+    let (lat, lon) = grid.inverse(e, n);
+    if !lat.is_finite() || !lon.is_finite() || !(-90.0..=90.0).contains(&lat) {
+        return Err(ToolError::invalid(
+            "/northing",
+            "That easting and northing is not a place on the MGA grid.",
+        ));
+    }
+    let back = grid.forward(lat, lon);
+    ctx.warnings
+        .push(Warning::new("REALIZATION_ASSUMED", frame));
+    mga_area_warning(ctx, lat, lon);
+    let cm = mga_central_meridian(zone);
+    if ctx.explaining() {
+        ctx.step(
+            "From the false origin",
+            "each zone counts 500 km east and 10,000 km north of its true origin",
+            format!("E {e:.3} m, N {n:.3} m"),
+            format!(
+                "{:.3} m east, {:.3} m north of it",
+                e - 500_000.0,
+                n - 10_000_000.0
+            ),
+        );
+        ctx.step(
+            "Off the grid",
+            "the inverse transverse Mercator, GRS 80, scale 0.9996 on the zone's central meridian",
+            format!("zone {zone}, central meridian {cm:.0}°E"),
+            format!(
+                "{}°",
+                gp_base::display::number(lat, Precision::Decimals(9), ctx.options.format)
+            ),
+        );
+    }
+    Ok(Json::obj([
+        ("lat", ctx.out("lat", deg(lat))),
+        ("lon", ctx.out("lon", deg(lon))),
+        ("convergence", ctx.out("convergence", deg(back.convergence))),
+        ("scale_factor", Json::Num(back.k)),
+        ("central_meridian", ctx.out("central_meridian", deg(cm))),
+        ("epsg", Json::str(mga_epsg(grid_name, zone))),
+        ("frame", Json::str(frame)),
+    ]))
+}

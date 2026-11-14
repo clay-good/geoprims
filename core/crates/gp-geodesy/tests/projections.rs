@@ -541,3 +541,227 @@ fn nztm_round_trips_and_pins_its_origin() {
     // or Irish one is nowhere near either grid: they are separate tools.
     assert!(val(&w, "northing") > 5_000_000.0, "{w}");
 }
+
+#[test]
+fn mga_rounds_trips_picks_its_zone_and_pins_its_origins() {
+    // add-international-grids, geodesy/national-grids: the Map Grid of
+    // Australia is UTM on GRS 80, registered by EPSG as zones 46 to 59 on
+    // GDA2020 (7846 to 7859) and 48 to 58 on GDA94 (28348 to 28358).
+    let places = [
+        (-33.858611, 151.214167, 56),
+        (-37.818078, 144.967105, 55),
+        (-27.468968, 153.023499, 56),
+        (-31.959500, 115.843900, 50),
+        (-12.463400, 130.845600, 52),
+        (-42.884400, 147.331000, 55),
+        (-12.187800, 96.829100, 47),
+        (-29.054600, 167.961900, 58),
+    ];
+    for (lat, lon, zone) in places {
+        let f = run(
+            "geodesy.projection.mga-forward",
+            &json!({"lat": lat, "lon": lon}),
+        );
+        // The zone comes from the longitude, not from the caller.
+        assert_eq!(
+            val(&f, "zone") as i32,
+            zone,
+            "{lat}, {lon} should fall in MGA zone {zone}: {f}"
+        );
+        // The zone's central meridian is 6n - 183, and the point is inside
+        // the zone's own six-degree band.
+        let cm = val(&f, "central_meridian");
+        assert!(
+            (cm - (6.0 * f64::from(zone) - 183.0)).abs() < 1e-12,
+            "zone {zone}'s central meridian is {cm}: {f}"
+        );
+        assert!(
+            (lon - cm).abs() <= 3.0,
+            "{lon} is not within zone {zone}: {f}"
+        );
+
+        let (e, n) = (val(&f, "easting"), val(&f, "northing"));
+        let b = run(
+            "geodesy.projection.mga-inverse",
+            &json!({"zone": zone, "easting": format!("{e} m"), "northing": format!("{n} m")}),
+        );
+        assert!((val(&b, "lat") - lat).abs() < 1e-9, "{b}");
+        assert!((val(&b, "lon") - lon).abs() < 1e-9, "{b}");
+        // Both ends describe the same point, so both report the same
+        // convergence and point scale factor there.
+        assert!(
+            (val(&f, "convergence") - val(&b, "convergence")).abs() < 1e-9,
+            "{f} vs {b}"
+        );
+        assert!(
+            (val(&f, "scale_factor") - val(&b, "scale_factor")).abs() < 1e-12,
+            "{f} vs {b}"
+        );
+        // Inside its own zone a point stays within 3 degrees of the central
+        // meridian, so the easting stays inside this band and the scale
+        // factor between 0.9996 and about 1.0010 (Janssen's figure for the
+        // zone edge). A wrong k0 or false easting breaks both.
+        assert!(
+            (100_000.0..900_000.0).contains(&e) && (5_000_000.0..9_900_000.0).contains(&n),
+            "{lat}, {lon} fell off MGA zone {zone}: E {e} N {n}"
+        );
+        let k = val(&f, "scale_factor");
+        assert!(
+            (0.9996..1.0011).contains(&k),
+            "the point scale factor inside a zone runs from 0.9996 to about 1.0010, not {k}"
+        );
+        // The convergence is degrees, and roughly -(lambda - lambda0) sin(phi).
+        // Checking only that the two tools agree let a convergence 57.3 times
+        // too large ship on the Irish grid, so check the size here too.
+        let rough = (lon - cm) * lat.to_radians().sin();
+        assert!(
+            (val(&f, "convergence") - rough).abs() < 0.01,
+            "convergence at {lat}, {lon} should be about {rough} degrees, not {}",
+            val(&f, "convergence")
+        );
+    }
+
+    // Each zone's own origin: on its central meridian at the equator the
+    // coordinates are the false origin exactly, the convergence is zero, and
+    // the scale factor is the declared 0.9996. This pins the parameters
+    // rather than a place.
+    for zone in 46..=59 {
+        let cm = 6.0 * f64::from(zone) - 183.0;
+        let o = run(
+            "geodesy.projection.mga-forward",
+            &json!({"lat": 0.0, "lon": cm}),
+        );
+        assert_eq!(val(&o, "zone") as i32, zone, "{o}");
+        assert!((val(&o, "easting") - 500_000.0).abs() < 1e-6, "{o}");
+        assert!((val(&o, "northing") - 10_000_000.0).abs() < 1e-6, "{o}");
+        assert!(val(&o, "convergence").abs() < 1e-12, "{o}");
+        assert!((val(&o, "scale_factor") - 0.9996).abs() < 1e-12, "{o}");
+    }
+
+    // The grid is on GRS 80, not WGS 84. The two differ only in the ninth
+    // digit of the flattening, which moves a northing by well under the
+    // millimetre the PROJ vectors allow -- the silent ellipsoid fallback that
+    // shipped on the Irish grid. Pinned against GeographicLib on GRS 80.
+    let s = run(
+        "geodesy.projection.mga-forward",
+        &json!({"lat": -33.858611, "lon": 151.214167}),
+    );
+    assert!(
+        (val(&s, "northing") - 6_252_086.099_999_2).abs() < 1e-6,
+        "the Opera House's northing on GRS 80 is 6252086.0999992 m, not {}",
+        val(&s, "northing")
+    );
+
+    // East and west of a central meridian the convergence turns the other
+    // way, which is what makes it a correction and not a constant.
+    let w = run(
+        "geodesy.projection.mga-forward",
+        &json!({"lat": -33.0, "lon": 151.0}),
+    );
+    let e = run(
+        "geodesy.projection.mga-forward",
+        &json!({"lat": -33.0, "lon": 155.0}),
+    );
+    assert!(
+        val(&w, "convergence") * val(&e, "convergence") < 0.0,
+        "convergence should change sign across zone 56's central meridian: {w} vs {e}"
+    );
+
+    // MGA94 and MGA2020 are the same projection on two datums, so the same
+    // latitude and longitude must give the same easting and northing under
+    // either name. The tool says this in words; this says it in numbers, and
+    // would catch a datum step creeping into a projection tool.
+    let a = run(
+        "geodesy.projection.mga-forward",
+        &json!({"lat": -33.858611, "lon": 151.214167, "datum": "MGA94"}),
+    );
+    assert!(
+        (val(&a, "easting") - val(&s, "easting")).abs() < 1e-9,
+        "{a} vs {s}"
+    );
+    assert!(
+        (val(&a, "northing") - val(&s, "northing")).abs() < 1e-9,
+        "{a} vs {s}"
+    );
+    // What does change is the code the answer names, and MGA94 has no
+    // registered code outside zones 48 to 58.
+    assert_eq!(a["epsg"], "EPSG:28356 (GDA94 / MGA zone 56)", "{a}");
+    assert_eq!(s["epsg"], "EPSG:7856 (GDA2020 / MGA zone 56)", "{s}");
+    let far = run(
+        "geodesy.projection.mga-forward",
+        &json!({"lat": -12.0, "lon": 94.5, "datum": "MGA94"}),
+    );
+    assert_eq!(val(&far, "zone") as i32, 46, "{far}");
+    assert!(
+        far["epsg"].as_str().unwrap().starts_with("none:"),
+        "EPSG registers GDA94 / MGA only for zones 48 to 58: {far}"
+    );
+}
+
+#[test]
+fn mga_refuses_a_zone_outside_australia_and_flags_a_forced_one() {
+    // A zone outside 46 to 59 is not an Australian zone, and the refusal has
+    // to name the range rather than return arithmetic.
+    for zone in [1, 45, 60, 31] {
+        let r: Value = serde_json::from_str(&REGISTRY.invoke(
+            "geodesy.projection.mga-inverse",
+            &json!({"zone": zone, "easting": "500000 m", "northing": "7000000 m"}).to_string(),
+        ))
+        .unwrap();
+        assert_eq!(r["ok"], false, "zone {zone} should be refused: {r}");
+        assert_eq!(r["error"]["code"], "INVALID_INPUT", "{r}");
+        assert_eq!(r["error"]["field"], "/zone", "{r}");
+        let msg = r["error"]["message"].as_str().unwrap();
+        assert!(
+            msg.contains("46") && msg.contains("59"),
+            "the refusal must name the range 46 to 59: {msg}"
+        );
+    }
+    // A longitude outside the Australian zones is refused the same way,
+    // rather than quietly projecting onto a zone that is not an MGA zone.
+    let r: Value = serde_json::from_str(&REGISTRY.invoke(
+        "geodesy.projection.mga-forward",
+        &json!({"lat": 51.5, "lon": -0.1}).to_string(),
+    ))
+    .unwrap();
+    assert_eq!(r["ok"], false, "London is not on the MGA grid: {r}");
+    assert_eq!(r["error"]["code"], "OUT_OF_DOMAIN", "{r}");
+
+    // Forcing a neighbouring zone is allowed -- jobs do run across boundaries
+    // -- but the answer has to say the zone is not the standard one.
+    let r: Value = serde_json::from_str(&REGISTRY.invoke(
+        "geodesy.projection.mga-forward",
+        &json!({"lat": -27.468968, "lon": 153.023499, "zone": 55}).to_string(),
+    ))
+    .unwrap();
+    assert_eq!(r["ok"], true, "{r}");
+    let codes: Vec<&str> = r["meta"]["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|w| w["code"].as_str().unwrap())
+        .collect();
+    assert!(codes.contains(&"NONSTANDARD_ZONE"), "{r}");
+    // Off its own zone the scale factor leaves the 0.9996 to 1.0010 band,
+    // which is the cost the warning is about.
+    assert!(
+        r["result"]["scale_factor"].as_f64().unwrap() > 1.0011,
+        "a forced zone costs scale: {r}"
+    );
+
+    // A point well outside the published Australian extent still computes,
+    // but says so.
+    let r: Value = serde_json::from_str(&REGISTRY.invoke(
+        "geodesy.projection.mga-forward",
+        &json!({"lat": 20.0, "lon": 120.0}).to_string(),
+    ))
+    .unwrap();
+    assert_eq!(r["ok"], true, "{r}");
+    let codes: Vec<&str> = r["meta"]["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|w| w["code"].as_str().unwrap())
+        .collect();
+    assert!(codes.contains(&"OUTSIDE_AREA_OF_USE"), "{r}");
+}

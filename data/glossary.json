@@ -487,6 +487,8 @@
         "geodesy.crs.search",
         "geodesy.crs.transform",
         "geodesy.datum.helmert",
+        "geodesy.projection.mga-forward",
+        "geodesy.projection.mga-inverse",
         "geodesy.spcs.spcs83-forward",
         "survey.cogo.helmert-3d-fit"
       ]
@@ -631,7 +633,9 @@
       "definition": "Australia's datum, fixed to the continent where it sat in 2020, about 1.8 m north-east of where GDA94 put it.",
       "source": "epsg-crs-registry",
       "relatedTools": [
-        "geodesy.datum.gda2020"
+        "geodesy.datum.gda2020",
+        "geodesy.projection.mga-forward",
+        "geodesy.projection.mga-inverse"
       ]
     },
     {
@@ -641,7 +645,9 @@
       "definition": "Australia's earlier datum, fixed to the continent as it sat in 1994; still behind a great deal of published mapping.",
       "source": "epsg-crs-registry",
       "relatedTools": [
-        "geodesy.datum.gda2020"
+        "geodesy.datum.gda2020",
+        "geodesy.projection.mga-forward",
+        "geodesy.projection.mga-inverse"
       ]
     },
     {
@@ -1115,6 +1121,39 @@
         "aviation.wind.heading-groundspeed",
         "aviation.wind.runway-components",
         "aviation.wind.tas-from-groundspeed"
+      ]
+    },
+    {
+      "id": "mga",
+      "term": "MGA",
+      "expansion": "Map Grid of Australia",
+      "definition": "Australia's national grid: the UTM system on GRS 80, in fourteen six-degree zones numbered 46 to 59. MGA2020 applies it to GDA2020 coordinates and MGA94 to GDA94 ones; the projection is the same for both.",
+      "source": "ga-mga2020",
+      "relatedTools": [
+        "geodesy.projection.mga-forward",
+        "geodesy.projection.mga-inverse"
+      ]
+    },
+    {
+      "id": "mga2020",
+      "term": "MGA2020",
+      "expansion": "Map Grid of Australia 2020",
+      "definition": "Australia's national grid: the UTM system on GRS 80 applied to GDA2020, zones 46 to 59, scale 0.9996, false origin 500 km east and 10,000 km north.",
+      "source": "ga-mga2020",
+      "relatedTools": [
+        "geodesy.projection.mga-forward",
+        "geodesy.projection.mga-inverse"
+      ]
+    },
+    {
+      "id": "mga94",
+      "term": "MGA94",
+      "expansion": "Map Grid of Australia 1994",
+      "definition": "The same grid on GDA94 instead of GDA2020. The projection is identical, so the difference is the datum: about 1.8 m on the ground.",
+      "source": "epsg-crs-registry",
+      "relatedTools": [
+        "geodesy.projection.mga-forward",
+        "geodesy.projection.mga-inverse"
       ]
     },
     {

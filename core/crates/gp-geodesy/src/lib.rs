@@ -3273,6 +3273,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &methods::LV95_INVERSE,
     &methods::NZTM_FORWARD,
     &methods::NZTM_INVERSE,
+    &methods::MGA_FORWARD,
+    &methods::MGA_INVERSE,
     &methods::WEB_MERCATOR_FORWARD,
     &methods::WEB_MERCATOR_INVERSE,
     &methods::LCC_FORWARD,

@@ -2,6 +2,25 @@
   "note": "User-facing changes, newest first. kind is result-change (a published result moved: every superseded golden vector must be listed here), added, fixed, or changed. A result change beyond tolerance also bumps the tool version. Rendered at /changelog/ and checked by tools/trust/changelog.test.mjs.",
   "entries": [
     {
+      "date": "2026-11-14",
+      "kind": "fixed",
+      "tools": [
+        "geometry.shape.enclosing"
+      ],
+      "vectors": [],
+      "summary": "The smallest enclosing circle could hang on a longitude far outside the globe. With planar edges the tool builds its hull on the longitudes as written, and then densifies each hull edge at a hundredth of a degree to measure the area, so a point at -36042 degrees turned one edge into millions of points and the answer took over ten seconds instead of twenty milliseconds. It now refuses a planar longitude outside -540 to 540 degrees, which is the same guard and the same bound the boolean overlay already carried. Longitudes within that range, including the ones past 180 that cross the antimeridian, are unchanged."
+    },
+    {
+      "date": "2026-11-14",
+      "kind": "added",
+      "tools": [
+        "geodesy.projection.mga-forward",
+        "geodesy.projection.mga-inverse"
+      ],
+      "vectors": [],
+      "summary": "Australia's national grid, both ways. The Map Grid of Australia is the UTM system on GRS 80 applied to Australian coordinates, and every Australian survey plan, title, and state spatial dataset is drawn on one of its fourteen zones. The pair converts between the grid and latitude and longitude, picking the zone from the longitude or taking a zone you name when a job runs across a boundary, and returns the grid convergence and the point scale factor beside the coordinates. It handles MGA94 as well as MGA2020, and says what most converters leave out: the two are the same projection, so the same latitude and longitude gives the same easting and northing on both, and the 1.8 m between them is a datum step, not a projection. Both tools are experimental."
+    },
+    {
       "date": "2026-11-07",
       "kind": "fixed",
       "tools": [],

@@ -95,11 +95,23 @@ fn stem(t: &str) -> &str {
 /// True when `a` and `b` differ by exactly one insertion, deletion, or substitution
 /// (or an adjacent transposition).
 fn one_edit(a: &str, b: &str) -> bool {
-    let (a, b): (Vec<char>, Vec<char>) = (a.chars().collect(), b.chars().collect());
+    // Nearly every word is ASCII, where bytes are characters: compare them in
+    // place. The palette scores every query word against every word in the
+    // catalog on each keystroke, and collecting characters allocated twice a
+    // call, which is what put it past its 16 ms budget as the catalog grew.
+    if a.is_ascii() && b.is_ascii() {
+        one_edit_units(a.as_bytes(), b.as_bytes())
+    } else {
+        let (a, b): (Vec<char>, Vec<char>) = (a.chars().collect(), b.chars().collect());
+        one_edit_units(&a, &b)
+    }
+}
+
+fn one_edit_units<T: PartialEq>(a: &[T], b: &[T]) -> bool {
     if a == b || a.len().abs_diff(b.len()) > 1 {
         return false;
     }
-    let pre = a.iter().zip(&b).take_while(|(x, y)| x == y).count();
+    let pre = a.iter().zip(b).take_while(|(x, y)| x == y).count();
     let (ra, rb) = (&a[pre..], &b[pre..]);
     let suf = ra
         .iter()
@@ -112,23 +124,46 @@ fn one_edit(a: &str, b: &str) -> bool {
         || (ma.len() == 2 && mb.len() == 2 && ma[0] == mb[1] && ma[1] == mb[0])
 }
 
+/// A query word with what every comparison needs, worked out once per search
+/// rather than once per catalog word.
+struct QueryWord<'a> {
+    word: &'a str,
+    stem: &'a str,
+    chars: usize,
+}
+
+impl<'a> QueryWord<'a> {
+    fn new(word: &'a str) -> QueryWord<'a> {
+        QueryWord {
+            word,
+            stem: stem(word),
+            chars: word.chars().count(),
+        }
+    }
+}
+
 /// Match quality of query token `q` against field token `t`, out of 100.
 fn match_score(q: &str, t: &str) -> u32 {
-    if q == t {
+    match_word(&QueryWord::new(q), t)
+}
+
+fn match_word(q: &QueryWord, t: &str) -> u32 {
+    if q.word == t {
         100
-    } else if stem(q) == stem(t) {
+    } else if q.stem == stem(t) {
         90
-    } else if q.len() >= 2 && t.starts_with(q) {
+    } else if q.word.len() >= 2 && t.starts_with(q.word) {
         70
-    } else if q.chars().count() >= 4 && one_edit(q, t) {
-        60
-    } else if q.chars().count() >= 4
-        && t.chars().count() > q.chars().count()
-        && one_edit(q, &t.chars().take(q.chars().count()).collect::<String>())
-    {
-        50
-    } else {
+    } else if q.chars < 4 {
         0
+    } else if one_edit(q.word, t) {
+        60
+    } else {
+        // The word's first q.chars characters, sliced rather than copied.
+        match t.char_indices().nth(q.chars) {
+            Some((end, _)) if one_edit(q.word, &t[..end]) => 50,
+            _ => 0,
+        }
     }
 }
 
@@ -460,10 +495,11 @@ pub fn search(json: &str) -> String {
         let table: Vec<Vec<u8>> = q
             .iter()
             .map(|qt| {
+                let qw = QueryWord::new(qt);
                 vocab
                     .words
                     .iter()
-                    .map(|w| match_score(qt, w) as u8)
+                    .map(|w| match_word(&qw, w) as u8)
                     .collect()
             })
             .collect();
@@ -638,6 +674,118 @@ mod exports {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The matcher as it was before it stopped allocating, kept as the oracle
+    /// for the one that replaced it.
+    fn old_one_edit(a: &str, b: &str) -> bool {
+        let (a, b): (Vec<char>, Vec<char>) = (a.chars().collect(), b.chars().collect());
+        if a == b || a.len().abs_diff(b.len()) > 1 {
+            return false;
+        }
+        let pre = a.iter().zip(&b).take_while(|(x, y)| x == y).count();
+        let (ra, rb) = (&a[pre..], &b[pre..]);
+        let suf = ra
+            .iter()
+            .rev()
+            .zip(rb.iter().rev())
+            .take_while(|(x, y)| x == y)
+            .count();
+        let (ma, mb) = (&ra[..ra.len() - suf], &rb[..rb.len() - suf]);
+        (ma.len() <= 1 && mb.len() <= 1)
+            || (ma.len() == 2 && mb.len() == 2 && ma[0] == mb[1] && ma[1] == mb[0])
+    }
+
+    fn old_match_score(q: &str, t: &str) -> u32 {
+        if q == t {
+            100
+        } else if stem(q) == stem(t) {
+            90
+        } else if q.len() >= 2 && t.starts_with(q) {
+            70
+        } else if q.chars().count() >= 4 && old_one_edit(q, t) {
+            60
+        } else if q.chars().count() >= 4
+            && t.chars().count() > q.chars().count()
+            && old_one_edit(q, &t.chars().take(q.chars().count()).collect::<String>())
+        {
+            50
+        } else {
+            0
+        }
+    }
+
+    /// Every pair from a vocabulary of real catalog words, their typos,
+    /// stems, prefixes, and non-ASCII words scores exactly as before.
+    #[test]
+    fn the_allocation_free_matcher_scores_as_the_old_one_did() {
+        let base = [
+            "density",
+            "densty",
+            "dnesity",
+            "densit",
+            "dens",
+            "d",
+            "de",
+            "altitude",
+            "alt",
+            "knots",
+            "knot",
+            "kts",
+            "plane",
+            "planes",
+            "pennsylvania",
+            "pensylvania",
+            "traverse",
+            "travers",
+            "closure",
+            "compass",
+            "rule",
+            "ground",
+            "sample",
+            "distance",
+            "battery",
+            "flight",
+            "time",
+            "tas",
+            "wca",
+            "geoid",
+            "h3",
+            "x",
+            "xyz",
+            "utm",
+            "lat",
+            "lon",
+            "longitude",
+            "magnetic",
+            "declination",
+            "crosswind",
+            "runway",
+            "27",
+            "zürich",
+            "zurich",
+            "réseau",
+            "reseau",
+            "géodésique",
+            "平面直角座標系",
+            "平面直角",
+            "naïve",
+            "naive",
+            "ab",
+            "ba",
+            "abc",
+            "acb",
+            "bac",
+            "running",
+            "runs",
+            "studies",
+        ];
+        for q in base {
+            for t in base {
+                assert_eq!(match_score(q, t), old_match_score(q, t), "{q} against {t}");
+                assert_eq!(one_edit(q, t), old_one_edit(q, t), "{q} against {t}");
+            }
+        }
+    }
 
     #[test]
     fn what3words_is_explained_rather_than_missing() {

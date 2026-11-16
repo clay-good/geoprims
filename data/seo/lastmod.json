@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "d9646e7c117c69e7",
+    "hash": "f587778e3d632de0",
     "lastmod": "2026-11-16"
   },
   "/accuracy/": {
@@ -316,7 +316,7 @@
     "lastmod": "2026-11-14"
   },
   "/changelog/": {
-    "hash": "ae9f9eb2f607c8cc",
+    "hash": "24e155a9b29c42a7",
     "lastmod": "2026-11-16"
   },
   "/disclaimer/": {
@@ -576,7 +576,7 @@
     "lastmod": "2026-11-14"
   },
   "/geodesy/": {
-    "hash": "9af0709819eeeec9",
+    "hash": "dfdaea6d05efd961",
     "lastmod": "2026-11-16"
   },
   "/geodesy/crs/": {
@@ -700,8 +700,8 @@
     "lastmod": "2026-11-14"
   },
   "/geodesy/grid-ref/": {
-    "hash": "d5a472189502c005",
-    "lastmod": "2026-11-14"
+    "hash": "c981aa72ae5d80d4",
+    "lastmod": "2026-11-16"
   },
   "/geodesy/grid-ref/bng-forward/": {
     "hash": "9f70ec0a120902a8",
@@ -728,12 +728,20 @@
     "lastmod": "2026-11-14"
   },
   "/geodesy/grid-ref/grid-zone-lookup/": {
-    "hash": "d943f8f6d0fe6bdd",
-    "lastmod": "2026-11-14"
+    "hash": "64656f719b0da0aa",
+    "lastmod": "2026-11-16"
+  },
+  "/geodesy/grid-ref/irish-forward/": {
+    "hash": "6f539f2d30844f3a",
+    "lastmod": "2026-11-16"
+  },
+  "/geodesy/grid-ref/irish-inverse/": {
+    "hash": "ce734cc1ec201956",
+    "lastmod": "2026-11-16"
   },
   "/geodesy/grid-ref/itm-forward/": {
-    "hash": "f870dff5895be226",
-    "lastmod": "2026-11-14"
+    "hash": "b87b9bde5054eabc",
+    "lastmod": "2026-11-16"
   },
   "/geodesy/grid-ref/itm-inverse/": {
     "hash": "05435711b7f3bcf9",
@@ -1132,12 +1140,12 @@
     "lastmod": "2026-10-20"
   },
   "/geometry/sampling/fishnet/": {
-    "hash": "55ff7faeccaca3a7",
-    "lastmod": "2026-11-14"
+    "hash": "ab2af408214de730",
+    "lastmod": "2026-11-16"
   },
   "/geometry/sampling/hex-grid/": {
-    "hash": "30cc8a7ff3854891",
-    "lastmod": "2026-11-14"
+    "hash": "ea181103e2591fb8",
+    "lastmod": "2026-11-16"
   },
   "/geometry/sampling/points-along-line/": {
     "hash": "f9e84de247ebdee1",
@@ -1632,7 +1640,7 @@
     "lastmod": "2026-11-14"
   },
   "/methodology/": {
-    "hash": "2b7053636d1e7b4e",
+    "hash": "506c3ae0ab62338a",
     "lastmod": "2026-11-16"
   },
   "/navigation/": {
@@ -1888,7 +1896,7 @@
     "lastmod": "2026-10-20"
   },
   "/quality/": {
-    "hash": "08f0e6f8b0db2e7e",
+    "hash": "82ccf22bcd145593",
     "lastmod": "2026-11-16"
   },
   "/raster/": {
@@ -2044,7 +2052,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "71c8fe849f95e719",
+    "hash": "eb96747948bbf4c6",
     "lastmod": "2026-11-16"
   },
   "/survey/": {
@@ -2480,7 +2488,7 @@
     "lastmod": "2026-11-14"
   },
   "/tools/": {
-    "hash": "e2e89d9063081ed8",
+    "hash": "0656f50eab7b6378",
     "lastmod": "2026-11-16"
   },
   "/units/": {
@@ -2744,7 +2752,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "80b4c0043aca011f",
+    "hash": "9b40ca43f31f221d",
     "lastmod": "2026-11-16"
   },
   "/workflows/": {

@@ -3,6 +3,26 @@
   "entries": [
     {
       "date": "2026-11-16",
+      "kind": "fixed",
+      "tools": [
+        "geometry.sampling.fishnet",
+        "geometry.sampling.hex-grid"
+      ],
+      "vectors": [],
+      "summary": "The square and hexagon grids now refuse a cell more than 1,000 km on a side, with a message that says why. The grids are laid on one UTM zone's plane, which is under 700 km wide, so a cell larger than that has corners off the plane; a 1,000,000 km cell came back as an internal error with no latitude at all. Cells up to 1,000 km give the same answers as before."
+    },
+    {
+      "date": "2026-11-16",
+      "kind": "added",
+      "tools": [
+        "geodesy.grid-ref.irish-forward",
+        "geodesy.grid-ref.irish-inverse"
+      ],
+      "vectors": [],
+      "summary": "Irish Grid references, both ways. Irish and Northern Irish maps, walking guides, and rescue reports give places as one letter and figures, like O 15 34. The pair turns a latitude and longitude into a reference at 2 to 10 figures, and reads a reference back to the square it names, with its corner, size, and center. From WGS 84 it uses EPSG's seven-parameter transformation, about 1 m, and says so. Pasting a British or Irish grid reference into the search now finds the tool that reads it. Both tools are experimental."
+    },
+    {
+      "date": "2026-11-16",
       "kind": "added",
       "tools": [
         "geodesy.projection.etrs89-forward",

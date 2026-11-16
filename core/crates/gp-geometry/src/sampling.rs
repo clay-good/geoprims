@@ -2291,6 +2291,9 @@ fn grid_cells(
     cells
 }
 
+/// The largest cell side the grids accept, in meters.
+const MAX_CELL_SIDE: f64 = 1_000_000.0;
+
 fn run_grid(ctx: &mut Ctx, hex: bool) -> Result<Json, ToolError> {
     let plane = Plane::read(ctx)?;
     let m = gp_base::units::by_symbol(QT::Length, "m").expect("m");
@@ -2308,6 +2311,16 @@ fn run_grid(ctx: &mut Ctx, hex: bool) -> Result<Json, ToolError> {
             if hex { "/size" } else { "/width" },
             "Cell sizes must be more than zero.",
         ));
+    }
+    // A UTM zone is under 700 km wide at the equator, so a cell larger than
+    // 1,000 km has corners off its plane, where the inverse projection gives
+    // no point at all: a 1,000,000 km cell returned a non-finite latitude.
+    if w > MAX_CELL_SIDE || h > MAX_CELL_SIDE {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "A cell can be at most 1,000 km on a side: the grid is laid on one UTM zone's plane, which is under 700 km wide, and a larger cell has corners off it.",
+        )
+        .at(if hex { "/size" } else { "/width" }));
     }
     let rot = ctx.quantity("rotation")?.map_or(0.0, |a| a.to(deg));
     let clip = ctx.choice("cells")? == Some("clip");

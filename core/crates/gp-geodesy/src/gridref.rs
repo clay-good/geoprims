@@ -1724,3 +1724,511 @@ fn run_itm_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("frame", Json::str(ITM_FRAME)),
     ]))
 }
+
+// ------------------------------------------------------------- Irish Grid
+
+const EPSG_IRISH: Reference = Reference {
+    title: "EPSG Geodetic Parameter Dataset (EPSG v13.102 CRS registry)",
+    issuer: "IOGP, from Ordnance Survey Ireland (Tailte Éireann) and Ordnance Survey of Northern Ireland",
+    year: 2026,
+    edition: "v13.102, as shipped in PROJ 9.9.0",
+    locator: "TM75 / Irish Grid (EPSG 29903): transverse Mercator on Airy Modified 1849, origin 53°30'N 8°W, scale 1.000035, false easting 200,000 m, false northing 250,000 m; and TM75 to WGS 84 (2) (EPSG 1954), position vector, tX 482.5 m, tY -130.6 m, tZ 564.6 m, rX -1.042\", rY -0.214\", rZ -0.631\", scale 8.15 ppm, stated accuracy 1 m, for Ireland and Northern Ireland onshore",
+    url: "https://epsg.org/crs/29903",
+};
+
+/// The Irish Grid projection (EPSG 29903): Airy Modified, true origin
+/// 53°30'N 8°W, scale 1.000035, false origin 200 km west and 250 km south.
+fn irish_grid() -> gp_geo::proj::TmGrid {
+    gp_geo::proj::TmGrid::new(
+        6_377_340.189,
+        1.0 / 299.324_964_6,
+        53.5,
+        -8.0,
+        1.000_035,
+        200_000.0,
+        250_000.0,
+    )
+}
+
+/// TM75 to or from WGS 84 by EPSG operation 1954 (position vector, 1 m).
+fn tm75_to_wgs84(lat: f64, lon: f64, to_wgs: bool) -> (f64, f64) {
+    use gp_geo::frames as fr;
+    use gp_geo::helmert::{Convention, Helmert, Params};
+    let tm75 = gp_geo::ellipsoid::Ellipsoid {
+        id: "tm75",
+        name: "Airy Modified 1849",
+        a: 6_377_340.189,
+        f: 1.0 / 299.324_964_6,
+    };
+    let wgs = gp_geo::ellipsoid::CATALOG[0];
+    let h = Helmert {
+        p: Params {
+            t: [482.5, -130.6, 564.6],
+            r: [-1.042, -0.214, -0.631],
+            ds: 8.15,
+        },
+        rate: Params::default(),
+        t0: 0.0,
+        convention: Convention::PositionVector,
+    };
+    let (src, dst) = if to_wgs { (&tm75, &wgs) } else { (&wgs, &tm75) };
+    let p = fr::to_ecef(src, lat.to_radians(), lon.to_radians(), 0.0);
+    let q = if to_wgs {
+        h.forward([p.0, p.1, p.2], 0.0)
+    } else {
+        h.reverse([p.0, p.1, p.2], 0.0)
+    };
+    let (phi, lam, _) = fr::from_ecef(dst, q[0], q[1], q[2]).expect("not the center");
+    (phi.to_degrees(), gp_base::angle::wrap_lon(lam.to_degrees()))
+}
+
+fn irish_bounds(e: f64, n: f64, side: f64, to_wgs: bool) -> (f64, f64, f64, f64) {
+    let g = irish_grid();
+    let corners = [(e, n), (e + side, n), (e, n + side), (e + side, n + side)];
+    let mut bounds = (90.0f64, 180.0f64, -90.0f64, -180.0f64);
+    for (ce, cn) in corners {
+        let (mut lat, mut lon) = g.inverse(ce, cn);
+        if to_wgs {
+            (lat, lon) = tm75_to_wgs84(lat, lon, true);
+        }
+        bounds = (
+            bounds.0.min(lat),
+            bounds.1.min(lon),
+            bounds.2.max(lat),
+            bounds.3.max(lon),
+        );
+    }
+    bounds
+}
+
+const IRISH_DATUM: Field = Field::new(
+    "datum",
+    "Datum of the latitude and longitude",
+    "WGS 84 (what a phone gives) or TM75, the Irish Grid's own datum, like WGS84",
+    Kind::Choice(&["WGS84", "TM75"]),
+);
+const IRISH_NOTICE: &str = "Without the OSi and OSNI polynomial this uses EPSG's seven-parameter transformation from TM75, stated as about 1 m, not the 0.4 m the polynomial gives.";
+const IRISH_AS_IS: &str =
+    "The coordinates were taken as TM75, so no datum transformation was applied.";
+
+fn irish_area_warning(ctx: &mut Ctx, lat: f64, lon: f64) {
+    if !((51.39..=55.43).contains(&lat) && (-10.56..=-5.34).contains(&lon)) {
+        ctx.warnings.push(Warning::new(
+            "OUTSIDE_AREA_OF_USE",
+            "The point is outside the area EPSG publishes for the Irish Grid and its datum, Ireland and Northern Ireland onshore. The arithmetic still holds, but the transformation was not fitted there.",
+        ));
+    }
+}
+
+pub static IRISH_FORWARD: ToolDef = ToolDef {
+    id: "geodesy.grid-ref.irish-forward",
+    title: "Latitude and longitude to an Irish Grid reference",
+    summary: "Turns a position into its Irish Grid reference, like O 15899 34671, with the easting and northing behind it and the square it names.",
+    aliases: &[
+        "lat long to Irish Grid",
+        "Irish grid reference from coordinates",
+        "OSi grid reference converter",
+        "latitude longitude to Irish Grid",
+    ],
+    keywords: &[
+        "Irish Grid",
+        "grid reference",
+        "TM75",
+        "Ireland",
+        "Northern Ireland",
+        "OSNI",
+        "easting",
+        "northing",
+    ],
+    inputs: &[
+        Field::new(
+            "lat",
+            "Latitude",
+            "North positive, like 53.349804",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(9))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "East positive, so Ireland is negative, like -6.260310",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(9))
+        .angle_range("[-180,180)"),
+        IRISH_DATUM,
+        Field::new(
+            "figures",
+            "Figures",
+            "How many digits the reference carries, 2 to 10, like 10",
+            Kind::Number {
+                min: 2.0,
+                max: 10.0,
+            },
+        )
+        .precision(Precision::Decimals(0)),
+    ],
+    outputs: &[
+        Field::new(
+            "reference",
+            "Irish Grid reference",
+            "One letter and the figures, like O 15899 34671",
+            Kind::Text { max_len: 24 },
+        ),
+        Field::new(
+            "square",
+            "100 km square",
+            "The letter it falls in",
+            Kind::Text { max_len: 2 },
+        ),
+        Field::new(
+            "easting",
+            "Easting",
+            "From the Irish Grid's false origin",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(3)),
+        Field::new(
+            "northing",
+            "Northing",
+            "From the Irish Grid's false origin",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(3)),
+        Field::new(
+            "square_size",
+            "Square the reference names",
+            "The side of the square those figures pick out",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(0)),
+        CELL_OUT[2],
+        CELL_OUT[3],
+        CELL_OUT[4],
+        CELL_OUT[5],
+        Field::new(
+            "notice",
+            "How the datum was handled",
+            "Which transformation stands behind the answer",
+            Kind::Text { max_len: 220 },
+        ),
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &[
+        "LOW_ACCURACY_TRANSFORM",
+        "OUTSIDE_AREA_OF_USE",
+        "EXPERIMENTAL_TOOL",
+    ],
+    model: "Latitude and longitude on WGS 84 carried to TM75 by EPSG's seven-parameter transformation (operation 1954, position vector), projected on the Irish Grid transverse Mercator (Airy Modified 1849, true origin 53°30'N 8°W, scale 1.000035, false origin 200 km west and 250 km south), then lettered: the grid's 100 km squares carry one letter, A to Z without I, and the figures are truncated, never rounded",
+    accuracy: "The projection is exact to the series' nanometre; from WGS 84 the seven-parameter transformation is about 1 m, which is what EPSG states for it, so a ten-figure reference is more precise than it is accurate",
+    when_to_use: "Use this to turn a phone's or a chart's latitude and longitude into the grid reference an Irish or Northern Irish map, a walking guide, or a mountain rescue report is written in. Pick how many figures you need: two for a 10 km square, six for a 100 m square, ten for a metre. Give the datum your coordinates are on, WGS 84 or TM75 itself.",
+    limitations: "This is the seven-parameter path, about 1 m, not the OSi and OSNI polynomial that gives 0.4 m; a ten-figure reference is therefore more precise than it is accurate. The Irish Grid is the older system: survey work in Ireland now uses Irish Transverse Mercator, geodesy.grid-ref.itm-forward, which is a different grid on a different datum. Outside the lettered 500 km square there is no reference to give. Heights are untouched.",
+    references: &[EPSG_IRISH],
+    examples: &[Example {
+        id: "primary",
+        title: "The Spire of Dublin",
+        source: "PROJ 9.9.0 applying EPSG 1954 and EPSG 29903: 53.349804°N 6.260310°W on WGS 84 gives E 315899.885 N 234671.788, which is O 15899 34671",
+        input: r#"{"lat":53.349804,"lon":-6.26031,"figures":10}"#,
+    }],
+    primary_example: "primary",
+    visualization: BBOX,
+    related: &[
+        Related {
+            id: "geodesy.grid-ref.irish-inverse",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.grid-ref.itm-forward",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.grid-ref.bng-forward",
+            reason: "alternative",
+        },
+    ],
+    sentence: "That point is {reference}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_irish_forward,
+    ..ToolDef::BLANK
+};
+
+fn run_irish_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let on_wgs = ctx.choice("datum")? != Some("TM75");
+    let figures = ctx.number("figures")?.unwrap_or(10.0).round() as usize;
+    if !figures.is_multiple_of(2) {
+        return Err(ToolError::invalid(
+            "/figures",
+            "An Irish Grid reference carries an even number of figures: 2, 4, 6, 8, or 10.",
+        ));
+    }
+    let (plat, plon) = if on_wgs {
+        ctx.warnings
+            .push(Warning::new("LOW_ACCURACY_TRANSFORM", IRISH_NOTICE));
+        tm75_to_wgs84(lat, lon, false)
+    } else {
+        (lat, lon)
+    };
+    irish_area_warning(ctx, lat, lon);
+    let g = irish_grid().forward(plat, plon);
+    let reference = gr::irish_encode(g.e, g.n, figures)
+        .map_err(|m| ToolError::new(ErrorCode::OutOfDomain, m).at("/lat"))?;
+    let square = gr::irish_square(g.e, g.n).expect("encode checked the bounds");
+    let m = units::by_symbol(QT::Length, "m").expect("m");
+    let q = |v: f64| Q { value: v, unit: m };
+    let side = 100_000.0 / 10f64.powi((figures / 2) as i32);
+    if ctx.explaining() {
+        ctx.step(
+            "Onto TM75",
+            if on_wgs {
+                "EPSG's seven-parameter transformation (operation 1954)"
+            } else {
+                "the coordinates are already on TM75"
+            },
+            format!("{lat:.7}°, {lon:.7}°"),
+            format!("{plat:.7}°, {plon:.7}°"),
+        );
+        ctx.step(
+            "On the Irish Grid",
+            "transverse Mercator, Airy Modified, true origin 53°30'N 8°W",
+            format!("{plat:.7}°, {plon:.7}°"),
+            format!("E {:.3} m, N {:.3} m", g.e, g.n),
+        );
+        ctx.step(
+            "Lettered",
+            "the 100 km square's letter, then the figures, truncated",
+            format!("E {:.0}, N {:.0}", g.e, g.n),
+            reference.clone(),
+        );
+    }
+    let (se, sn) = ((g.e / side).floor() * side, (g.n / side).floor() * side);
+    let (south, west, north, east) = irish_bounds(se, sn, side, on_wgs);
+    Ok(Json::obj([
+        ("reference", Json::str(reference)),
+        ("square", Json::str(square.to_string())),
+        ("easting", ctx.out("easting", q(g.e))),
+        ("northing", ctx.out("northing", q(g.n))),
+        ("square_size", ctx.out("square_size", q(side))),
+        ("south", ctx.out("south", deg(south))),
+        ("west", ctx.out("west", deg(west))),
+        ("north", ctx.out("north", deg(north))),
+        ("east", ctx.out("east", deg(east))),
+        (
+            "notice",
+            Json::str(if on_wgs { IRISH_NOTICE } else { IRISH_AS_IS }),
+        ),
+    ]))
+}
+
+pub static IRISH_INVERSE: ToolDef = ToolDef {
+    id: "geodesy.grid-ref.irish-inverse",
+    title: "Irish Grid reference to latitude and longitude",
+    summary: "Reads an Irish Grid reference like O 15 34 and gives the square it names: its south-west corner, its center, its size, and the latitude and longitude of that center.",
+    aliases: &[
+        "Irish Grid to lat long",
+        "Irish grid reference to coordinates",
+        "read an Irish Grid reference",
+        "OSi grid reference to latitude longitude",
+    ],
+    keywords: &[
+        "Irish Grid",
+        "grid reference",
+        "TM75",
+        "Ireland",
+        "Northern Ireland",
+        "OSNI",
+        "easting",
+        "northing",
+    ],
+    inputs: &[
+        code_in(
+            "reference",
+            "Irish Grid reference",
+            "One letter and an even number of figures, like O 15 34",
+        ),
+        IRISH_DATUM,
+    ],
+    outputs: &[
+        Field::new(
+            "lat",
+            "Latitude of the center",
+            "Of the square the reference names",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(7))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude of the center",
+            "Of the square the reference names",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(7))
+        .angle_range("[-180,180)"),
+        Field::new(
+            "easting",
+            "Easting of the south-west corner",
+            "From the Irish Grid's false origin",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(1)),
+        Field::new(
+            "northing",
+            "Northing of the south-west corner",
+            "From the Irish Grid's false origin",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(1)),
+        Field::new(
+            "square_size",
+            "Square the reference names",
+            "The side of the square those figures pick out",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(0)),
+        Field::new(
+            "square",
+            "100 km square",
+            "The letter",
+            Kind::Text { max_len: 2 },
+        ),
+        CELL_OUT[2],
+        CELL_OUT[3],
+        CELL_OUT[4],
+        CELL_OUT[5],
+        Field::new(
+            "notice",
+            "How the datum was handled",
+            "Which transformation stands behind the answer",
+            Kind::Text { max_len: 220 },
+        ),
+    ],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &[
+        "LOW_ACCURACY_TRANSFORM",
+        "OUTSIDE_AREA_OF_USE",
+        "EXPERIMENTAL_TOOL",
+    ],
+    model: "The letter gives the 100 km square, the figures the offset inside it, truncated, so a reference names a square rather than a point: its south-west corner, and its center half a square further. The center is unprojected from the Irish Grid transverse Mercator onto TM75, and carried to WGS 84 by EPSG's seven-parameter transformation (operation 1954) when WGS 84 is asked for",
+    accuracy: "The square's corner and size are exact. The latitude and longitude on TM75 are exact to the series' nanometre; on WGS 84 the seven-parameter transformation is about 1 m, which is what EPSG states for it",
+    when_to_use: "Use this to read an Irish Grid reference off an Irish or Northern Irish map, a walking guide, or a rescue call and find where it is. It answers with the square the reference actually names: two figures name a 10 km square, six a 100 m square, ten a metre, and the result gives the size as well as the corner and the center.",
+    limitations: "A reference names a square, and the latitude and longitude given are its center, so a two-figure reference is good to 5 km by construction. On WGS 84 the answer runs through the seven-parameter transformation, about 1 m, not the OSi and OSNI polynomial. Irish Transverse Mercator coordinates are a different grid and are read by geodesy.grid-ref.itm-inverse. Heights are untouched.",
+    references: &[EPSG_IRISH],
+    examples: &[Example {
+        id: "primary",
+        title: "O 15 34, central Dublin",
+        source: "The lettering of EPSG 29903's grid: O is the 100 km square from E 300000 to 400000 and N 200000 to 300000, so O 15 34 is the 1 km square whose south-west corner is E 315000 N 234000",
+        input: r#"{"reference":"O 15 34","datum":"WGS84"}"#,
+    }],
+    primary_example: "primary",
+    visualization: BBOX,
+    related: &[
+        Related {
+            id: "geodesy.grid-ref.irish-forward",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.grid-ref.itm-inverse",
+            reason: "alternative",
+        },
+        Related {
+            id: "geodesy.grid-ref.bng-inverse",
+            reason: "alternative",
+        },
+    ],
+    sentence: "That reference names a {square_size} square centered on {lat}, {lon}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_irish_inverse,
+    ..ToolDef::BLANK
+};
+
+fn run_irish_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let text = ctx.text("reference")?.expect("required");
+    let (e, n, side) = gr::irish_decode(&text).map_err(|m| ToolError::invalid("/reference", m))?;
+    let want_wgs = ctx.choice("datum")? != Some("TM75");
+    let (clat, clon) = irish_grid().inverse(e + side / 2.0, n + side / 2.0);
+    let (lat, lon) = if want_wgs {
+        ctx.warnings
+            .push(Warning::new("LOW_ACCURACY_TRANSFORM", IRISH_NOTICE));
+        tm75_to_wgs84(clat, clon, true)
+    } else {
+        (clat, clon)
+    };
+    irish_area_warning(ctx, lat, lon);
+    let m = units::by_symbol(QT::Length, "m").expect("m");
+    let q = |v: f64| Q { value: v, unit: m };
+    let square = gr::irish_square(e, n).expect("decode gives a square on the grid");
+    let (south, west, north, east) = irish_bounds(e, n, side, want_wgs);
+    if ctx.explaining() {
+        ctx.step(
+            "The square",
+            "one letter for the 100 km square, then the figures inside it",
+            text.clone(),
+            format!("E {e:.0} m, N {n:.0} m, {side:.0} m square"),
+        );
+        ctx.step(
+            "Its center",
+            "half a square further east and north",
+            format!("E {:.1} m, N {:.1} m", e + side / 2.0, n + side / 2.0),
+            format!(
+                "{}°",
+                gp_base::display::number(lat, Precision::Decimals(7), ctx.options.format)
+            ),
+        );
+    }
+    Ok(Json::obj([
+        ("lat", ctx.out("lat", deg(lat))),
+        ("lon", ctx.out("lon", deg(lon))),
+        ("easting", ctx.out("easting", q(e))),
+        ("northing", ctx.out("northing", q(n))),
+        ("square_size", ctx.out("square_size", q(side))),
+        ("square", Json::str(square.to_string())),
+        ("south", ctx.out("south", deg(south))),
+        ("west", ctx.out("west", deg(west))),
+        ("north", ctx.out("north", deg(north))),
+        ("east", ctx.out("east", deg(east))),
+        (
+            "notice",
+            Json::str(if want_wgs {
+                IRISH_NOTICE
+            } else {
+                "The latitude and longitude are on TM75 itself, so no datum transformation was applied."
+            }),
+        ),
+    ]))
+}

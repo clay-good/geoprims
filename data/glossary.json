@@ -1565,6 +1565,22 @@
       ]
     },
     {
+      "id": "osi",
+      "term": "OSi",
+      "expansion": "Ordnance Survey Ireland",
+      "definition": "Ireland's national mapping agency, now part of Tailte Éireann. With OSNI it publishes the Irish Grid and Irish Transverse Mercator.",
+      "source": "epsg-crs-registry",
+      "relatedTools": []
+    },
+    {
+      "id": "osni",
+      "term": "OSNI",
+      "expansion": "Ordnance Survey of Northern Ireland",
+      "definition": "Northern Ireland's national mapping agency, which shares the Irish Grid and Irish Transverse Mercator with OSi.",
+      "source": "epsg-crs-registry",
+      "relatedTools": []
+    },
+    {
       "id": "papi",
       "term": "PAPI",
       "expansion": "precision approach path indicator",
@@ -2009,6 +2025,17 @@
       ]
     },
     {
+      "id": "tm75",
+      "term": "TM75",
+      "expansion": "Geodetic Datum of 1965, the realization EPSG calls TM75",
+      "definition": "The datum of the Irish Grid, on the Airy Modified 1849 ellipsoid. The same latitude and longitude read on WGS 84 instead lands about 30 to 70 m away across Ireland.",
+      "source": "epsg-crs-registry",
+      "relatedTools": [
+        "geodesy.grid-ref.irish-forward",
+        "geodesy.grid-ref.irish-inverse"
+      ]
+    },
+    {
       "id": "tms",
       "term": "TMS",
       "expansion": "Tile Map Service",
@@ -2339,6 +2366,8 @@
         "geodesy.grid-ref.bng-forward",
         "geodesy.grid-ref.bng-inverse",
         "geodesy.grid-ref.bng-to-latlon",
+        "geodesy.grid-ref.irish-forward",
+        "geodesy.grid-ref.irish-inverse",
         "geodesy.height.convert",
         "geodesy.height.ellipsoidal-to-orthometric",
         "geodesy.height.orthometric-to-ellipsoidal",

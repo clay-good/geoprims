@@ -462,6 +462,140 @@ pub fn bng_decode(s: &str) -> Result<(f64, f64, f64), String> {
     Ok((e, n, side))
 }
 
+// -------------------------------------------------------------- Irish Grid
+
+/// The Irish Grid's 100 km square letters, A to Z without I, in rows of five
+/// from the north-west: A to E across the top (400 to 500 km north), V to Z
+/// across the bottom, so V's south-west corner is the grid's false origin.
+const IRISH_LETTERS: &[u8] = b"ABCDEFGHJKLMNOPQRSTUVWXYZ";
+/// The lettered grid is 500 km square.
+pub const IRISH_MAX: f64 = 500_000.0;
+
+/// The letter of the 100 km square holding an Irish Grid easting and
+/// northing, or None outside the lettered 500 km square.
+pub fn irish_square(e: f64, n: f64) -> Option<char> {
+    if !(0.0..IRISH_MAX).contains(&e) || !(0.0..IRISH_MAX).contains(&n) {
+        return None;
+    }
+    let col = (e / 100_000.0).floor() as usize;
+    let row = 4 - (n / 100_000.0).floor() as usize;
+    IRISH_LETTERS.get(row * 5 + col).map(|b| *b as char)
+}
+
+/// An Irish Grid reference with `figures` digits in all (2 to 10, even),
+/// truncated as the convention requires rather than rounded: "O 15 34".
+pub fn irish_encode(e: f64, n: f64, figures: usize) -> Result<String, String> {
+    if !(2..=10).contains(&figures) || !figures.is_multiple_of(2) {
+        return Err("An Irish Grid reference carries 2, 4, 6, 8, or 10 figures.".into());
+    }
+    let square = irish_square(e, n).ok_or_else(|| {
+        "That easting and northing is outside the lettered Irish Grid, which runs 0 to 500 km east and north of its false origin.".to_string()
+    })?;
+    let digits = figures / 2;
+    let unit = 100_000.0 / 10f64.powi(digits as i32);
+    let part = |v: f64| -> String {
+        let within = (v.rem_euclid(100_000.0) / unit).floor() as u64;
+        format!("{within:0digits$}", digits = digits)
+    };
+    Ok(format!("{square} {} {}", part(e), part(n)))
+}
+
+/// The square an Irish Grid reference names: its south-west corner and its
+/// side in meters.
+pub fn irish_decode(s: &str) -> Result<(f64, f64, f64), String> {
+    let up: String = s
+        .chars()
+        .filter(|c| !c.is_whitespace())
+        .map(|c| c.to_ascii_uppercase())
+        .collect();
+    let bytes = up.as_bytes();
+    if bytes.is_empty() || !bytes[0].is_ascii_alphabetic() {
+        return Err("An Irish Grid reference starts with one letter, like O 15 34.".into());
+    }
+    if bytes[0] == b'I' {
+        return Err("The letter I is not used in the Irish Grid.".into());
+    }
+    let i = IRISH_LETTERS
+        .iter()
+        .position(|x| *x == bytes[0])
+        .expect("every other capital is a square") as i64;
+    let rest = &up[1..];
+    if !rest.bytes().all(|b| b.is_ascii_digit()) {
+        return Err(
+            "After the letter an Irish Grid reference is all figures, like O 15 34.".into(),
+        );
+    }
+    if !rest.len().is_multiple_of(2) || rest.len() > 10 {
+        return Err(
+            "An Irish Grid reference carries an even number of figures, up to 10, half for the easting and half for the northing.".into(),
+        );
+    }
+    let digits = rest.len() / 2;
+    let side = 100_000.0 / 10f64.powi(digits as i32);
+    let value = |part: &str| -> f64 {
+        if part.is_empty() {
+            0.0
+        } else {
+            part.parse::<f64>().unwrap_or(0.0) * side
+        }
+    };
+    let e = (i % 5) as f64 * 100_000.0 + value(&rest[..digits]);
+    let n = (4 - i / 5) as f64 * 100_000.0 + value(&rest[digits..]);
+    Ok((e, n, side))
+}
+
+#[cfg(test)]
+mod irish_tests {
+    use super::*;
+
+    #[test]
+    fn letters_squares_and_round_trips() {
+        // V's south-west corner is the false origin; A is the north-west square.
+        assert_eq!(irish_square(0.0, 0.0), Some('V'));
+        assert_eq!(irish_square(0.0, 450_000.0), Some('A'));
+        assert_eq!(irish_square(499_999.0, 499_999.0), Some('E'));
+        assert_eq!(irish_square(315_855.0, 234_718.0), Some('O'));
+        assert_eq!(irish_square(500_000.0, 0.0), None);
+        assert_eq!(
+            irish_encode(315_855.479, 234_718.929, 4).unwrap(),
+            "O 15 34"
+        );
+        assert_eq!(
+            irish_encode(315_855.479, 234_718.929, 10).unwrap(),
+            "O 15855 34718"
+        );
+        assert_eq!(
+            irish_decode("O 15 34").unwrap(),
+            (315_000.0, 234_000.0, 1_000.0)
+        );
+        assert_eq!(
+            irish_decode("o1534").unwrap(),
+            (315_000.0, 234_000.0, 1_000.0)
+        );
+        assert_eq!(
+            irish_decode("N").unwrap(),
+            (200_000.0, 200_000.0, 100_000.0)
+        );
+        assert!(irish_decode("I 15 34").unwrap_err().contains("letter I"));
+        assert!(irish_decode("O 153").is_err());
+        assert!(irish_decode("O 1234567890 12").is_err());
+        assert!(irish_decode("15 34").is_err());
+        // Every square, every precision: the corner of what a reference
+        // names encodes back to the same reference.
+        for (k, letter) in IRISH_LETTERS.iter().enumerate() {
+            let (e0, n0) = ((k % 5) as f64 * 1e5, (4 - k / 5) as f64 * 1e5);
+            for figures in [2, 4, 6, 8, 10] {
+                let r = irish_encode(e0 + 12_345.678, n0 + 67_890.123, figures).unwrap();
+                assert!(r.starts_with(*letter as char), "{r}");
+                let (e, n, side) = irish_decode(&r).unwrap();
+                assert_eq!(irish_encode(e, n, figures).unwrap(), r);
+                assert!(e <= e0 + 12_345.678 && e0 + 12_345.678 < e + side, "{r}");
+                assert!(n <= n0 + 67_890.123 && n0 + 67_890.123 < n + side, "{r}");
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod bng_tests {
     use super::*;

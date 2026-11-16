@@ -3329,6 +3329,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &frames::FROM_LOCAL,
     &gridref::BNG_FORWARD,
     &gridref::BNG_INVERSE,
+    &gridref::IRISH_FORWARD,
+    &gridref::IRISH_INVERSE,
     &gridref::ITM_FORWARD,
     &gridref::ITM_INVERSE,
     &gridref::USNG_FORWARD,

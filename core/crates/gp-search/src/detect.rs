@@ -156,6 +156,45 @@ fn is_mgrs(s: &str) -> bool {
         && digits.iter().all(u8::is_ascii_digit)
 }
 
+/// The letters of the British and Irish grids: A to Z without I.
+fn grid_letter(b: u8) -> bool {
+    b.is_ascii_uppercase() && b != b'I'
+}
+
+/// A reference's figures: an even number from 2 to 10, all digits.
+fn grid_figures(b: &[u8]) -> bool {
+    (2..=10).contains(&b.len()) && b.len().is_multiple_of(2) && b.iter().all(u8::is_ascii_digit)
+}
+
+/// A British National Grid reference: two letters whose first is one of the
+/// 500 km squares that touch Great Britain (H, J, N, O, S, T), then an even
+/// number of figures, spaced or not: "TQ 30 80", "tq3080", "NN 16650 71250".
+fn is_bng(s: &str) -> bool {
+    let c: String = s
+        .chars()
+        .filter(|ch| !ch.is_whitespace())
+        .map(|ch| ch.to_ascii_uppercase())
+        .collect();
+    let b = c.as_bytes();
+    b.len() >= 4
+        && matches!(b[0], b'H' | b'J' | b'N' | b'O' | b'S' | b'T')
+        && grid_letter(b[1])
+        && grid_figures(&b[2..])
+}
+
+/// An Irish Grid reference: one letter, not I, then an even number of
+/// figures, spaced or not: "O 15 34", "J3374". A METAR altimeter group
+/// (A2992, Q1013) has the same shape and is left to its own reading.
+fn is_irish_grid(s: &str) -> bool {
+    let c: String = s
+        .chars()
+        .filter(|ch| !ch.is_whitespace())
+        .map(|ch| ch.to_ascii_uppercase())
+        .collect();
+    let b = c.as_bytes();
+    b.len() >= 3 && grid_letter(b[0]) && grid_figures(&b[1..]) && !is_altimeter(s.trim())
+}
+
 /// The common four- through ten-character Maidenhead forms. Two-character
 /// fields are valid too, but look exactly like ordinary short words, so the
 /// palette leaves those to an explicit tool search rather than guessing.
@@ -411,6 +450,22 @@ const KINDS: &[Kind] = &[
         offers: AT_POINT,
     },
     Kind {
+        kind: "bng",
+        label: "British National Grid reference",
+        matches: is_bng,
+        decoder: "geodesy.grid-ref.bng-inverse",
+        decode: reference,
+        offers: AT_POINT,
+    },
+    Kind {
+        kind: "irish-grid",
+        label: "Irish Grid reference",
+        matches: is_irish_grid,
+        decoder: "geodesy.grid-ref.irish-inverse",
+        decode: reference,
+        offers: AT_POINT,
+    },
+    Kind {
         kind: "metar",
         label: "METAR report",
         matches: is_metar,
@@ -449,6 +504,9 @@ fn code(v: &str) -> Vec<(&'static str, Json)> {
 }
 fn altimeter(v: &str) -> Vec<(&'static str, Json)> {
     vec![("altimeter", Json::str(v.to_ascii_uppercase()))]
+}
+fn reference(v: &str) -> Vec<(&'static str, Json)> {
+    vec![("reference", Json::str(v.trim()))]
 }
 fn text(v: &str) -> Vec<(&'static str, Json)> {
     vec![("text", Json::str(v))]
@@ -590,6 +648,35 @@ mod tests {
         let (id, input) = decisive("mgrs 18S UJ 23487 06483").unwrap();
         assert_eq!(id, "geodesy.grid-ref.mgrs-inverse");
         assert_eq!(input[0].1, Json::str("18S UJ 23487 06483"));
+    }
+
+    /// British and Irish grid references are recognized however they are
+    /// spaced or cased, and a near miss is not; an altimeter group stays an
+    /// altimeter group.
+    #[test]
+    fn british_and_irish_grid_references() {
+        for yes in ["TQ 30 80", "tq3080", "NN 16650 71250", "SV 9 1", "HU 45 40"] {
+            assert!(is_bng(yes), "{yes}");
+        }
+        for no in [
+            "TI 30 80",
+            "TQ 308",
+            "AB 12 34",
+            "TQ",
+            "TQ 1234567890 12",
+            "denver",
+        ] {
+            assert!(!is_bng(no), "{no}");
+        }
+        for yes in ["O 15 34", "o1534", "J 33765 73994", "N 1 3"] {
+            assert!(is_irish_grid(yes), "{yes}");
+        }
+        for no in ["I 15 34", "O 153", "A2992", "Q1013", "OO 15 34", "15 34"] {
+            assert!(!is_irish_grid(no), "{no}");
+        }
+        assert_eq!(kinds("TQ 30 80"), ["bng", "coordinates"]);
+        assert_eq!(kinds("O 15 34"), ["irish-grid", "coordinates"]);
+        assert_eq!(kinds("A2992"), ["altimeter"]);
     }
 
     #[test]

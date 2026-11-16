@@ -1013,6 +1013,13 @@
           ]
         },
         {
+          "want": "read or write an Irish Grid reference",
+          "tools": [
+            "irish-forward",
+            "irish-inverse"
+          ]
+        },
+        {
           "want": "go straight between GPS latitude and longitude and a National Grid reference",
           "tools": [
             "latlon-to-bng",

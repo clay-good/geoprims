@@ -143,6 +143,9 @@ impl<'a> QueryWord<'a> {
 }
 
 /// Match quality of query token `q` against field token `t`, out of 100.
+/// The search prepares each query word once and calls `match_word`; this is
+/// the one-off form the tests use.
+#[cfg(test)]
 fn match_score(q: &str, t: &str) -> u32 {
     match_word(&QueryWord::new(q), t)
 }

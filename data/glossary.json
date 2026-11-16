@@ -529,6 +529,8 @@
       "source": "epsg-crs-registry",
       "relatedTools": [
         "geodesy.datum.etrf",
+        "geodesy.datum.ostn15",
+        "geodesy.datum.ostn15-inverse",
         "geodesy.grid-ref.itm-inverse"
       ]
     },
@@ -712,6 +714,17 @@
       "source": "iers-conventions-2010",
       "relatedTools": [
         "time.scale.sidereal"
+      ]
+    },
+    {
+      "id": "gnss",
+      "term": "GNSS",
+      "expansion": "Global Navigation Satellite System",
+      "definition": "Any satellite positioning system, such as GPS, Galileo, GLONASS, or BeiDou, and the receivers that use them.",
+      "source": "os-transformations-osgm15",
+      "relatedTools": [
+        "geodesy.datum.ostn15",
+        "geodesy.datum.ostn15-inverse"
       ]
     },
     {
@@ -1540,6 +1553,14 @@
       "relatedTools": []
     },
     {
+      "id": "odn",
+      "term": "ODN",
+      "expansion": "Ordnance Datum Newlyn",
+      "definition": "The datum for heights above sea level on mainland Great Britain, from mean sea level at Newlyn in Cornwall. The islands have their own datums.",
+      "source": "os-transformations-osgm15",
+      "relatedTools": []
+    },
+    {
       "id": "opus",
       "term": "OPUS",
       "expansion": "Online Positioning User Service",
@@ -1560,9 +1581,18 @@
       "source": "epsg",
       "relatedTools": [
         "geodesy.datum.legacy",
+        "geodesy.datum.ostn15-inverse",
         "geodesy.grid-ref.bng-forward",
         "geodesy.grid-ref.bng-inverse"
       ]
+    },
+    {
+      "id": "osgm15",
+      "term": "OSGM15",
+      "expansion": "Ordnance Survey Geoid Model 2015",
+      "definition": "The model of the geoid that turns a GNSS height above the ellipsoid into a height above sea level on Newlyn or the island datums, in Great Britain and Ireland.",
+      "source": "os-transformations-osgm15",
+      "relatedTools": []
     },
     {
       "id": "osi",
@@ -1579,6 +1609,17 @@
       "definition": "Northern Ireland's national mapping agency, which shares the Irish Grid and Irish Transverse Mercator with OSi.",
       "source": "epsg-crs-registry",
       "relatedTools": []
+    },
+    {
+      "id": "ostn15",
+      "term": "OSTN15",
+      "expansion": "Ordnance Survey National Grid Transformation 2015",
+      "definition": "The 1 km grid of shifts that turns an ETRS89 GNSS position into OSGB36 National Grid coordinates. It is the official definition of the National Grid.",
+      "source": "os-transformations-osgm15",
+      "relatedTools": [
+        "geodesy.datum.ostn15",
+        "geodesy.datum.ostn15-inverse"
+      ]
     },
     {
       "id": "papi",

@@ -3,6 +3,16 @@
   "entries": [
     {
       "date": "2026-11-16",
+      "kind": "added",
+      "tools": [
+        "geodesy.datum.ostn15",
+        "geodesy.datum.ostn15-inverse"
+      ],
+      "vectors": [],
+      "summary": "Survey-grade British National Grid, both ways. OSTN15 is the transformation that defines the National Grid, and OSGM15 turns a GNSS height into a height above Newlyn or the island datums. The pair puts an ETRS89 position from a GNSS receiver onto the grid and the local datum, and back, on Ordnance Survey's own 1 km grid. It reproduces every result in Ordnance Survey's test files, 40 points each way, and both of its worked examples, the forward ones to the printed millimetre. The grid is a 6.1 MB download the first time either tool runs, and an offline pack. Both tools are experimental."
+    },
+    {
+      "date": "2026-11-16",
       "kind": "fixed",
       "tools": [
         "geometry.sampling.fishnet",

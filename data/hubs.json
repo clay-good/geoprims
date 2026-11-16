@@ -901,6 +901,13 @@
           ]
         },
         {
+          "want": "put a GNSS position onto the British National Grid and Newlyn heights, or back, by OSTN15 and OSGM15",
+          "tools": [
+            "ostn15",
+            "ostn15-inverse"
+          ]
+        },
+        {
           "want": "move a position between any two ITRF, WGS 84, or NAD 83 frames, with the steps and their accuracy",
           "tools": [
             "transform"

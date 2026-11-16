@@ -66,6 +66,14 @@ fn catalog_lint_examples_vectors() {
             &std::fs::read(&path).unwrap(),
         );
     }
+    gp_base::assets::put(
+        "ostn15@2016/ostn15-osgm15.grid",
+        &std::fs::read(format!(
+            "{}/../../../assets/data/ostn15/2016/ostn15-osgm15.grid",
+            env!("CARGO_MANIFEST_DIR")
+        ))
+        .unwrap(),
+    );
     let tax: Value = serde_json::from_str(&repo("data/taxonomy.json")).unwrap();
     let owned: Vec<(String, Vec<String>)> = tax["domains"]
         .as_object()

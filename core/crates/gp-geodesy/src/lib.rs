@@ -8,6 +8,7 @@ pub mod geoid;
 pub mod gridref;
 pub mod magnetic;
 pub mod methods;
+pub mod ostn15;
 pub mod pairs;
 pub mod spcs;
 pub mod spcs2022;
@@ -3284,6 +3285,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &methods::LAMBERT93_INVERSE,
     &methods::ETRS89_FORWARD,
     &methods::ETRS89_INVERSE,
+    &ostn15::OSTN15_FORWARD,
+    &ostn15::OSTN15_INVERSE,
     &pairs::LATLON_TO_BNG,
     &pairs::BNG_TO_LATLON,
     &pairs::MGA_TO_LATLON,

@@ -4336,6 +4336,26 @@
       "editionCheck": false
     },
     {
+      "id": "os-transformations-osgm15",
+      "name": "Transformations and OSGM15 User Guide",
+      "issuer": "Ordnance Survey",
+      "currentEdition": "v1.3, November 2020",
+      "currentReleaseDate": "2020-11-12",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-11-16",
+      "verificationNote": "Read from OSTN15-OSGM15-DevelopersPack.zip (sha256 67069a6d…88364d), downloaded on 2026-11-16 from the link on Ordnance Survey's OS Net for-developers page. Chapter 3 gives the record-number rule, the bilinear interpolation, the datum flag by quadrant, and the iterative inverse; Table 1 the height datum flags; annexe A the Caister Water Tower example both ways with every intermediate; annexes B and C the projection formulas. The same zip holds the native data file packed into the ostn15 asset and the 40-point test files the golden vectors come from. Both worked examples and all 80 test results are reproduced, the forward ones to the printed millimetre. The guide states OSTN15 at 0.1 m RMS against the triangulation and OSGM15's standard error as 0.01 m in Great Britain, 0.02 m in Orkney and Shetland, and 0.03 m on the Isle of Man.",
+      "freeAccessUrl": "https://www.ordnancesurvey.co.uk/documents/resources/OSTN15-OSGM15-DevelopersPack.zip",
+      "matchTerms": [
+        "Transformations and OSGM15 User Guide"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "linz-nzgd2000-deformation",
       "name": "New Zealand Geodetic Datum 2000 deformation model",
       "issuer": "Land Information New Zealand (LINZ)",

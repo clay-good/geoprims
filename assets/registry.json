@@ -329,6 +329,30 @@
       "consumers": [
         "web-map"
       ]
+    },
+    {
+      "id": "ostn15",
+      "version": "2016",
+      "title": "OSTN15 and OSGM15: the ETRS89 to OSGB36 National Grid transformation and geoid for Great Britain",
+      "issuer": "Ordnance Survey",
+      "license": "BSD (Open Source Initiative BSD Licence)",
+      "attribution": "© Copyright and database rights Ordnance Survey Limited 2016. All rights reserved.",
+      "sourceUrl": "https://www.ordnancesurvey.co.uk/documents/resources/OSTN15-OSGM15-DevelopersPack.zip",
+      "retrievedAt": "2026-11-16",
+      "files": {
+        "ostn15-osgm15.grid": {
+          "sha256": "193b03771f757a1834b52a79220f9762d605a0098b19d8f5ffc0df1849d2b017",
+          "bytes": 6138692
+        }
+      },
+      "tiling": "one file for Great Britain, 700 km by 1,250 km, far coarser than the 1° privacy floor",
+      "loadPolicy": "on-demand",
+      "offlinePack": "Transform GNSS positions to the British National Grid and ODN heights offline with OSTN15 and OSGM15.",
+      "consumers": [
+        "web-assets",
+        "mcp-server"
+      ],
+      "interpolation": "Bilinear on the native 1 km grid, with the datum flag by quadrant, as Ordnance Survey's Transformations and OSGM15 User Guide (v1.3, 2020) specifies"
     }
   ]
 }

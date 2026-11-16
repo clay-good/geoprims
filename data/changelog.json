@@ -3,6 +3,16 @@
   "entries": [
     {
       "date": "2026-11-16",
+      "kind": "added",
+      "tools": [
+        "geodesy.projection.lo-forward",
+        "geodesy.projection.lo-inverse"
+      ],
+      "vectors": [],
+      "summary": "South Africa's Lo system, both ways. South African survey diagrams, general plans, and city datasets are drawn on two-degree belts about the odd meridians from 15 to 33 degrees east, measured west and south rather than east and north. The pair converts between Y and X on a belt and a Hartebeesthoek94 latitude and longitude. It picks the belt from the longitude or takes one you name, and returns the grid convergence and the point scale factor. IOGP's own worked example is a test, and its printed westing is 1 cm off the exact projection because it uses a shorter series; the tool, PROJ, and GeographicLib agree to a micrometer. Both tools are experimental."
+    },
+    {
+      "date": "2026-11-16",
       "kind": "fixed",
       "tools": [
         "survey.curves.spiral"

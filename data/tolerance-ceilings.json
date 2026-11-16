@@ -280,6 +280,11 @@
       "tool": "survey.astro.solar-azimuth",
       "source": "USNO celnav API 4.0.1",
       "reason": "The limb correction is the sun's semidiameter over the cosine of its altitude, and the oracle is USNO's own published semidiameter and geocentric altitude for the instant. This core's semidiameter comes from VSOP87D rather than USNO's series, and the altitude it uses is its own, so the derived correction can only be matched to about a second of arc out of 1,328."
+    },
+    {
+      "tool": "geodesy.projection.lo-forward",
+      "source": "IOGP Guidance Note 7-2 (September 2019)",
+      "reason": "G7-2 prints its Lo29 example to the centimetre from the USGS transverse Mercator series truncated at the fifth power, whose westing is 1.0 cm larger than the exact projection that PROJ, GeographicLib, and this core agree on to a micrometre; the 2 cm and 1 cm tolerances cover that series difference and the printed rounding."
     }
   ]
 }

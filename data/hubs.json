@@ -1175,6 +1175,13 @@
           ]
         },
         {
+          "want": "convert South African Lo coordinates",
+          "tools": [
+            "geodesy.projection.lo-forward",
+            "geodesy.projection.lo-inverse"
+          ]
+        },
+        {
           "want": "go straight from Australian or New Zealand grid coordinates to latitude and longitude",
           "tools": [
             "geodesy.projection.mga-to-latlon",

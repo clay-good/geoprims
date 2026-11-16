@@ -887,3 +887,105 @@ fn jgd2011_refuses_a_system_outside_the_nineteen_and_flags_a_point_off_japan() {
         .collect();
     assert!(codes.contains(&"OUTSIDE_AREA_OF_USE"), "{r}");
 }
+
+#[test]
+fn lo_round_trips_every_belt_and_counts_west_and_south() {
+    // add-international-grids, geodesy/national-grids: Hartebeesthoek94 Lo15
+    // to Lo33, EPSG 2046 to 2055, Transverse Mercator (South Orientated).
+    for cm in (15..=33).step_by(2) {
+        let cm = f64::from(cm);
+        // Half a degree west of the meridian: Y counts west, so it is positive,
+        // and X counts south from the equator, so it is positive too.
+        let (lat, lon) = (-29.0, cm - 0.5);
+        let f = run(
+            "geodesy.projection.lo-forward",
+            &json!({"lat": lat, "lon": lon}),
+        );
+        assert_eq!(val(&f, "zone"), cm, "{f}");
+        let (y, x) = (val(&f, "westing"), val(&f, "southing"));
+        assert!(
+            y > 40_000.0 && y < 60_000.0,
+            "west of Lo{cm} Y is positive: {f}"
+        );
+        assert!(x > 3_200_000.0 && x < 3_220_000.0, "{f}");
+        let b = run(
+            "geodesy.projection.lo-inverse",
+            &json!({"zone": cm, "westing": format!("{y} m"), "southing": format!("{x} m")}),
+        );
+        assert!((val(&b, "lat") - lat).abs() < 1e-9, "{b}");
+        assert!((val(&b, "lon") - lon).abs() < 1e-9, "{b}");
+        assert!(
+            (val(&f, "convergence") - val(&b, "convergence")).abs() < 1e-9,
+            "{f} vs {b}"
+        );
+        // The convergence is degrees, about (lambda - lambda0) sin(phi).
+        let rough = (lon - cm) * lat.to_radians().sin();
+        assert!((val(&f, "convergence") - rough).abs() < 0.01, "{f}");
+        // Scale 1 on the meridian, so the factor is just above 1 off it.
+        let k = val(&f, "scale_factor");
+        assert!((1.0..1.0001).contains(&k), "{f}");
+        // East of the meridian the westing turns negative.
+        let e = run(
+            "geodesy.projection.lo-forward",
+            &json!({"lat": lat, "lon": cm + 0.5}),
+        );
+        assert!(
+            (val(&e, "westing") + y).abs() < 1e-6,
+            "the belt is symmetric about its meridian: {e}"
+        );
+        assert_eq!(
+            e["epsg"],
+            format!(
+                "EPSG:{} (Hartebeesthoek94 / Lo{cm})",
+                2046 + (cm as i32 - 15) / 2
+            )
+        );
+    }
+    // At the origin, the equator on the meridian, both axes are zero.
+    let o = run(
+        "geodesy.projection.lo-forward",
+        &json!({"lat": 0.0, "lon": 29.0}),
+    );
+    assert!(
+        val(&o, "westing").abs() < 1e-9 && val(&o, "southing").abs() < 1e-9,
+        "{o}"
+    );
+    assert!((val(&o, "scale_factor") - 1.0).abs() < 1e-15, "{o}");
+}
+
+#[test]
+fn lo_refuses_an_even_or_foreign_belt_and_flags_a_forced_one() {
+    // An even meridian is not a Lo belt, and the refusal names the system.
+    for zone in [28, 16, 32] {
+        let r: Value = serde_json::from_str(&REGISTRY.invoke(
+            "geodesy.projection.lo-inverse",
+            &json!({"zone": zone, "westing": "0 m", "southing": "3000000 m"}).to_string(),
+        ))
+        .unwrap();
+        assert_eq!(r["ok"], false, "Lo{zone} should be refused: {r}");
+        assert_eq!(r["error"]["code"], "OUT_OF_DOMAIN", "{r}");
+        assert_eq!(r["error"]["field"], "/zone", "{r}");
+    }
+    // A longitude outside the belts is refused rather than projected.
+    let r: Value = serde_json::from_str(&REGISTRY.invoke(
+        "geodesy.projection.lo-forward",
+        &json!({"lat": 51.5, "lon": -0.1}).to_string(),
+    ))
+    .unwrap();
+    assert_eq!(r["ok"], false, "{r}");
+    assert_eq!(r["error"]["code"], "OUT_OF_DOMAIN", "{r}");
+    // A forced neighbouring belt answers, and says so.
+    let r: Value = serde_json::from_str(&REGISTRY.invoke(
+        "geodesy.projection.lo-forward",
+        &json!({"lat": -25.7403, "lon": 28.2122, "zone": 27}).to_string(),
+    ))
+    .unwrap();
+    assert_eq!(r["ok"], true, "{r}");
+    let codes: Vec<&str> = r["meta"]["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|w| w["code"].as_str().unwrap())
+        .collect();
+    assert!(codes.contains(&"NONSTANDARD_ZONE"), "{r}");
+}

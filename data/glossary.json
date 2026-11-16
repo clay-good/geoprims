@@ -489,6 +489,8 @@
         "geodesy.datum.helmert",
         "geodesy.projection.jgd2011-forward",
         "geodesy.projection.jgd2011-inverse",
+        "geodesy.projection.lo-forward",
+        "geodesy.projection.lo-inverse",
         "geodesy.projection.mga-forward",
         "geodesy.projection.mga-inverse",
         "geodesy.projection.mga-to-latlon",

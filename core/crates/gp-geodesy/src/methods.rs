@@ -3884,3 +3884,432 @@ fn run_jgd2011_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("frame", Json::str(JGD_FRAME)),
     ]))
 }
+
+// ------------------------------------------ South Africa (Hartebeesthoek94 Lo)
+
+const G7_2_TMSO: Reference = Reference {
+    title: "Coordinate Conversions and Transformations including Formulas, IOGP Publication 373-7-2 (Guidance Note 7-2)",
+    issuer: "International Association of Oil & Gas Producers (IOGP)",
+    year: 2019,
+    edition: "Revised September 2019",
+    locator: "Section 3.2.3.3, Transverse Mercator (South Orientated), EPSG method 9808: westings and southings increase to the west and south from the origin, with the worked example for Hartebeesthoek94 / Lo29 at 25°43'55.302\"S 28°16'57.479\"E giving Y 71984.49 m, X 2847342.74 m",
+    url: "https://idms.iogp.org/Documents/474",
+};
+
+const EPSG_LO: Reference = Reference {
+    title: "EPSG Geodetic Parameter Dataset (EPSG v13.102 CRS registry)",
+    issuer: "IOGP, from the Chief Directorate: National Geo-spatial Information, South Africa",
+    year: 2026,
+    edition: "v13.102, as shipped in PROJ 9.9.0",
+    locator: "Hartebeesthoek94 / Lo15 to Lo33 as EPSG 2046 to 2055, each Transverse Mercator (South Orientated) on WGS 84 about an odd meridian from 15°E to 33°E, scale 1, no false westing or southing, axes westing (Y) and southing (X); Hartebeesthoek94 itself (EPSG 4148) with its area of use",
+    url: "https://epsg.org/crs/2053",
+};
+
+const LO_MIN: i32 = 15;
+const LO_MAX: i32 = 33;
+
+/// The Lo belt a longitude falls in: two degrees wide about each odd meridian.
+fn lo_for(lon: f64) -> i32 {
+    2 * (lon / 2.0).floor() as i32 + 1
+}
+
+/// Lo belt `cm`: transverse Mercator on WGS 84 about meridian `cm`, scale 1,
+/// origin at the equator. The south-orientated axes are the negated easting
+/// and northing.
+fn lo_grid(cm: i32) -> TmGrid {
+    let w = ellipsoid::CATALOG
+        .iter()
+        .find(|e| e.id == "wgs84")
+        .expect("the ellipsoid catalog lists wgs84");
+    TmGrid::new(w.a, w.f, 0.0, f64::from(cm), 1.0, 0.0, 0.0)
+}
+
+fn lo_epsg(cm: i32) -> String {
+    format!(
+        "EPSG:{} (Hartebeesthoek94 / Lo{cm})",
+        2046 + (cm - LO_MIN) / 2
+    )
+}
+
+fn lo_check(cm: i32, at: &str) -> Result<(), ToolError> {
+    if (LO_MIN..=LO_MAX).contains(&cm) && cm % 2 == 1 {
+        return Ok(());
+    }
+    Err(ToolError::new(
+        ErrorCode::OutOfDomain,
+        format!(
+            "Lo{cm} is not one of South Africa's belts. The Lo system runs on the odd meridians from Lo{LO_MIN} to Lo{LO_MAX}."
+        ),
+    )
+    .at(at))
+}
+
+const LO_FRAME: &str = "The coordinates are taken to be on Hartebeesthoek94, South Africa's datum since 1999: ITRF91 at epoch 1994.0 on the WGS 84 ellipsoid. A modern GNSS position has moved with the African plate since then, a few centimetres a year. Coordinates on the older Cape datum are on another ellipsoid and are not this grid.";
+
+const LO_AREA: &str = "The point is outside the area EPSG publishes for Hartebeesthoek94, South Africa, Lesotho, and Eswatini with their offshore waters, about 13 to 43 degrees east and 22 to 50 degrees south. The arithmetic still holds, but this is not South African national grid territory.";
+
+fn lo_area_warning(ctx: &mut Ctx, lat: f64, lon: f64) {
+    let inside = (-50.32..=-22.13).contains(&lat) && (13.33..=42.85).contains(&lon);
+    if !inside {
+        ctx.warnings
+            .push(Warning::new("OUTSIDE_AREA_OF_USE", LO_AREA));
+    }
+}
+
+const LO_ZONE_OUT: Field = Field::new(
+    "zone",
+    "Lo belt",
+    "The central meridian of the belt the coordinates are on, in degrees east, like 29 for Lo29",
+    Kind::Number {
+        min: LO_MIN as f64,
+        max: LO_MAX as f64,
+    },
+)
+.precision(Precision::Decimals(0));
+
+const LO_WESTING_OUT: Field = Field::new(
+    "westing",
+    "Y (westing)",
+    "Metres west of the belt's central meridian, negative to the east; South African surveys call this Y",
+    Kind::Quantity {
+        q: QT::Length,
+        unit: "m",
+    },
+)
+.precision(Precision::Decimals(3));
+
+const LO_SOUTHING_OUT: Field = Field::new(
+    "southing",
+    "X (southing)",
+    "Metres south of the equator along the belt's grid; South African surveys call this X",
+    Kind::Quantity {
+        q: QT::Length,
+        unit: "m",
+    },
+)
+.precision(Precision::Decimals(3));
+
+pub static LO_FORWARD: ToolDef = ToolDef {
+    id: "geodesy.projection.lo-forward",
+    title: "Latitude and longitude to South African Lo",
+    summary: "Converts a Hartebeesthoek94 latitude and longitude to the Y and X of South Africa's Lo system, picking the two-degree belt or taking yours, with the grid convergence and the point scale factor.",
+    aliases: &[
+        "lat long to Lo coordinates",
+        "South African Lo converter",
+        "Hartebeesthoek94 Lo29",
+        "latlon to Lo system",
+    ],
+    keywords: &[
+        "Lo",
+        "Hartebeesthoek94",
+        "South Africa",
+        "south orientated",
+        "transverse Mercator",
+        "westing",
+        "southing",
+        "EPSG 2053",
+    ],
+    inputs: &[
+        Field::new(
+            "lat",
+            "Latitude",
+            "North positive, so South Africa is negative, like -25.745500",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(9))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "East positive, like 28.188000",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(9))
+        .angle_range("[-180,180)"),
+        Field::new(
+            "zone",
+            "Force belt",
+            "Optional: an odd central meridian from 15 to 33, like 29 for Lo29, to use instead of the belt the longitude falls in",
+            Kind::Number {
+                min: LO_MIN as f64,
+                max: LO_MAX as f64,
+            },
+        ),
+    ],
+    outputs: &[
+        // The last explain step ends on the westing, which the trace gate
+        // requires to be this first output.
+        LO_WESTING_OUT,
+        LO_SOUTHING_OUT,
+        LO_ZONE_OUT,
+        MGA_CONVERGENCE,
+        MGA_SCALE,
+        MGA_EPSG_OUT,
+        MGA_FRAME_OUT,
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &[
+        "REALIZATION_ASSUMED",
+        "NONSTANDARD_ZONE",
+        "OUTSIDE_AREA_OF_USE",
+        "EXPERIMENTAL_TOOL",
+    ],
+    model: "Transverse Mercator (South Orientated), EPSG method 9808, on WGS 84 with the Lo belt's parameters (EPSG 2046 to 2055): origin on the equator and the belt's odd central meridian, scale 1, no false westing or southing, westing and southing positive to the west and south, by Karney's series",
+    accuracy: "The projection is exact to the series' nanometre across South Africa, and agrees with PROJ applying each belt's own EPSG record within a millimetre at every test place. IOGP's worked example prints a westing 1 cm larger, because its formula is a shorter series. The coordinates are taken to be on Hartebeesthoek94",
+    when_to_use: "Use this to put a latitude and longitude onto the grid South African survey diagrams, general plans, and municipal datasets are drawn in. It picks the two-degree belt from the longitude, or takes one you name when a job runs across a belt edge, and returns the grid convergence and the point scale factor beside Y and X.",
+    limitations: "Y is the westing and X the southing, both measured from the equator on the belt's central meridian: Y grows to the west and is negative east of the meridian, the reverse of an easting. The tool projects and does not transform: a Cape datum latitude and longitude is on the Clarke 1880 ellipsoid and must first be moved to Hartebeesthoek94. Heights are untouched; SAGEOID2010 is a separate asset.",
+    references: &[G7_2_TMSO, EPSG_LO],
+    examples: &[Example {
+        id: "primary",
+        title: "IOGP's Lo29 worked example",
+        source: "IOGP Guidance Note 7-2, section 3.2.3.3: 25°43'55.302\"S 28°16'57.479\"E on Hartebeesthoek94 / Lo29 gives Y 71984.49 m, X 2847342.74 m; PROJ 9.9.0 and GeographicLib both give Y 71984.480 m, X 2847342.735 m",
+        input: r#"{"lat":"25°43'55.302\"S","lon":"28°16'57.479\"E"}"#,
+    }],
+    primary_example: "primary",
+    visualization: &[Layer {
+        kind: "table-only",
+        map: &[],
+    }],
+    related: &[
+        Related {
+            id: "geodesy.projection.lo-inverse",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.projection.tm-forward",
+            reason: "parent",
+        },
+    ],
+    sentence: "That point is Y {westing}, X {southing} on Lo{zone}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_lo_forward,
+    ..ToolDef::BLANK
+};
+
+fn run_lo_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let standard = lo_for(lon);
+    let cm = match ctx.number("zone")? {
+        Some(z) => {
+            let z = z.round() as i32;
+            lo_check(z, "/zone")?;
+            if z != standard {
+                ctx.warnings.push(Warning::new(
+                    "NONSTANDARD_ZONE",
+                    format!(
+                        "The longitude {lon:.6}° falls in Lo{standard}, and the answer is on Lo{z} as asked. Coordinates on another belt are further from its central meridian, so the point scale factor is further from 1."
+                    ),
+                ));
+            }
+            z
+        }
+        None => {
+            lo_check(standard, "/lon")?;
+            standard
+        }
+    };
+    let g = lo_grid(cm).forward(lat, lon);
+    let (y, x) = (-g.e, -g.n);
+    ctx.warnings
+        .push(Warning::new("REALIZATION_ASSUMED", LO_FRAME));
+    lo_area_warning(ctx, lat, lon);
+    if ctx.explaining() {
+        ctx.step(
+            "The belt",
+            "the belts are two degrees wide, each about an odd meridian",
+            format!("{lon:.6}° east"),
+            format!("Lo{cm}, central meridian {cm}°E"),
+        );
+        ctx.step(
+            "On the grid",
+            "transverse Mercator on WGS 84, scale 1 on the central meridian, from the equator; turned to count west and south",
+            format!("{lat:.6}°, {lon:.6}°"),
+            format!(
+                "{} m",
+                gp_base::display::number(y, Precision::Decimals(3), ctx.options.format)
+            ),
+        );
+    }
+    Ok(Json::obj([
+        ("zone", Json::Num(f64::from(cm))),
+        ("westing", ctx.out("westing", meters(y))),
+        ("southing", ctx.out("southing", meters(x))),
+        ("convergence", ctx.out("convergence", deg(g.convergence))),
+        ("scale_factor", Json::Num(g.k)),
+        ("epsg", Json::str(lo_epsg(cm))),
+        ("frame", Json::str(LO_FRAME)),
+    ]))
+}
+
+pub static LO_INVERSE: ToolDef = ToolDef {
+    id: "geodesy.projection.lo-inverse",
+    title: "South African Lo to latitude and longitude",
+    summary: "Converts the Y and X of a South African Lo belt back to a Hartebeesthoek94 latitude and longitude, with the grid convergence and the point scale factor there.",
+    aliases: &[
+        "Lo to lat long",
+        "South African Lo coordinates to latitude longitude",
+        "read Lo westing southing",
+        "Hartebeesthoek94 Lo to coordinates",
+    ],
+    keywords: &[
+        "Lo",
+        "Hartebeesthoek94",
+        "South Africa",
+        "south orientated",
+        "transverse Mercator",
+        "inverse",
+        "EPSG 2053",
+    ],
+    inputs: &[
+        Field::new(
+            "zone",
+            "Lo belt",
+            "The belt's central meridian, an odd number from 15 to 33, like 29 for Lo29",
+            Kind::Number {
+                min: LO_MIN as f64,
+                max: LO_MAX as f64,
+            },
+        )
+        .required()
+        .core(),
+        length(
+            "westing",
+            "Y (westing)",
+            "Metres west of the belt's central meridian, negative to the east, like 71984.480 m",
+        )
+        .required()
+        .core(),
+        length(
+            "southing",
+            "X (southing)",
+            "Metres south of the equator, like 2847342.735 m",
+        )
+        .required()
+        .core(),
+    ],
+    outputs: &[
+        Field::new(
+            "lat",
+            "Latitude",
+            "On Hartebeesthoek94, north positive",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "On Hartebeesthoek94, east positive",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .angle_range("[-180,180)"),
+        MGA_CONVERGENCE,
+        MGA_SCALE,
+        MGA_EPSG_OUT,
+        MGA_FRAME_OUT,
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &[
+        "REALIZATION_ASSUMED",
+        "OUTSIDE_AREA_OF_USE",
+        "EXPERIMENTAL_TOOL",
+    ],
+    model: "The inverse Transverse Mercator (South Orientated), EPSG method 9808, on WGS 84 with the Lo belt's parameters (origin on the equator and the belt's central meridian, scale 1, no false westing or southing), by Karney's series",
+    accuracy: "The inverse is the forward's own inverse rather than a separate approximation, and the round trip returns every test place to within a nanodegree. The answer is on Hartebeesthoek94",
+    when_to_use: "Use this to read Y and X off a South African survey diagram, general plan, or municipal dataset and get the latitude and longitude a phone or a web map wants. Y is the westing and X the southing, so a point east of the belt's meridian has a negative Y. The coordinates do not carry their belt, so it is asked for.",
+    limitations: "Y and X without their belt are ambiguous: every belt counts from its own meridian, so the same numbers name a place in each, two degrees of longitude apart. Coordinates on the older Cape datum are on the Clarke 1880 ellipsoid and are not this grid. Heights are untouched.",
+    references: &[G7_2_TMSO, EPSG_LO],
+    examples: &[Example {
+        id: "primary",
+        title: "IOGP's Lo29 worked example",
+        source: "IOGP Guidance Note 7-2, section 3.2.3.3, reverse: Lo29, Y 71984.49 m, X 2847342.74 m gives 25°43'55.302\"S 28°16'57.479\"E; here at PROJ's Y 71984.4797 m, X 2847342.7352 m",
+        input: r#"{"zone":29,"westing":"71984.4797 m","southing":"2847342.7352 m"}"#,
+    }],
+    primary_example: "primary",
+    visualization: INVERSE_LAYER,
+    related: &[
+        Related {
+            id: "geodesy.projection.lo-forward",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.projection.tm-inverse",
+            reason: "parent",
+        },
+    ],
+    sentence: "That is {lat}, {lon}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_lo_inverse,
+    ..ToolDef::BLANK
+};
+
+fn run_lo_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let cm = ctx
+        .number("zone")?
+        .ok_or_else(|| ToolError::invalid("/zone", "Name the Lo belt, 15 to 33."))?
+        .round() as i32;
+    lo_check(cm, "/zone")?;
+    let m = unit(QT::Length, "m");
+    let y = ctx.req_quantity("westing")?.to(m);
+    let x = ctx.req_quantity("southing")?.to(m);
+    if !y.is_finite() || !x.is_finite() {
+        return Err(ToolError::invalid(
+            "/westing",
+            "Y and X are metres on a Lo belt.",
+        ));
+    }
+    let grid = lo_grid(cm);
+    let (lat, lon) = grid.inverse(-y, -x);
+    if !lat.is_finite() || !lon.is_finite() || !(-90.0..=90.0).contains(&lat) {
+        return Err(ToolError::invalid(
+            "/southing",
+            "That Y and X is not a place on the belt.",
+        ));
+    }
+    let back = grid.forward(lat, lon);
+    ctx.warnings
+        .push(Warning::new("REALIZATION_ASSUMED", LO_FRAME));
+    lo_area_warning(ctx, lat, lon);
+    if ctx.explaining() {
+        ctx.step(
+            "Turned back",
+            "the Lo axes count west and south, so the easting and northing are their negatives",
+            format!("Y {y:.3} m, X {x:.3} m"),
+            format!("E {:.3} m, N {:.3} m", -y, -x),
+        );
+        ctx.step(
+            "Off the grid",
+            "the inverse transverse Mercator on WGS 84, scale 1 on the belt's central meridian",
+            format!("Lo{cm}"),
+            format!(
+                "{}°",
+                gp_base::display::number(lat, Precision::Decimals(9), ctx.options.format)
+            ),
+        );
+    }
+    Ok(Json::obj([
+        ("lat", ctx.out("lat", deg(lat))),
+        ("lon", ctx.out("lon", deg(lon))),
+        ("convergence", ctx.out("convergence", deg(back.convergence))),
+        ("scale_factor", Json::Num(back.k)),
+        ("epsg", Json::str(lo_epsg(cm))),
+        ("frame", Json::str(LO_FRAME)),
+    ]))
+}

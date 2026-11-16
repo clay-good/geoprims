@@ -17,7 +17,7 @@ use gp_base::units::{self, Quantity as QT, Unit};
 use gp_geo::ellipsoid::{self, Ellipsoid};
 use gp_geo::point;
 use gp_geo::proj::{
-    self, Albers, Azimuthal, AzimuthalProj, EquidistantCylindrical, Grid, Hotine, Lcc,
+    self, Albers, Azimuthal, AzimuthalProj, EquidistantCylindrical, Grid, Hotine, Laea, Lcc,
     Orthographic, PolarStereo, TmGrid, WebMercator,
 };
 use gp_geo::tmexact::TmExactGrid;
@@ -4718,5 +4718,420 @@ fn run_lambert93_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("scale_factor", Json::Num(back.k)),
         ("epsg", Json::str(l93_epsg(zone))),
         ("frame", Json::str(L93_FRAME)),
+    ]))
+}
+
+// ------------------------------------------- Europe (ETRS89-LAEA, ETRS89-LCC)
+
+const G7_2_LAEA: Reference = Reference {
+    title: "Coordinate Conversions and Transformations including Formulas, IOGP Publication 373-7-2 (Guidance Note 7-2)",
+    issuer: "International Association of Oil & Gas Producers (IOGP)",
+    year: 2019,
+    edition: "Revised September 2019",
+    locator: "Section 3.3.2, Lambert Azimuthal Equal Area, EPSG method 9820, oblique aspect, with the worked example for ETRS89 / ETRS-LAEA at 50°N 5°E giving E 3962799.45 m, N 2999718.85 m; section 3.2.1.1, Lambert Conic Conformal (2SP)",
+    url: "https://idms.iogp.org/Documents/474",
+};
+
+const EPSG_ETRS: Reference = Reference {
+    title: "EPSG Geodetic Parameter Dataset (EPSG v13.102 CRS registry)",
+    issuer: "IOGP, from EUREF and the European Commission",
+    year: 2026,
+    edition: "v13.102, as shipped in PROJ 9.9.0",
+    locator: "ETRS89-extended / LAEA Europe (EPSG 3035): Lambert Azimuthal Equal Area on GRS 1980, origin 52°N 10°E, false easting 4,321,000 m, false northing 3,210,000 m; ETRS89-extended / LCC Europe (EPSG 3034): Lambert Conic Conformal (2SP), origin 52°N 10°E, standard parallels 35°N and 65°N, false easting 4,000,000 m, false northing 2,800,000 m; both with Europe's area of use",
+    url: "https://epsg.org/crs/3035",
+};
+
+const EU_1089: Reference = Reference {
+    title: "Commission Regulation (EU) No 1089/2010 implementing Directive 2007/2/EC (INSPIRE) as regards interoperability of spatial data sets and services",
+    issuer: "European Commission",
+    year: 2010,
+    edition: "Of 23 November 2010, as published on EUR-Lex, read 2026-11-16",
+    locator: "Annex II, section 2.2.1, Grid for pan-European spatial analysis and reporting: the grid is based on ETRS89 Lambert Azimuthal Equal Area with the centre of the projection at 52°N 10°E, false easting 4 321 000 m and false northing 3 210 000 m, designated Grid_ETRS89-LAEA, with cells of 1 m to 100 000 m referenced by their lower left corner",
+    url: "https://eur-lex.europa.eu/eli/reg/2010/1089/oj/eng",
+};
+
+const ETRS_FRAME: &str = "The coordinates are taken to be on ETRS89, the European frame fixed to the stable part of the Eurasian plate. A GNSS position on WGS 84 or ITRF differs from ETRS89 by about 84 cm at Dublin in 2026, growing by about 2.3 cm a year; geodesy.datum.etrf makes that step. For statistics and a European map the difference rarely matters.";
+
+const ETRS_AREA: &str = "The point is outside the area EPSG publishes for these grids, Europe from about 36°W to 45°E and 25°N to 85°N. The arithmetic still holds, but the distortion grows quickly away from Europe.";
+
+/// LAEA (true) or LCC (false).
+fn etrs_which(ctx: &Ctx) -> Result<bool, ToolError> {
+    Ok(ctx.choice("grid")? != Some("LCC Europe"))
+}
+
+fn etrs_laea() -> Laea {
+    let g = crate::gridref::grs80();
+    Laea::new(g.a, g.f, 52.0, 10.0, 4_321_000.0, 3_210_000.0)
+}
+
+fn etrs_lcc() -> Lcc {
+    let g = crate::gridref::grs80();
+    Lcc::two_sp(g.a, g.f, 52.0, 10.0, 35.0, 65.0, 4_000_000.0, 2_800_000.0)
+}
+
+fn etrs_name(laea: bool) -> &'static str {
+    if laea { "LAEA Europe" } else { "LCC Europe" }
+}
+
+fn etrs_epsg(laea: bool) -> &'static str {
+    if laea {
+        "EPSG:3035 (ETRS89-extended / LAEA Europe)"
+    } else {
+        "EPSG:3034 (ETRS89-extended / LCC Europe)"
+    }
+}
+
+fn etrs_area_warning(ctx: &mut Ctx, lat: f64, lon: f64) {
+    if !((24.6..=84.73).contains(&lat) && (-35.58..=44.83).contains(&lon)) {
+        ctx.warnings
+            .push(Warning::new("OUTSIDE_AREA_OF_USE", ETRS_AREA));
+    }
+}
+
+const ETRS_GRID_IN: Field = Field::new(
+    "grid",
+    "Grid",
+    "LAEA Europe, the equal-area grid of European statistics and the INSPIRE grids, or LCC Europe, the conformal one for maps; the default is LAEA Europe",
+    Kind::Choice(&["LAEA Europe", "LCC Europe"]),
+);
+
+const ETRS_H: Field = Field::new(
+    "scale_meridian",
+    "Scale along the meridian",
+    "Grid distance over ground distance north and south at the point",
+    Kind::Number {
+        min: 0.0,
+        max: 10.0,
+    },
+)
+.precision(Precision::Decimals(9));
+
+const ETRS_K: Field = Field::new(
+    "scale_parallel",
+    "Scale along the parallel",
+    "Grid distance over ground distance east and west at the point; on LAEA it is the reciprocal of the meridian scale, near enough, so areas are true",
+    Kind::Number { min: 0.0, max: 10.0 },
+)
+.precision(Precision::Decimals(9));
+
+pub static ETRS89_FORWARD: ToolDef = ToolDef {
+    id: "geodesy.projection.etrs89-forward",
+    title: "Latitude and longitude to LAEA Europe",
+    summary: "Converts an ETRS89 latitude and longitude to the pan-European grids: LAEA Europe (EPSG 3035), the equal-area grid of European statistics and the INSPIRE grid cells, or LCC Europe (EPSG 3034) for conformal maps, with the convergence and the scales.",
+    aliases: &[
+        "lat long to EPSG 3035",
+        "LAEA Europe converter",
+        "ETRS89 LAEA coordinates",
+        "INSPIRE grid coordinates",
+        "lat long to LCC Europe",
+    ],
+    keywords: &[
+        "ETRS89",
+        "LAEA",
+        "EPSG 3035",
+        "EPSG 3034",
+        "Europe",
+        "equal area",
+        "INSPIRE",
+        "Eurostat",
+    ],
+    inputs: &[
+        Field::new(
+            "lat",
+            "Latitude",
+            "North positive, like 50.0",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(9))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "East positive, so west of Greenwich is negative, like 5.0",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(9))
+        .angle_range("[-180,180)"),
+        ETRS_GRID_IN,
+    ],
+    outputs: &[
+        // The last explain step ends on the easting, which the trace gate
+        // requires to be this first output.
+        MGA_EASTING_OUT,
+        MGA_NORTHING_OUT,
+        L93_GRID_OUT,
+        MGA_CONVERGENCE,
+        ETRS_H,
+        ETRS_K,
+        MGA_EPSG_OUT,
+        MGA_FRAME_OUT,
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &[
+        "REALIZATION_ASSUMED",
+        "OUTSIDE_AREA_OF_USE",
+        "EXPERIMENTAL_TOOL",
+    ],
+    model: "LAEA Europe: Lambert Azimuthal Equal Area (EPSG method 9820), oblique ellipsoidal aspect on GRS 80, origin 52°N 10°E, false easting 4,321,000 m and false northing 3,210,000 m, by Guidance Note 7-2's formulas. LCC Europe: Lambert Conic Conformal (2SP, EPSG 9802), origin 52°N 10°E, standard parallels 35°N and 65°N, false easting 4,000,000 m and false northing 2,800,000 m, in closed form. The convergence and the scales of LAEA are measured from the projection itself over 100 m chords",
+    accuracy: "Both grids are closed form and agree with PROJ applying their EPSG records within a millimetre at every test place, and LAEA Europe reproduces Guidance Note 7-2's worked example to the centimetre it prints. The convergence and scales agree with PROJ's to 1e-8. The coordinates are taken to be on ETRS89",
+    when_to_use: "Use LAEA Europe to place a point in the grid of European statistics: Eurostat's population grid, the INSPIRE 1 km and 10 km grid cells, and the European Environment Agency's reference grid are all squares in it, because areas are true. Use LCC Europe for a conformal map of the continent, where shapes and angles are true over small areas.",
+    limitations: "LAEA keeps areas true and pays in shape: away from 52°N 10°E the meridian and parallel scales part, by up to about 2 percent at the edges of Europe, so a ground distance on it needs both scales and a direction. Neither grid is for surveying: a national grid is. The coordinates are taken to be on ETRS89; a WGS 84 or ITRF position differs from it by about 84 cm at Dublin in 2026. Heights are untouched.",
+    references: &[G7_2_LAEA, EPSG_ETRS, EU_1089],
+    examples: &[Example {
+        id: "primary",
+        title: "IOGP's LAEA Europe worked example",
+        source: "IOGP Guidance Note 7-2, section 3.3.2: 50°N 5°E on ETRS89 / ETRS-LAEA gives E 3962799.45 m, N 2999718.85 m; PROJ 9.9.0 gives the same to the millimetre",
+        input: r#"{"lat":50,"lon":5}"#,
+    }],
+    primary_example: "primary",
+    visualization: FORWARD_LAYER,
+    related: &[
+        Related {
+            id: "geodesy.projection.etrs89-inverse",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.datum.etrf",
+            reason: "next",
+        },
+        Related {
+            id: "geodesy.projection.lcc-forward",
+            reason: "parent",
+        },
+    ],
+    sentence: "That point is E {easting}, N {northing} on {grid}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_etrs89_forward,
+    ..ToolDef::BLANK
+};
+
+fn run_etrs89_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let laea = etrs_which(ctx)?;
+    let g = if laea {
+        etrs_laea().forward(lat, lon)
+    } else {
+        if lat <= -90.0 {
+            return Err(ToolError::new(
+                ErrorCode::OutOfDomain,
+                "The cone opens toward the South Pole, which is at infinity on LCC Europe.",
+            )
+            .at("/lat"));
+        }
+        etrs_lcc().forward(lat, lon)
+    };
+    if !g.e.is_finite() || !g.n.is_finite() {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "That point is the far side of the Earth from 52°N 10°E, which LAEA Europe spreads into a circle rather than a point.",
+        )
+        .at("/lat"));
+    }
+    ctx.warnings
+        .push(Warning::new("REALIZATION_ASSUMED", ETRS_FRAME));
+    etrs_area_warning(ctx, lat, lon);
+    let name = etrs_name(laea);
+    if ctx.explaining() {
+        ctx.step(
+            "The grid",
+            if laea {
+                "Lambert azimuthal equal area on GRS 80, centred on 52°N 10°E"
+            } else {
+                "Lambert conic conformal on GRS 80, standard parallels 35°N and 65°N"
+            },
+            name.to_string(),
+            etrs_epsg(laea).to_string(),
+        );
+        ctx.step(
+            "On the grid",
+            "the projection, then the false origin added",
+            format!("{lat:.6}°, {lon:.6}°"),
+            format!(
+                "{} m",
+                gp_base::display::number(g.e, Precision::Decimals(3), ctx.options.format)
+            ),
+        );
+    }
+    Ok(Json::obj([
+        ("easting", ctx.out("easting", meters(g.e))),
+        ("northing", ctx.out("northing", meters(g.n))),
+        ("grid", Json::str(name)),
+        ("convergence", ctx.out("convergence", deg(g.convergence))),
+        ("scale_meridian", Json::Num(g.h)),
+        ("scale_parallel", Json::Num(g.k)),
+        ("epsg", Json::str(etrs_epsg(laea))),
+        ("frame", Json::str(ETRS_FRAME)),
+    ]))
+}
+
+pub static ETRS89_INVERSE: ToolDef = ToolDef {
+    id: "geodesy.projection.etrs89-inverse",
+    title: "LAEA Europe to latitude and longitude",
+    summary: "Converts an easting and northing on LAEA Europe (EPSG 3035) or LCC Europe (EPSG 3034) back to an ETRS89 latitude and longitude, with the convergence and the scales there.",
+    aliases: &[
+        "EPSG 3035 to lat long",
+        "LAEA Europe to latitude longitude",
+        "INSPIRE grid cell to lat long",
+        "LCC Europe to lat long",
+    ],
+    keywords: &[
+        "ETRS89",
+        "LAEA",
+        "EPSG 3035",
+        "EPSG 3034",
+        "Europe",
+        "inverse",
+        "INSPIRE",
+        "Eurostat",
+    ],
+    inputs: &[
+        length(
+            "easting",
+            "Easting",
+            "Metres on the grid, with its false easting, like 3962799.45 m",
+        )
+        .required()
+        .core(),
+        length(
+            "northing",
+            "Northing",
+            "Metres on the grid, with its false northing, like 2999718.85 m",
+        )
+        .required()
+        .core(),
+        ETRS_GRID_IN,
+    ],
+    outputs: &[
+        Field::new(
+            "lat",
+            "Latitude",
+            "On ETRS89, north positive",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "On ETRS89, east positive",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .angle_range("[-180,180)"),
+        L93_GRID_OUT,
+        MGA_CONVERGENCE,
+        ETRS_H,
+        ETRS_K,
+        MGA_EPSG_OUT,
+        MGA_FRAME_OUT,
+    ],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &[
+        "REALIZATION_ASSUMED",
+        "OUTSIDE_AREA_OF_USE",
+        "EXPERIMENTAL_TOOL",
+    ],
+    model: "The inverse of LAEA Europe (EPSG 3035) or LCC Europe (EPSG 3034) on GRS 80; the LAEA latitude is recovered from the authalic latitude by Newton's method rather than Guidance Note 7-2's series, which is truncated near a centimetre",
+    accuracy: "The round trip returns every test place to within a nanodegree, and the answer agrees with PROJ applying the grid's EPSG record. The answer is on ETRS89",
+    when_to_use: "Use this to read a coordinate off a European statistical grid, an INSPIRE grid cell's corner, or a Eurostat or European Environment Agency dataset, and get the latitude and longitude a web map wants. LAEA Europe is the default; LCC Europe is named where a dataset uses it.",
+    limitations: "The two grids use different false origins, but their numbers overlap in range, so read the grid off the dataset rather than guessing it. A point beyond the circle LAEA Europe maps the far side of the Earth to is refused. The answer is on ETRS89; heights are untouched.",
+    references: &[G7_2_LAEA, EPSG_ETRS, EU_1089],
+    examples: &[Example {
+        id: "primary",
+        title: "IOGP's LAEA Europe worked example",
+        source: "IOGP Guidance Note 7-2, section 3.3.2, reverse: E 3962799.45 m, N 2999718.85 m on ETRS89 / ETRS-LAEA gives 50°N 5°E; here at PROJ's E 3962799.4510 m, N 2999718.8532 m",
+        input: r#"{"easting":"3962799.4510 m","northing":"2999718.8532 m"}"#,
+    }],
+    primary_example: "primary",
+    visualization: INVERSE_LAYER,
+    related: &[
+        Related {
+            id: "geodesy.projection.etrs89-forward",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.projection.lcc-inverse",
+            reason: "parent",
+        },
+    ],
+    sentence: "That is {lat}, {lon}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_etrs89_inverse,
+    ..ToolDef::BLANK
+};
+
+fn run_etrs89_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let laea = etrs_which(ctx)?;
+    let (e, n) = grid_in(ctx)?;
+    if !e.is_finite() || !n.is_finite() {
+        return Err(ToolError::invalid(
+            "/easting",
+            "The easting and northing are metres on the grid.",
+        ));
+    }
+    let off = || {
+        ToolError::invalid(
+            "/northing",
+            "That easting and northing is not a place on the grid: it is beyond the circle the far side of the Earth maps to.",
+        )
+    };
+    let (lat, lon, back) = if laea {
+        let p = etrs_laea();
+        let (lat, lon) = p.inverse(e, n).ok_or_else(off)?;
+        (lat, lon, p.forward(lat, lon))
+    } else {
+        let p = etrs_lcc();
+        let (lat, lon) = p.inverse(e, n);
+        (lat, lon, p.forward(lat, lon))
+    };
+    if !lat.is_finite() || !lon.is_finite() || !(-90.0..=90.0).contains(&lat) {
+        return Err(off());
+    }
+    ctx.warnings
+        .push(Warning::new("REALIZATION_ASSUMED", ETRS_FRAME));
+    etrs_area_warning(ctx, lat, lon);
+    let name = etrs_name(laea);
+    if ctx.explaining() {
+        ctx.step(
+            "The grid",
+            "LAEA Europe or LCC Europe, both on GRS 80 about 52°N 10°E",
+            name.to_string(),
+            etrs_epsg(laea).to_string(),
+        );
+        ctx.step(
+            "Off the grid",
+            "the false origin taken off, then the inverse projection",
+            format!("E {e:.3} m, N {n:.3} m"),
+            format!(
+                "{}°",
+                gp_base::display::number(lat, Precision::Decimals(9), ctx.options.format)
+            ),
+        );
+    }
+    Ok(Json::obj([
+        ("lat", ctx.out("lat", deg(lat))),
+        ("lon", ctx.out("lon", deg(lon))),
+        ("grid", Json::str(name)),
+        ("convergence", ctx.out("convergence", deg(back.convergence))),
+        ("scale_meridian", Json::Num(back.h)),
+        ("scale_parallel", Json::Num(back.k)),
+        ("epsg", Json::str(etrs_epsg(laea))),
+        ("frame", Json::str(ETRS_FRAME)),
     ]))
 }

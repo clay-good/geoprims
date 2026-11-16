@@ -1078,3 +1078,65 @@ fn lambert93_flags_a_point_outside_its_grid() {
     assert_eq!(r["ok"], false, "{r}");
     assert_eq!(r["error"]["code"], "OUT_OF_DOMAIN", "{r}");
 }
+
+#[test]
+fn etrs89_grids_round_trip_and_pin_their_origins() {
+    // add-international-grids, geodesy/national-grids: LAEA Europe (EPSG
+    // 3035) and LCC Europe (EPSG 3034), both about 52°N 10°E on GRS 80.
+    for (grid, fe, fn_) in [
+        ("LAEA Europe", 4_321_000.0, 3_210_000.0),
+        ("LCC Europe", 4_000_000.0, 2_800_000.0),
+    ] {
+        let o = run(
+            "geodesy.projection.etrs89-forward",
+            &json!({"lat": 52.0, "lon": 10.0, "grid": grid}),
+        );
+        assert!((val(&o, "easting") - fe).abs() < 1e-6, "{grid}: {o}");
+        assert!((val(&o, "northing") - fn_).abs() < 1e-6, "{grid}: {o}");
+        assert!(val(&o, "convergence").abs() < 1e-9, "{grid}: {o}");
+        for (lat, lon) in [(38.7, -9.1), (64.1, -21.9), (35.2, 33.4), (78.2, 15.6)] {
+            let f = run(
+                "geodesy.projection.etrs89-forward",
+                &json!({"lat": lat, "lon": lon, "grid": grid}),
+            );
+            let (e, n) = (val(&f, "easting"), val(&f, "northing"));
+            let b = run(
+                "geodesy.projection.etrs89-inverse",
+                &json!({"easting": format!("{e} m"), "northing": format!("{n} m"), "grid": grid}),
+            );
+            assert!((val(&b, "lat") - lat).abs() < 1e-9, "{grid}: {b}");
+            assert!((val(&b, "lon") - lon).abs() < 1e-9, "{grid}: {b}");
+            let (h, k) = (val(&f, "scale_meridian"), val(&f, "scale_parallel"));
+            if grid == "LCC Europe" {
+                // Conformal: the two scales are one.
+                assert!((h - k).abs() < 1e-12, "{f}");
+            } else {
+                // Equal area: one scale grows as the other shrinks, and away
+                // from the origin they part, but by no more than a few percent.
+                assert!((h - 1.0) * (k - 1.0) < 0.0, "{f}");
+                assert!((h - 1.0).abs() < 0.03 && (k - 1.0).abs() < 0.03, "{f}");
+            }
+        }
+    }
+    // LAEA Europe is the default, and the far side of the Earth from its
+    // origin is a circle on the grid, not a point: refused.
+    let d = run(
+        "geodesy.projection.etrs89-forward",
+        &json!({"lat": 50, "lon": 5}),
+    );
+    assert_eq!(d["epsg"], "EPSG:3035 (ETRS89-extended / LAEA Europe)");
+    let r: Value = serde_json::from_str(&REGISTRY.invoke(
+        "geodesy.projection.etrs89-forward",
+        &json!({"lat": -52.0, "lon": -170.0}).to_string(),
+    ))
+    .unwrap();
+    assert_eq!(r["ok"], false, "{r}");
+    assert_eq!(r["error"]["code"], "OUT_OF_DOMAIN", "{r}");
+    let r: Value = serde_json::from_str(&REGISTRY.invoke(
+        "geodesy.projection.etrs89-inverse",
+        &json!({"easting": "40000000 m", "northing": "3210000 m"}).to_string(),
+    ))
+    .unwrap();
+    assert_eq!(r["ok"], false, "{r}");
+    assert_eq!(r["error"]["field"], "/northing", "{r}");
+}

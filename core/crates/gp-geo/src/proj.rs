@@ -3,7 +3,8 @@
 //! following IOGP Guidance Note 7-2: Lambert Conic Conformal 1SP and 2SP
 //! (EPSG 9801, 9802), Albers Equal Area (9822), Polar Stereographic variants
 //! A and B (9810, 9829), Popular Visualisation Pseudo Mercator, the Web
-//! Mercator of EPSG:3857 (1024), and Equidistant Cylindrical (1028).
+//! Mercator of EPSG:3857 (1024), Equidistant Cylindrical (1028), and Lambert
+//! Azimuthal Equal Area (9820).
 //!
 //! Latitudes that Guidance Note 7-2 recovers with truncated series are solved
 //! here to convergence instead: φ from the isometric t by fixed-point
@@ -362,6 +363,133 @@ fn albers_q(phi: f64, e2: f64, e: f64) -> f64 {
         return 2.0 * s;
     }
     (1.0 - e2) * (s / (1.0 - e2 * s * s) - log((1.0 - e * s) / (1.0 + e * s)) / (2.0 * e))
+}
+
+/// Lambert Azimuthal Equal Area, oblique ellipsoidal aspect (EPSG 9820),
+/// following Guidance Note 7-2 section 3.3.2 forward. The inverse recovers φ
+/// from the authalic q by Newton's method, as Albers does, rather than with
+/// the note's series in e⁶, whose truncation is near a centimetre.
+pub struct Laea {
+    e2: f64,
+    e: f64,
+    qp: f64,
+    rq: f64,
+    d: f64,
+    sb0: f64,
+    cb0: f64,
+    lon0: f64,
+    fe: f64,
+    fn_: f64,
+    geod: Geodesic,
+}
+
+impl Laea {
+    pub fn new(a: f64, f: f64, lat0: f64, lon0: f64, fe: f64, fn_: f64) -> Laea {
+        let (e2, e) = (f * (2.0 - f), sqrt(f * (2.0 - f)));
+        let qp = albers_q(FRAC_PI_2, e2, e);
+        let p0 = lat0.to_radians();
+        let b0 = asin((albers_q(p0, e2, e) / qp).clamp(-1.0, 1.0));
+        let rq = a * sqrt(qp / 2.0);
+        let d = a * m_of(p0, e2) / (rq * cos(b0));
+        Laea {
+            e2,
+            e,
+            qp,
+            rq,
+            d,
+            sb0: sin(b0),
+            cb0: cos(b0),
+            lon0,
+            fe,
+            fn_,
+            geod: Geodesic::new(a, f),
+        }
+    }
+
+    /// Easting and northing, or infinities at the origin's antipode, which
+    /// the projection sends to a circle rather than a point.
+    fn en(&self, lat: f64, lon: f64) -> (f64, f64) {
+        let beta = asin((albers_q(lat.to_radians(), self.e2, self.e) / self.qp).clamp(-1.0, 1.0));
+        let (sb, cb) = (sin(beta), cos(beta));
+        let dl = dlon(lon, self.lon0).to_radians();
+        let den = 1.0 + self.sb0 * sb + self.cb0 * cb * cos(dl);
+        if den <= 1e-15 {
+            return (f64::INFINITY, f64::INFINITY);
+        }
+        let b = self.rq * sqrt(2.0 / den);
+        (
+            self.fe + b * self.d * cb * sin(dl),
+            self.fn_ + (b / self.d) * (self.cb0 * sb - self.sb0 * cb * cos(dl)),
+        )
+    }
+
+    pub fn forward(&self, lat: f64, lon: f64) -> Grid {
+        let (e, n) = self.en(lat, lon);
+        if !e.is_finite() {
+            return Grid {
+                e,
+                n,
+                convergence: 0.0,
+                h: f64::INFINITY,
+                k: 0.0,
+            };
+        }
+        let (convergence, h, k) = factors(|la, lo| self.en(la, lo), &self.geod, lat, lon);
+        Grid {
+            e,
+            n,
+            convergence,
+            h,
+            k,
+        }
+    }
+
+    /// Latitude and longitude, or None beyond the circle the antipode maps
+    /// to, which no point on the ellipsoid reaches.
+    pub fn inverse(&self, x: f64, y: f64) -> Option<(f64, f64)> {
+        let (dx, dy) = ((x - self.fe) / self.d, self.d * (y - self.fn_));
+        let rho = dx.hypot(dy);
+        if rho == 0.0 {
+            let b0 = atan2(self.sb0, self.cb0);
+            let q = self.qp * sin(b0);
+            return Some((
+                phi_of_q(q, self.qp, self.e2, self.e).to_degrees(),
+                self.lon0,
+            ));
+        }
+        let s = rho / (2.0 * self.rq);
+        if s > 1.0 + 1e-12 {
+            return None;
+        }
+        let c = 2.0 * asin(s.min(1.0));
+        let (sc, cc) = (sin(c), cos(c));
+        let sbeta = (cc * self.sb0 + dy * sc * self.cb0 / rho).clamp(-1.0, 1.0);
+        let lam = atan2(dx * sc, rho * self.cb0 * cc - dy * self.sb0 * sc);
+        let phi = phi_of_q(self.qp * sbeta, self.qp, self.e2, self.e);
+        Some((phi.to_degrees(), wrap(lam.to_degrees() + self.lon0)))
+    }
+}
+
+/// φ from q by Newton's method on q(φ), started from the authalic latitude.
+fn phi_of_q(q: f64, qp: f64, e2: f64, e: f64) -> f64 {
+    if q.abs() >= qp {
+        return FRAC_PI_2.copysign(q);
+    }
+    let mut phi = asin(q / qp);
+    for _ in 0..40 {
+        let (s, c) = (sin(phi), cos(phi));
+        let w = 1.0 - e2 * s * s;
+        let dq = 2.0 * (1.0 - e2) * c / (w * w);
+        if dq <= 0.0 {
+            break;
+        }
+        let step = (q - albers_q(phi, e2, e)) / dq;
+        phi = (phi + step).clamp(-FRAC_PI_2, FRAC_PI_2);
+        if step.abs() < 1e-15 {
+            break;
+        }
+    }
+    phi
 }
 
 /// Polar Stereographic, variant A (scale at the pole, EPSG 9810) or B
@@ -988,6 +1116,39 @@ mod tests {
 
     const A: f64 = 6_378_137.0;
     const F: f64 = 1.0 / 298.257_223_563;
+
+    /// Guidance Note 7-2 section 3.3.2: ETRS89 / ETRS-LAEA, 50°N 5°E gives
+    /// E 3962799.45 m N 2999718.85 m, and back; and the inverse closes.
+    #[test]
+    fn laea_guidance_note_example_and_round_trip() {
+        let g = 1.0 / 298.257_222_101;
+        let l = Laea::new(A, g, 52.0, 10.0, 4_321_000.0, 3_210_000.0);
+        let p = l.forward(50.0, 5.0);
+        assert!((p.e - 3_962_799.45).abs() < 0.005, "{p:?}");
+        assert!((p.n - 2_999_718.85).abs() < 0.005, "{p:?}");
+        let (lat, lon) = l.inverse(p.e, p.n).expect("on the map");
+        assert!(
+            (lat - 50.0).abs() < 1e-11 && (lon - 5.0).abs() < 1e-11,
+            "{lat} {lon}"
+        );
+        for (la, lo) in [
+            (52.0, 10.0),
+            (35.0, -10.0),
+            (71.0, 30.0),
+            (-30.0, 100.0),
+            (0.0, -60.0),
+        ] {
+            let q = l.forward(la, lo);
+            let (b, c) = l.inverse(q.e, q.n).expect("on the map");
+            assert!(
+                (b - la).abs() < 1e-10 && (c - lo).abs() < 1e-10,
+                "{la} {lo}: {b} {c}"
+            );
+        }
+        // The origin's antipode is a circle, not a point, and beyond it is nothing.
+        assert!(!l.forward(-52.0, -170.0).e.is_finite());
+        assert!(l.inverse(4_321_000.0 + 2.0e7, 3_210_000.0).is_none());
+    }
 
     /// Guidance Note 7-2's worked examples for the methods it works.
     #[test]

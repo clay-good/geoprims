@@ -4316,6 +4316,26 @@
       "editionCheck": false
     },
     {
+      "id": "eu-reg-1089-2010",
+      "name": "Commission Regulation (EU) No 1089/2010 implementing Directive 2007/2/EC (INSPIRE) as regards interoperability of spatial data sets and services",
+      "issuer": "European Commission",
+      "currentEdition": "Of 23 November 2010",
+      "currentReleaseDate": "2010-11-23",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-11-16",
+      "verificationNote": "Read on EUR-Lex (eli/reg/2010/1089/oj/eng) on 2026-11-16: Annex II section 2.2.1 defines the grid for pan-European spatial analysis and reporting on ETRS89 Lambert Azimuthal Equal Area with the centre of the projection at 52°N 10°E, false easting 4 321 000 m and false northing 3 210 000 m, designated Grid_ETRS89-LAEA, hierarchical from 1 m to 100 000 m cells referenced by their lower left corner. Those parameters are EPSG 3035's, which gen_etrs89.py checks against projinfo on every run. The regulation has been amended since 2010; this is the original text as published, and the consolidated version was not checked.",
+      "freeAccessUrl": "https://eur-lex.europa.eu/eli/reg/2010/1089/oj/eng",
+      "matchTerms": [
+        "Regulation (EU) No 1089/2010"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "linz-nzgd2000-deformation",
       "name": "New Zealand Geodetic Datum 2000 deformation model",
       "issuer": "Land Information New Zealand (LINZ)",

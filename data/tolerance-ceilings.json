@@ -285,6 +285,11 @@
       "tool": "geodesy.projection.lo-forward",
       "source": "IOGP Guidance Note 7-2 (September 2019)",
       "reason": "G7-2 prints its Lo29 example to the centimetre from the USGS transverse Mercator series truncated at the fifth power, whose westing is 1.0 cm larger than the exact projection that PROJ, GeographicLib, and this core agree on to a micrometre; the 2 cm and 1 cm tolerances cover that series difference and the printed rounding."
+    },
+    {
+      "tool": "geodesy.projection.etrs89-forward",
+      "source": "IOGP Guidance Note 7-2 (September 2019), section 3.3.2",
+      "reason": "Guidance Note 7-2 prints its ETRS-LAEA example to the centimetre, so the printed values carry half a centimetre of rounding; the exact projection, PROJ, and this core agree on 3962799.4510 m and 2999718.8532 m, inside it."
     }
   ]
 }

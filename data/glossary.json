@@ -498,6 +498,8 @@
         "geodesy.crs.search",
         "geodesy.crs.transform",
         "geodesy.datum.helmert",
+        "geodesy.projection.etrs89-forward",
+        "geodesy.projection.etrs89-inverse",
         "geodesy.projection.jgd2011-forward",
         "geodesy.projection.jgd2011-inverse",
         "geodesy.projection.lambert93-forward",
@@ -954,6 +956,17 @@
       ]
     },
     {
+      "id": "inspire",
+      "term": "INSPIRE",
+      "expansion": "Infrastructure for Spatial Information in the European Community",
+      "definition": "The EU's rules for sharing spatial data, set by Directive 2007/2/EC. Its pan-European statistical grid is made of square cells on LAEA Europe.",
+      "source": "eu-reg-1089-2010",
+      "relatedTools": [
+        "geodesy.projection.etrs89-forward",
+        "geodesy.projection.etrs89-inverse"
+      ]
+    },
+    {
       "id": "isa",
       "term": "ISA",
       "expansion": "International Standard Atmosphere",
@@ -1047,6 +1060,17 @@
       ]
     },
     {
+      "id": "laea",
+      "term": "LAEA",
+      "expansion": "Lambert Azimuthal Equal Area",
+      "definition": "A map projection that keeps areas true, used for Europe's statistical grids as LAEA Europe (EPSG 3035), centred on 52°N 10°E.",
+      "source": "iogp-g7-2",
+      "relatedTools": [
+        "geodesy.projection.etrs89-forward",
+        "geodesy.projection.etrs89-inverse"
+      ]
+    },
+    {
       "id": "las",
       "term": "LAS",
       "expansion": "LASer file format",
@@ -1064,6 +1088,17 @@
       "source": "asprs-las-1-4",
       "relatedTools": [
         "drone.sensors.dataset-size"
+      ]
+    },
+    {
+      "id": "lcc",
+      "term": "LCC",
+      "expansion": "Lambert Conic Conformal",
+      "definition": "A map projection onto a cone that keeps angles and small shapes true; Lambert-93 and LCC Europe are two of its uses.",
+      "source": "iogp-g7-2",
+      "relatedTools": [
+        "geodesy.projection.etrs89-forward",
+        "geodesy.projection.etrs89-inverse"
       ]
     },
     {

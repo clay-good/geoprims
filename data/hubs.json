@@ -1189,6 +1189,13 @@
           ]
         },
         {
+          "want": "convert to or from the pan-European grids (LAEA Europe, LCC Europe)",
+          "tools": [
+            "geodesy.projection.etrs89-forward",
+            "geodesy.projection.etrs89-inverse"
+          ]
+        },
+        {
           "want": "go straight from Australian or New Zealand grid coordinates to latitude and longitude",
           "tools": [
             "geodesy.projection.mga-to-latlon",

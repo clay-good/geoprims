@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "63155cf2c172da04",
+    "hash": "d9646e7c117c69e7",
     "lastmod": "2026-11-16"
   },
   "/accuracy/": {
@@ -316,7 +316,7 @@
     "lastmod": "2026-11-14"
   },
   "/changelog/": {
-    "hash": "1889220999ff062a",
+    "hash": "ae9f9eb2f607c8cc",
     "lastmod": "2026-11-16"
   },
   "/disclaimer/": {
@@ -576,7 +576,7 @@
     "lastmod": "2026-11-14"
   },
   "/geodesy/": {
-    "hash": "84b09ec6a81f1e46",
+    "hash": "9af0709819eeeec9",
     "lastmod": "2026-11-16"
   },
   "/geodesy/crs/": {
@@ -856,7 +856,7 @@
     "lastmod": "2026-11-14"
   },
   "/geodesy/projection/": {
-    "hash": "6e61eac7a9b9ff83",
+    "hash": "4e0964509d152378",
     "lastmod": "2026-11-16"
   },
   "/geodesy/projection/albers-forward/": {
@@ -888,12 +888,20 @@
     "lastmod": "2026-11-14"
   },
   "/geodesy/projection/equidistant-cylindrical-inverse/": {
-    "hash": "fd29007f0b4f2e3e",
-    "lastmod": "2026-11-14"
+    "hash": "ca3b53837b7de641",
+    "lastmod": "2026-11-16"
+  },
+  "/geodesy/projection/etrs89-forward/": {
+    "hash": "0fd1534312f13c96",
+    "lastmod": "2026-11-16"
+  },
+  "/geodesy/projection/etrs89-inverse/": {
+    "hash": "672dfa60eb85f5c6",
+    "lastmod": "2026-11-16"
   },
   "/geodesy/projection/gnomonic-forward/": {
-    "hash": "6027ff0781187765",
-    "lastmod": "2026-11-14"
+    "hash": "7388dcc6744c1246",
+    "lastmod": "2026-11-16"
   },
   "/geodesy/projection/gnomonic-inverse/": {
     "hash": "c50fdd4e536cc423",
@@ -1624,7 +1632,7 @@
     "lastmod": "2026-11-14"
   },
   "/methodology/": {
-    "hash": "dab803bc8bbe5de5",
+    "hash": "2b7053636d1e7b4e",
     "lastmod": "2026-11-16"
   },
   "/navigation/": {
@@ -1880,7 +1888,7 @@
     "lastmod": "2026-10-20"
   },
   "/quality/": {
-    "hash": "95c12a6cccd5b9bb",
+    "hash": "08f0e6f8b0db2e7e",
     "lastmod": "2026-11-16"
   },
   "/raster/": {
@@ -2036,7 +2044,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "b9d3b8bfdb38a70b",
+    "hash": "71c8fe849f95e719",
     "lastmod": "2026-11-16"
   },
   "/survey/": {
@@ -2472,7 +2480,7 @@
     "lastmod": "2026-11-14"
   },
   "/tools/": {
-    "hash": "aed0488db50e2aee",
+    "hash": "e2e89d9063081ed8",
     "lastmod": "2026-11-16"
   },
   "/units/": {
@@ -2736,7 +2744,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "9e8fc1ef1112a7cd",
+    "hash": "80b4c0043aca011f",
     "lastmod": "2026-11-16"
   },
   "/workflows/": {

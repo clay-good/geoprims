@@ -5,6 +5,16 @@
       "date": "2026-11-16",
       "kind": "added",
       "tools": [
+        "geodesy.projection.etrs89-forward",
+        "geodesy.projection.etrs89-inverse"
+      ],
+      "vectors": [],
+      "summary": "Europe's two continental grids, both ways. LAEA Europe (EPSG 3035) is the equal-area grid behind Eurostat's population grid and the INSPIRE grid cells, and LCC Europe (EPSG 3034) is the conformal one for maps. The pair converts between either grid and an ETRS89 latitude and longitude, and because LAEA is not conformal it returns the scale along the meridian and along the parallel separately, with the convergence. IOGP's own worked example is a test, and the scales match PROJ's to eight decimals. Both tools are experimental."
+    },
+    {
+      "date": "2026-11-16",
+      "kind": "added",
+      "tools": [
         "geodesy.projection.lambert93-forward",
         "geodesy.projection.lambert93-inverse"
       ],

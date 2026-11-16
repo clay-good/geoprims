@@ -765,3 +765,125 @@ fn mga_refuses_a_zone_outside_australia_and_flags_a_forced_one() {
         .collect();
     assert!(codes.contains(&"OUTSIDE_AREA_OF_USE"), "{r}");
 }
+
+#[test]
+fn jgd2011_round_trips_every_system_and_pins_the_notices_origins() {
+    // add-international-grids, geodesy/national-grids: the nineteen JGD2011
+    // plane rectangular systems of MLIT Notice No. 9 of 2002, EPSG 6669 to
+    // 6687. Origins are (latitude, longitude) as the notice prints them.
+    let origins = [
+        (33.0, 129.5),
+        (33.0, 131.0),
+        (36.0, 132.0 + 10.0 / 60.0),
+        (33.0, 133.5),
+        (36.0, 134.0 + 20.0 / 60.0),
+        (36.0, 136.0),
+        (36.0, 137.0 + 10.0 / 60.0),
+        (36.0, 138.5),
+        (36.0, 139.0 + 50.0 / 60.0),
+        (40.0, 140.0 + 50.0 / 60.0),
+        (44.0, 140.25),
+        (44.0, 142.25),
+        (44.0, 144.25),
+        (26.0, 142.0),
+        (26.0, 127.5),
+        (26.0, 124.0),
+        (26.0, 131.0),
+        (20.0, 136.0),
+        (26.0, 154.0),
+    ];
+    for (i, (lat0, lon0)) in origins.into_iter().enumerate() {
+        let zone = i as i32 + 1;
+        // At the origin X and Y are zero, the convergence is zero, and the
+        // scale factor is the notice's 0.9999.
+        let o = run(
+            "geodesy.projection.jgd2011-forward",
+            &json!({"lat": lat0, "lon": lon0, "zone": zone}),
+        );
+        assert!(val(&o, "easting").abs() < 1e-6, "system {zone}: {o}");
+        assert!(val(&o, "northing").abs() < 1e-6, "system {zone}: {o}");
+        assert!(val(&o, "convergence").abs() < 1e-12, "system {zone}: {o}");
+        assert!((val(&o, "scale_factor") - 0.9999).abs() < 1e-12, "{o}");
+        assert_eq!(
+            o["epsg"].as_str().unwrap()[..9],
+            format!("EPSG:{}", 6668 + zone)
+        );
+
+        // A point 1.3 degrees north-east of the origin and back.
+        let (lat, lon) = (lat0 + 1.3, lon0 + 1.3);
+        let f = run(
+            "geodesy.projection.jgd2011-forward",
+            &json!({"lat": lat, "lon": lon, "zone": zone}),
+        );
+        let (e, n) = (val(&f, "easting"), val(&f, "northing"));
+        // North-east of the origin is positive X and positive Y: the axes are
+        // the notice's, not swapped.
+        assert!(e > 100_000.0 && n > 100_000.0, "system {zone}: {f}");
+        let b = run(
+            "geodesy.projection.jgd2011-inverse",
+            &json!({"zone": zone, "easting": format!("{e} m"), "northing": format!("{n} m")}),
+        );
+        assert!((val(&b, "lat") - lat).abs() < 1e-9, "{b}");
+        assert!((val(&b, "lon") - lon).abs() < 1e-9, "{b}");
+        assert!(
+            (val(&f, "convergence") - val(&b, "convergence")).abs() < 1e-9,
+            "{f} vs {b}"
+        );
+        assert!(
+            (val(&f, "scale_factor") - val(&b, "scale_factor")).abs() < 1e-12,
+            "{f} vs {b}"
+        );
+        // The convergence is degrees, and roughly (lambda - lambda0) sin(phi).
+        let rough = (lon - lon0) * lat.to_radians().sin();
+        assert!(
+            (val(&f, "convergence") - rough).abs() < 0.02,
+            "convergence at {lat}, {lon} should be about {rough} degrees, not {}",
+            val(&f, "convergence")
+        );
+    }
+
+    // Tokyo Station on system IX, pinned against PROJ's EPSG:6677 at a
+    // tenth of a millimetre: on GRS 80 and on the notice's origin.
+    let t = run(
+        "geodesy.projection.jgd2011-forward",
+        &json!({"lat": 35.681236, "lon": 139.767125, "zone": 9}),
+    );
+    assert!((val(&t, "northing") + 35_363.237_745).abs() < 1e-4, "{t}");
+    assert!((val(&t, "easting") + 5_992.919_570).abs() < 1e-4, "{t}");
+}
+
+#[test]
+fn jgd2011_refuses_a_system_outside_the_nineteen_and_flags_a_point_off_japan() {
+    for zone in [0, 20, -9] {
+        let r: Value = serde_json::from_str(&REGISTRY.invoke(
+            "geodesy.projection.jgd2011-inverse",
+            &json!({"zone": zone, "easting": "0 m", "northing": "0 m"}).to_string(),
+        ))
+        .unwrap();
+        assert_eq!(r["ok"], false, "system {zone} should be refused: {r}");
+        assert_eq!(r["error"]["code"], "INVALID_INPUT", "{r}");
+        assert_eq!(r["error"]["field"], "/zone", "{r}");
+    }
+    // The system is set by prefecture, so the forward tool does not guess it.
+    let r: Value = serde_json::from_str(&REGISTRY.invoke(
+        "geodesy.projection.jgd2011-forward",
+        &json!({"lat": 35.681236, "lon": 139.767125}).to_string(),
+    ))
+    .unwrap();
+    assert_eq!(r["ok"], false, "{r}");
+    assert_eq!(r["error"]["field"], "/zone", "{r}");
+
+    let r: Value = serde_json::from_str(&REGISTRY.invoke(
+        "geodesy.projection.jgd2011-forward",
+        &json!({"lat": 51.5, "lon": -0.1, "zone": 9}).to_string(),
+    ))
+    .unwrap();
+    assert_eq!(r["ok"], true, "{r}");
+    let codes: Vec<&str> = r["meta"]["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|w| w["code"].as_str().unwrap())
+        .collect();
+    assert!(codes.contains(&"OUTSIDE_AREA_OF_USE"), "{r}");
+}

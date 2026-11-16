@@ -3427,3 +3427,460 @@ fn run_mga_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("frame", Json::str(frame)),
     ]))
 }
+
+// ------------------------------------------- Japan (JGD2011 plane rectangular)
+
+const MLIT_JPC: Reference = Reference {
+    title: "Plane rectangular coordinate systems (平面直角座標系), Ministry of Land, Infrastructure, Transport and Tourism Notice No. 9 of 2002",
+    issuer: "Ministry of Land, Infrastructure, Transport and Tourism of Japan, as published by the Geospatial Information Authority of Japan (GSI)",
+    year: 2010,
+    edition: "Notice No. 9 of 2002, last amended by Notice No. 289 of 2010, read 2026-11-16",
+    locator: "The table of systems I to XIX gives each origin's longitude and latitude and the prefectures it applies to; the remarks state the Gauss conformal projection, the X axis along the origin's meridian positive to true north, the Y axis positive to true east, the scale factor 0.9999 on the X axis, and X = 0.000 m, Y = 0.000 m at the origin",
+    url: "https://www.gsi.go.jp/LAW/heimencho.html",
+};
+
+const EPSG_JGD: Reference = Reference {
+    title: "EPSG Geodetic Parameter Dataset (EPSG v13.102 CRS registry)",
+    issuer: "IOGP, from the Geospatial Information Authority of Japan",
+    year: 2026,
+    edition: "v13.102, as shipped in PROJ 9.9.0",
+    locator: "JGD2011 / Japan Plane Rectangular CS I to XIX as EPSG 6669 to 6687, each transverse Mercator on GRS 1980 with the notice's origin, scale 0.9999 and false easting and northing 0 m, and JGD2011 itself (EPSG 6668) with its area of use",
+    url: "https://epsg.org/crs/6677",
+};
+
+const JGD_ZONES: i32 = 19;
+
+/// Each system's origin, latitude then longitude in degrees, from the notice's
+/// table (system I first). Minutes are written as fractions so the parameters
+/// read as the notice prints them.
+const JGD_ORIGINS: [(f64, f64); 19] = [
+    (33.0, 129.0 + 30.0 / 60.0),
+    (33.0, 131.0),
+    (36.0, 132.0 + 10.0 / 60.0),
+    (33.0, 133.0 + 30.0 / 60.0),
+    (36.0, 134.0 + 20.0 / 60.0),
+    (36.0, 136.0),
+    (36.0, 137.0 + 10.0 / 60.0),
+    (36.0, 138.0 + 30.0 / 60.0),
+    (36.0, 139.0 + 50.0 / 60.0),
+    (40.0, 140.0 + 50.0 / 60.0),
+    (44.0, 140.0 + 15.0 / 60.0),
+    (44.0, 142.0 + 15.0 / 60.0),
+    (44.0, 144.0 + 15.0 / 60.0),
+    (26.0, 142.0),
+    (26.0, 127.0 + 30.0 / 60.0),
+    (26.0, 124.0),
+    (26.0, 131.0),
+    (20.0, 136.0),
+    (26.0, 154.0),
+];
+
+const ROMAN: [&str; 19] = [
+    "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV",
+    "XVI", "XVII", "XVIII", "XIX",
+];
+
+/// System `zone` (1 to 19): transverse Mercator on GRS 80 about the notice's
+/// origin, scale 0.9999, the origin at X = 0, Y = 0.
+fn jgd_grid(zone: i32) -> TmGrid {
+    let g = crate::gridref::grs80();
+    let (lat0, lon0) = JGD_ORIGINS[(zone - 1) as usize];
+    TmGrid::new(g.a, g.f, lat0, lon0, 0.9999, 0.0, 0.0)
+}
+
+fn jgd_epsg(zone: i32) -> String {
+    format!(
+        "EPSG:{} (JGD2011 / Japan Plane Rectangular CS {})",
+        6668 + zone,
+        ROMAN[(zone - 1) as usize]
+    )
+}
+
+fn jgd_zone(ctx: &mut Ctx) -> Result<i32, ToolError> {
+    // The field declares 1 to 19, so the input validator has already refused
+    // anything outside it by the time this runs.
+    Ok(ctx
+        .number("zone")?
+        .ok_or_else(|| {
+            ToolError::invalid(
+                "/zone",
+                "Name the plane rectangular system, 1 to 19. It follows the prefecture, not the longitude.",
+            )
+        })?
+        .round() as i32)
+}
+
+const JGD_FRAME: &str = "The coordinates are taken to be on JGD2011, Japan's datum since the 2011 Tohoku earthquake. JGD2000 uses the same nineteen systems with the same parameters, so the same latitude and longitude gives the same X and Y on both; what differs is the datum, which the earthquake moved by up to about 5 m in eastern Japan. Coordinates on the older Tokyo datum are on a different ellipsoid and are not this grid.";
+
+const JGD_AREA: &str = "The point is outside the area EPSG publishes for JGD2011, about 122 to 158 degrees east and 17 to 46 degrees north. The arithmetic still holds, but this is not Japanese national grid territory.";
+
+fn jgd_area_warning(ctx: &mut Ctx, lat: f64, lon: f64) {
+    let inside = (17.09..=46.05).contains(&lat) && (122.38..=157.65).contains(&lon);
+    if !inside {
+        ctx.warnings
+            .push(Warning::new("OUTSIDE_AREA_OF_USE", JGD_AREA));
+    }
+}
+
+const JGD_ZONE_IN: Field = Field::new(
+    "zone",
+    "System",
+    "The plane rectangular system, 1 to 19, set by prefecture: 9 for Tokyo, 6 for Osaka and Kyoto, 12 for most of Hokkaido",
+    Kind::Number {
+        min: 1.0,
+        max: JGD_ZONES as f64,
+    },
+)
+.required()
+.core();
+
+const JGD_ZONE_OUT: Field = Field::new(
+    "zone",
+    "System",
+    "The plane rectangular system the coordinates are on",
+    Kind::Number {
+        min: 1.0,
+        max: JGD_ZONES as f64,
+    },
+)
+.precision(Precision::Decimals(0));
+
+const JGD_ORIGIN_LAT_OUT: Field = Field::new(
+    "origin_lat",
+    "Origin latitude",
+    "Where the system's X is zero",
+    Kind::Quantity {
+        q: QT::Angle,
+        unit: "deg",
+    },
+)
+.precision(Precision::Decimals(6))
+.angle_range("[-90,90]");
+
+const JGD_ORIGIN_LON_OUT: Field = Field::new(
+    "central_meridian",
+    "Origin longitude",
+    "The meridian the system is drawn about, where Y is zero",
+    Kind::Quantity {
+        q: QT::Angle,
+        unit: "deg",
+    },
+)
+.precision(Precision::Decimals(6))
+.angle_range("[-180,180]");
+
+const JGD_EASTING_OUT: Field = Field::new(
+    "easting",
+    "Y (easting)",
+    "Metres east of the system's origin, negative to the west; Japanese surveys call this Y",
+    Kind::Quantity {
+        q: QT::Length,
+        unit: "m",
+    },
+)
+.precision(Precision::Decimals(3));
+
+const JGD_NORTHING_OUT: Field = Field::new(
+    "northing",
+    "X (northing)",
+    "Metres north of the system's origin, negative to the south; Japanese surveys call this X",
+    Kind::Quantity {
+        q: QT::Length,
+        unit: "m",
+    },
+)
+.precision(Precision::Decimals(3));
+
+pub static JGD2011_FORWARD: ToolDef = ToolDef {
+    id: "geodesy.projection.jgd2011-forward",
+    title: "Latitude and longitude to Japan plane rectangular",
+    summary: "Converts a JGD2011 latitude and longitude to X and Y on one of Japan's nineteen plane rectangular systems, with the grid convergence and the point scale factor.",
+    aliases: &[
+        "lat long to Japan plane rectangular",
+        "JGD2011 plane rectangular converter",
+        "Japanese survey coordinates",
+        "heimen chokaku zahyo",
+    ],
+    keywords: &[
+        "JGD2011",
+        "Japan",
+        "plane rectangular",
+        "平面直角座標系",
+        "transverse Mercator",
+        "EPSG 6677",
+        "JGD2000",
+    ],
+    inputs: &[
+        Field::new(
+            "lat",
+            "Latitude",
+            "North positive, like 35.681236",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(9))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "East positive, like 139.767125",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(9))
+        .angle_range("[-180,180)"),
+        JGD_ZONE_IN,
+    ],
+    outputs: &[
+        // The last explain step ends on the easting, which the trace gate
+        // requires to be this first output.
+        JGD_EASTING_OUT,
+        JGD_NORTHING_OUT,
+        JGD_ZONE_OUT,
+        MGA_CONVERGENCE,
+        MGA_SCALE,
+        JGD_ORIGIN_LAT_OUT,
+        JGD_ORIGIN_LON_OUT,
+        MGA_EPSG_OUT,
+        MGA_FRAME_OUT,
+    ],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &[
+        "REALIZATION_ASSUMED",
+        "OUTSIDE_AREA_OF_USE",
+        "EXPERIMENTAL_TOOL",
+    ],
+    model: "Gauss conformal (transverse Mercator) projection on GRS 80 with the parameters of MLIT Notice No. 9 of 2002 and EPSG 6669 to 6687: the system's own origin latitude and longitude, scale 0.9999 on its meridian, X = 0 and Y = 0 at the origin, by Karney's series",
+    accuracy: "The projection is exact to the series' nanometre across Japan, and agrees with PROJ applying each system's own EPSG record within a millimetre at every test place. The coordinates are taken to be on JGD2011: a latitude and longitude on the older Tokyo datum is out by about 400 m",
+    when_to_use: "Use this to put a latitude and longitude onto the grid Japanese public surveys, cadastral maps, and municipal datasets are drawn in. The system is set by prefecture rather than by longitude, so it is asked for: 9 for Tokyo and the Kanto prefectures, 6 for Osaka and Kyoto, 12 for most of Hokkaido. The answer returns the grid convergence and the point scale factor beside X and Y.",
+    limitations: "The tool does not pick the system, because the notice assigns systems by prefecture and by island group, not by a band of longitude; a point projected on the wrong system gives valid but useless numbers. It projects and does not transform: a Tokyo-datum latitude and longitude must first be moved to JGD2011, and GSI's grids for that step need Survey Act approval to use, so they are not here. Heights are untouched.",
+    references: &[MLIT_JPC, EPSG_JGD],
+    examples: &[Example {
+        id: "primary",
+        title: "Tokyo Station",
+        source: "PROJ 9.9.0 applying EPSG:6677 (JGD2011 / Japan Plane Rectangular CS IX): 35.681236°N 139.767125°E gives X -35363.238 m, Y -5992.920 m",
+        input: r#"{"lat":35.681236,"lon":139.767125,"zone":9}"#,
+    }],
+    primary_example: "primary",
+    visualization: FORWARD_LAYER,
+    related: &[
+        Related {
+            id: "geodesy.projection.jgd2011-inverse",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.utm.forward",
+            reason: "parent",
+        },
+    ],
+    sentence: "That point is X {northing}, Y {easting} on system {zone}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_jgd2011_forward,
+    ..ToolDef::BLANK
+};
+
+fn run_jgd2011_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let zone = jgd_zone(ctx)?;
+    let (lat0, lon0) = JGD_ORIGINS[(zone - 1) as usize];
+    let g = jgd_grid(zone).forward(lat, lon);
+    ctx.warnings
+        .push(Warning::new("REALIZATION_ASSUMED", JGD_FRAME));
+    jgd_area_warning(ctx, lat, lon);
+    if ctx.explaining() {
+        let roman = ROMAN[(zone - 1) as usize];
+        ctx.step(
+            "The system's origin",
+            "the notice fixes each system's origin, where X and Y are both zero",
+            format!("system {roman}"),
+            format!("{lat0:.6}°N, {lon0:.6}°E"),
+        );
+        ctx.step(
+            "Off the origin",
+            "the projection measures the longitude from the origin's meridian",
+            format!("{lon:.6}° against {lon0:.6}°"),
+            format!("{:.6}°", lon - lon0),
+        );
+        ctx.step(
+            "On the grid",
+            "transverse Mercator, GRS 80, scale 0.9999 on the origin's meridian; X counts north and Y east of the origin",
+            format!("{lat:.6}°, {lon:.6}°"),
+            format!(
+                "{} m",
+                gp_base::display::number(g.e, Precision::Decimals(3), ctx.options.format)
+            ),
+        );
+    }
+    Ok(Json::obj([
+        ("zone", Json::Num(f64::from(zone))),
+        ("easting", ctx.out("easting", meters(g.e))),
+        ("northing", ctx.out("northing", meters(g.n))),
+        ("convergence", ctx.out("convergence", deg(g.convergence))),
+        ("scale_factor", Json::Num(g.k)),
+        ("origin_lat", ctx.out("origin_lat", deg(lat0))),
+        ("central_meridian", ctx.out("central_meridian", deg(lon0))),
+        ("epsg", Json::str(jgd_epsg(zone))),
+        ("frame", Json::str(JGD_FRAME)),
+    ]))
+}
+
+pub static JGD2011_INVERSE: ToolDef = ToolDef {
+    id: "geodesy.projection.jgd2011-inverse",
+    title: "Japan plane rectangular to latitude and longitude",
+    summary: "Converts X and Y on one of Japan's nineteen plane rectangular systems back to a JGD2011 latitude and longitude, with the grid convergence and the point scale factor there.",
+    aliases: &[
+        "Japan plane rectangular to lat long",
+        "JGD2011 X Y to latitude longitude",
+        "read Japanese survey coordinates",
+        "heimen chokaku zahyo to lat long",
+    ],
+    keywords: &[
+        "JGD2011",
+        "Japan",
+        "plane rectangular",
+        "平面直角座標系",
+        "transverse Mercator",
+        "inverse",
+        "EPSG 6677",
+    ],
+    inputs: &[
+        JGD_ZONE_IN,
+        length(
+            "northing",
+            "X (northing)",
+            "Metres north of the system's origin, negative to the south, like -35363.238 m",
+        )
+        .required()
+        .core(),
+        length(
+            "easting",
+            "Y (easting)",
+            "Metres east of the system's origin, negative to the west, like -5992.920 m",
+        )
+        .required()
+        .core(),
+    ],
+    outputs: &[
+        Field::new(
+            "lat",
+            "Latitude",
+            "On JGD2011, north positive",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "On JGD2011, east positive",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .angle_range("[-180,180)"),
+        MGA_CONVERGENCE,
+        MGA_SCALE,
+        JGD_ORIGIN_LAT_OUT,
+        JGD_ORIGIN_LON_OUT,
+        MGA_EPSG_OUT,
+        MGA_FRAME_OUT,
+    ],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &[
+        "REALIZATION_ASSUMED",
+        "OUTSIDE_AREA_OF_USE",
+        "EXPERIMENTAL_TOOL",
+    ],
+    model: "The inverse Gauss conformal (transverse Mercator) projection on GRS 80 with the system's parameters from MLIT Notice No. 9 of 2002 (its origin, scale 0.9999, X = 0 and Y = 0 at the origin), by Karney's series",
+    accuracy: "The inverse is the forward's own inverse rather than a separate approximation, and the round trip returns every test place to within a nanodegree. The answer is on JGD2011",
+    when_to_use: "Use this to read X and Y off a Japanese survey drawing, cadastral map, or municipal dataset and get the latitude and longitude a phone or a web map wants. X is the northing and Y the easting, the opposite of the order most other grids print, so check which column is which. The coordinates do not carry their system, so it is asked for.",
+    limitations: "X and Y without their system are ambiguous: every system has its origin at zero, so the same numbers name a place in each of the nineteen. The answer is on JGD2011; X and Y read off a JGD2000 drawing give a JGD2000 position, which in eastern Japan differs from JGD2011 by up to about 5 m because of the 2011 earthquake. Tokyo-datum coordinates are on another ellipsoid and are not this grid. Heights are untouched.",
+    references: &[MLIT_JPC, EPSG_JGD],
+    examples: &[Example {
+        id: "primary",
+        title: "Tokyo Station",
+        source: "PROJ 9.9.0 applying EPSG:6677 in reverse: system IX, X -35363.238 m, Y -5992.920 m gives 35.681236°N 139.767125°E on JGD2011",
+        input: r#"{"zone":9,"northing":"-35363.2377449 m","easting":"-5992.9195704 m"}"#,
+    }],
+    primary_example: "primary",
+    visualization: INVERSE_LAYER,
+    related: &[
+        Related {
+            id: "geodesy.projection.jgd2011-forward",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.utm.inverse",
+            reason: "parent",
+        },
+    ],
+    sentence: "That is {lat}, {lon}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_jgd2011_inverse,
+    ..ToolDef::BLANK
+};
+
+fn run_jgd2011_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let zone = jgd_zone(ctx)?;
+    let (e, n) = grid_in(ctx)?;
+    if !e.is_finite() || !n.is_finite() {
+        return Err(ToolError::invalid(
+            "/easting",
+            "X and Y are metres on a plane rectangular system.",
+        ));
+    }
+    let grid = jgd_grid(zone);
+    let (lat, lon) = grid.inverse(e, n);
+    if !lat.is_finite() || !lon.is_finite() || !(-90.0..=90.0).contains(&lat) {
+        return Err(ToolError::invalid(
+            "/northing",
+            "That X and Y is not a place on the system.",
+        ));
+    }
+    let back = grid.forward(lat, lon);
+    ctx.warnings
+        .push(Warning::new("REALIZATION_ASSUMED", JGD_FRAME));
+    jgd_area_warning(ctx, lat, lon);
+    let (lat0, lon0) = JGD_ORIGINS[(zone - 1) as usize];
+    if ctx.explaining() {
+        let roman = ROMAN[(zone - 1) as usize];
+        ctx.step(
+            "The system's origin",
+            "the notice fixes each system's origin, where X and Y are both zero",
+            format!("system {roman}"),
+            format!("{lat0:.6}°N, {lon0:.6}°E"),
+        );
+        ctx.step(
+            "Off the grid",
+            "the inverse transverse Mercator, GRS 80, scale 0.9999 on the origin's meridian",
+            format!("X {n:.3} m, Y {e:.3} m"),
+            format!(
+                "{}°",
+                gp_base::display::number(lat, Precision::Decimals(9), ctx.options.format)
+            ),
+        );
+    }
+    Ok(Json::obj([
+        ("lat", ctx.out("lat", deg(lat))),
+        ("lon", ctx.out("lon", deg(lon))),
+        ("convergence", ctx.out("convergence", deg(back.convergence))),
+        ("scale_factor", Json::Num(back.k)),
+        ("origin_lat", ctx.out("origin_lat", deg(lat0))),
+        ("central_meridian", ctx.out("central_meridian", deg(lon0))),
+        ("epsg", Json::str(jgd_epsg(zone))),
+        ("frame", Json::str(JGD_FRAME)),
+    ]))
+}

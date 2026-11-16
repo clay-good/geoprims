@@ -199,6 +199,8 @@ const REGRESSIONS = [
   ['aviation.performance.glide', { glide_ratio: 9, height: '5000 ft', tas: '70 kt', lon: 360, lat: -18121.399614028633 }, 'INVALID_INPUT'],
   ['geometry.overlay.boolean', { polygon_a: [{ lat: 40, lon: -105 }, { lat: 40, lon: -104.99 }, { lat: 40.008, lon: -104.99 }, { lat: 40.008, lon: -105 }], polygon_b: [{ lat: 40.004, lon: '-1000000000 deg' }, { lat: 40.004, lon: -104.985 }, { lat: 40.012, lon: -104.985 }, { lat: 40.012, lon: -104.995 }], edges: 'planar' }, 'OUT_OF_DOMAIN'],
   ['geometry.shape.enclosing', { points: [{ lat: 40, lon: -105 }, { lat: 40.004, lon: -104.996 }, { lat: 40.001, lon: -104.99 }, { lat: 39.997, lon: -104.993 }, { lat: 40.002, lon: -104.994 }, { lat: 39.999, lon: -36042.23451111466 }, { lat: 40.006, lon: -104.992 }], edges: 'planar' }, 'OUT_OF_DOMAIN'],
+  // A station of -1e300 left no digits for the interval loop, which never advanced.
+  ['survey.curves.spiral', { delta: "40°00'00\"", interval: 361, pi_station: -1e300, radius: '1000 ft', spiral_length: 360 }, 'INVALID_INPUT'],
 ];
 
 test('fuzzer regressions return structured errors', async () => {

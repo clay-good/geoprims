@@ -1158,8 +1158,25 @@ fn run_area(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 // ---------------------------------------------------------------- stations
 
+/// The largest station magnitude read: 10,000,000+00, about 190,000 miles of
+/// alignment in feet. Past it a station has no digits left for the interval
+/// arithmetic: at 1e300 adding a 50 ft interval changes nothing, and the
+/// curve tools' station loops never advanced.
+const STATION_MAX: f64 = 1e9;
+
 /// Reads a station: `12+34.56`, `1+234.567`, or a plain number (in `u`).
 pub(crate) fn station(ctx: &mut Ctx, name: &str) -> Result<Option<f64>, ToolError> {
+    let v = station_value(ctx, name)?;
+    if v.is_some_and(|x| x.abs() > STATION_MAX) {
+        return Err(ToolError::invalid(
+            &format!("/{name}"),
+            "A station is within 10,000,000+00 of zero, either way.",
+        ));
+    }
+    Ok(v)
+}
+
+fn station_value(ctx: &mut Ctx, name: &str) -> Result<Option<f64>, ToolError> {
     match ctx.raw(name).cloned() {
         None => Ok(None),
         Some(Value::Number(n)) => Ok(n.as_f64().filter(|x| x.is_finite())),

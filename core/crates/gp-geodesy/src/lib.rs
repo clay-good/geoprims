@@ -3276,6 +3276,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &methods::NZTM_INVERSE,
     &methods::MGA_FORWARD,
     &methods::MGA_INVERSE,
+    &methods::JGD2011_FORWARD,
+    &methods::JGD2011_INVERSE,
     &pairs::LATLON_TO_BNG,
     &pairs::BNG_TO_LATLON,
     &pairs::MGA_TO_LATLON,

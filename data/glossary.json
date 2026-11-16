@@ -487,6 +487,8 @@
         "geodesy.crs.search",
         "geodesy.crs.transform",
         "geodesy.datum.helmert",
+        "geodesy.projection.jgd2011-forward",
+        "geodesy.projection.jgd2011-inverse",
         "geodesy.projection.mga-forward",
         "geodesy.projection.mga-inverse",
         "geodesy.projection.mga-to-latlon",
@@ -1000,6 +1002,14 @@
         "navigation.geodesic.spherical-direct",
         "navigation.geodesic.spherical-inverse"
       ]
+    },
+    {
+      "id": "jgd2011",
+      "term": "JGD2011",
+      "expansion": "Japanese Geodetic Datum 2011",
+      "definition": "Japan's datum since the 2011 Tohoku earthquake, which moved eastern Japan by up to about 5 m against the earlier JGD2000. Japan's nineteen plane rectangular systems are drawn on it.",
+      "source": "epsg-crs-registry",
+      "relatedTools": []
     },
     {
       "id": "kml",

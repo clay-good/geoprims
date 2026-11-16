@@ -1168,6 +1168,13 @@
           ]
         },
         {
+          "want": "convert Japanese plane rectangular (JGD2011) coordinates",
+          "tools": [
+            "geodesy.projection.jgd2011-forward",
+            "geodesy.projection.jgd2011-inverse"
+          ]
+        },
+        {
           "want": "go straight from Australian or New Zealand grid coordinates to latitude and longitude",
           "tools": [
             "geodesy.projection.mga-to-latlon",

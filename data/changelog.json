@@ -2,6 +2,25 @@
   "note": "User-facing changes, newest first. kind is result-change (a published result moved: every superseded golden vector must be listed here), added, fixed, or changed. A result change beyond tolerance also bumps the tool version. Rendered at /changelog/ and checked by tools/trust/changelog.test.mjs.",
   "entries": [
     {
+      "date": "2026-11-16",
+      "kind": "fixed",
+      "tools": [
+        "survey.curves.spiral"
+      ],
+      "vectors": [],
+      "summary": "The spiral curve could hang on a station far beyond any real alignment. At a PI station of -1e300 the numbers have no digits left for a 361 ft interval, so the loop that lists stations along the curve never advanced and the answer took over ten seconds. Every tool that reads a station now refuses one farther than 10,000,000+00 from zero, which is about 190,000 miles of alignment. Stations inside that range give the same answers as before."
+    },
+    {
+      "date": "2026-11-16",
+      "kind": "added",
+      "tools": [
+        "geodesy.projection.jgd2011-forward",
+        "geodesy.projection.jgd2011-inverse"
+      ],
+      "vectors": [],
+      "summary": "Japan's nineteen plane rectangular systems, both ways. Japanese public surveys, cadastral maps, and city datasets are drawn on these grids, which a 2002 government notice defines by prefecture. The pair converts between X and Y on a system you name and a JGD2011 latitude and longitude, and returns the grid convergence and the point scale factor. X is the northing and Y the easting, the reverse of most grids, and both are labeled. The pair does not convert from the older Tokyo datum, because the official grids for that step need approval under Japan's Survey Act. Both tools are experimental."
+    },
+    {
       "date": "2026-11-14",
       "kind": "changed",
       "tools": [

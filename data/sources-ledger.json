@@ -4276,6 +4276,26 @@
       "editionCheck": false
     },
     {
+      "id": "mlit-jpc-notice-9",
+      "name": "Plane rectangular coordinate systems, Ministry of Land, Infrastructure, Transport and Tourism Notice No. 9 of 2002",
+      "issuer": "Ministry of Land, Infrastructure, Transport and Tourism of Japan (published by GSI)",
+      "currentEdition": "Notice No. 9 of 2002, last amended by Notice No. 289 of 2010",
+      "currentReleaseDate": "2010-03-31",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": "2010-04-01",
+      "validTo": null,
+      "lastVerified": "2026-11-16",
+      "verificationNote": "Read at gsi.go.jp/LAW/heimencho.html on 2026-11-16: the notice's table gives systems I to XIX with each origin's longitude and latitude to a ten-thousandth of a second and the prefectures and island groups each applies to, and its remarks state the Gauss conformal projection, the X axis along the origin's meridian positive to true north, the Y axis positive to true east, the scale factor 0.9999 on the X axis, and X = 0.000 m, Y = 0.000 m at the origin. The last amendment is Notice No. 289 of 2010, in force from 2010-04-01. gen_jgd.py checks all nineteen origins and the scale factor against PROJ 9.9.0's renderings of EPSG 6669 to 6687 on every run, and they agree.",
+      "freeAccessUrl": "https://www.gsi.go.jp/LAW/heimencho.html",
+      "matchTerms": [
+        "Notice No. 9 of 2002"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "linz-nzgd2000-deformation",
       "name": "New Zealand Geodetic Datum 2000 deformation model",
       "issuer": "Land Information New Zealand (LINZ)",

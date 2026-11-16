@@ -5,6 +5,16 @@
       "date": "2026-11-16",
       "kind": "added",
       "tools": [
+        "geodesy.projection.lambert93-forward",
+        "geodesy.projection.lambert93-inverse"
+      ],
+      "vectors": [],
+      "summary": "France's national grid, both ways. French cadastral plans, IGN maps, and public datasets are drawn on Lambert-93, and large-scale surveys on one of nine narrower conic zones, CC42 to CC50. The pair converts between any of the ten grids and an RGF93 latitude and longitude, and returns the grid convergence and the point scale factor. Besides PROJ, the tests check five places against the projection constants IGN prints for Lambert-93, which agree to under a millimeter. Both tools are experimental."
+    },
+    {
+      "date": "2026-11-16",
+      "kind": "added",
+      "tools": [
         "geodesy.projection.lo-forward",
         "geodesy.projection.lo-inverse"
       ],

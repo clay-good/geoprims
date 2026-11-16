@@ -191,6 +191,17 @@
       ]
     },
     {
+      "id": "cc",
+      "term": "CC",
+      "expansion": "Conique conforme (conformal conic)",
+      "definition": "France's nine conformal conic zones, CC42 to CC50, each named by the latitude of its origin and one degree of latitude wide, used for large-scale surveys where Lambert-93's scale error is too large.",
+      "source": "epsg-crs-registry",
+      "relatedTools": [
+        "geodesy.projection.lambert93-forward",
+        "geodesy.projection.lambert93-inverse"
+      ]
+    },
+    {
       "id": "cfr",
       "term": "CFR",
       "expansion": "Code of Federal Regulations",
@@ -489,6 +500,8 @@
         "geodesy.datum.helmert",
         "geodesy.projection.jgd2011-forward",
         "geodesy.projection.jgd2011-inverse",
+        "geodesy.projection.lambert93-forward",
+        "geodesy.projection.lambert93-inverse",
         "geodesy.projection.lo-forward",
         "geodesy.projection.lo-inverse",
         "geodesy.projection.mga-forward",
@@ -1719,6 +1732,14 @@
         "navigation.geodesic.spherical-direct",
         "navigation.geodesic.spherical-inverse"
       ]
+    },
+    {
+      "id": "rgf93",
+      "term": "RGF93",
+      "expansion": "Réseau géodésique français 1993",
+      "definition": "France's datum: the European ETRS89 as realized in France. Lambert-93 and the CC conic zones are drawn on it, and its realizations v1, v2, and v2b differ by a few centimeters.",
+      "source": "epsg-crs-registry",
+      "relatedTools": []
     },
     {
       "id": "rinex",

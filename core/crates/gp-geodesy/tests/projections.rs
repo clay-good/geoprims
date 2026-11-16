@@ -989,3 +989,92 @@ fn lo_refuses_an_even_or_foreign_belt_and_flags_a_forced_one() {
         .collect();
     assert!(codes.contains(&"NONSTANDARD_ZONE"), "{r}");
 }
+
+#[test]
+fn lambert93_round_trips_every_grid_and_pins_the_false_origins() {
+    // add-international-grids, geodesy/national-grids: RGF93 Lambert-93
+    // (EPSG 2154) and the nine CC conic zones (EPSG 3942 to 3950).
+    let mut grids = vec![("Lambert-93", 46.5, 700_000.0, 6_600_000.0)];
+    for z in 42..=50 {
+        grids.push((
+            [
+                "CC42", "CC43", "CC44", "CC45", "CC46", "CC47", "CC48", "CC49", "CC50",
+            ][z - 42],
+            z as f64,
+            1_700_000.0,
+            (z as f64 - 41.0) * 1_000_000.0 + 200_000.0,
+        ));
+    }
+    for (grid, lat0, fe, fn_) in grids {
+        // At the false origin, on 3°E at the origin's parallel, the
+        // coordinates are the false easting and northing, the convergence is
+        // zero, and with two standard parallels the scale is just under 1.
+        let o = run(
+            "geodesy.projection.lambert93-forward",
+            &json!({"lat": lat0, "lon": 3.0, "grid": grid}),
+        );
+        assert!((val(&o, "easting") - fe).abs() < 1e-6, "{grid}: {o}");
+        assert!((val(&o, "northing") - fn_).abs() < 1e-3, "{grid}: {o}");
+        assert!(val(&o, "convergence").abs() < 1e-12, "{grid}: {o}");
+        let k0 = val(&o, "scale_factor");
+        assert!((0.999..1.0).contains(&k0), "{grid}: {o}");
+        assert_eq!(o["grid"], grid);
+
+        // A point a degree east and a third of a degree north, and back.
+        let (lat, lon) = (lat0 + 0.3, 4.0);
+        let f = run(
+            "geodesy.projection.lambert93-forward",
+            &json!({"lat": lat, "lon": lon, "grid": grid}),
+        );
+        let (e, n) = (val(&f, "easting"), val(&f, "northing"));
+        assert!(e > fe && n > fn_, "{grid}: {f}");
+        // East of 3°E grid north leans east: the convergence is n times the
+        // longitude difference, positive, and under the full degree.
+        let c = val(&f, "convergence");
+        assert!(c > 0.6 && c < 0.8, "{grid}: {f}");
+        let b = run(
+            "geodesy.projection.lambert93-inverse",
+            &json!({"easting": format!("{e} m"), "northing": format!("{n} m"), "grid": grid}),
+        );
+        assert!((val(&b, "lat") - lat).abs() < 1e-9, "{b}");
+        assert!((val(&b, "lon") - lon).abs() < 1e-9, "{b}");
+        assert!((val(&b, "convergence") - c).abs() < 1e-9, "{b}");
+    }
+    // The default grid is Lambert-93.
+    let d = run(
+        "geodesy.projection.lambert93-forward",
+        &json!({"lat": 48.85837, "lon": 2.294481}),
+    );
+    assert_eq!(d["epsg"], "EPSG:2154 (RGF93 v1 / Lambert-93)");
+    assert!((val(&d, "easting") - 648_235.877_747).abs() < 1e-4, "{d}");
+    assert!(
+        (val(&d, "northing") - 6_862_268.358_286).abs() < 1e-4,
+        "{d}"
+    );
+}
+
+#[test]
+fn lambert93_flags_a_point_outside_its_grid() {
+    // Marseille is not in CC50's band; the answer computes and says so.
+    let r: Value = serde_json::from_str(&REGISTRY.invoke(
+        "geodesy.projection.lambert93-forward",
+        &json!({"lat": 43.2951, "lon": 5.374, "grid": "CC50"}).to_string(),
+    ))
+    .unwrap();
+    assert_eq!(r["ok"], true, "{r}");
+    let codes: Vec<&str> = r["meta"]["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|w| w["code"].as_str().unwrap())
+        .collect();
+    assert!(codes.contains(&"OUTSIDE_AREA_OF_USE"), "{r}");
+    // The cone opens toward the South Pole, which has no place on the grid.
+    let r: Value = serde_json::from_str(&REGISTRY.invoke(
+        "geodesy.projection.lambert93-forward",
+        &json!({"lat": -90.0, "lon": 3.0}).to_string(),
+    ))
+    .unwrap();
+    assert_eq!(r["ok"], false, "{r}");
+    assert_eq!(r["error"]["code"], "OUT_OF_DOMAIN", "{r}");
+}

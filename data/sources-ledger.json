@@ -4296,6 +4296,26 @@
       "editionCheck": false
     },
     {
+      "id": "ign-ntg71",
+      "name": "Projection cartographique conique conforme de Lambert, IGN Notes techniques NT/G 71",
+      "issuer": "Institut national de l'information géographique et forestière (IGN), Service de géodésie et nivellement",
+      "currentEdition": "1st edition, January 1995",
+      "currentReleaseDate": "1995-01-01",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-11-16",
+      "verificationNote": "Read at data.geopf.fr on 2026-11-16, linked from geodesie.ign.fr/algorithmes-geodesiques: the note states ALG0001 (isometric latitude), ALG0003 (geographic to Lambert), ALG0004 (Lambert to geographic), and ALG0054 (secant cone constants) with test sets, and its table of constants for the Lambert projections in use in France gives Lambert-93 n = 0.7256077650, c = 11 754 255.426 m, Xs = 700 000.0 m, Ys = 12 655 612.050 m. Those constants put through ALG0003 agree with PROJ 9.9.0's EPSG:2154 to 0.15 mm at five places across France. The Lambert-93 and CC zone definitions themselves are in French decree 2000-1276 as amended by decree 2006-272; Légifrance returns 403 to scripted requests, so the zone parameters are cited to EPSG, which registers IGN's definitions as 2154 and 3942 to 3950.",
+      "freeAccessUrl": "https://data.geopf.fr/annexes/ressources/documentation/geodesie/algorithmes/NTG_71.pdf",
+      "matchTerms": [
+        "NT/G 71"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "linz-nzgd2000-deformation",
       "name": "New Zealand Geodetic Datum 2000 deformation model",
       "issuer": "Land Information New Zealand (LINZ)",

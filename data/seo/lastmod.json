@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "3e6a817679a7dc0e",
+    "hash": "63155cf2c172da04",
     "lastmod": "2026-11-16"
   },
   "/accuracy/": {
@@ -316,7 +316,7 @@
     "lastmod": "2026-11-14"
   },
   "/changelog/": {
-    "hash": "6e93e51ce98bd65d",
+    "hash": "1889220999ff062a",
     "lastmod": "2026-11-16"
   },
   "/disclaimer/": {
@@ -576,7 +576,7 @@
     "lastmod": "2026-11-14"
   },
   "/geodesy/": {
-    "hash": "44aee736df8bc6b5",
+    "hash": "84b09ec6a81f1e46",
     "lastmod": "2026-11-16"
   },
   "/geodesy/crs/": {
@@ -856,7 +856,7 @@
     "lastmod": "2026-11-14"
   },
   "/geodesy/projection/": {
-    "hash": "ba7e05f52d4ac2ca",
+    "hash": "6e61eac7a9b9ff83",
     "lastmod": "2026-11-16"
   },
   "/geodesy/projection/albers-forward/": {
@@ -912,11 +912,19 @@
     "lastmod": "2026-11-16"
   },
   "/geodesy/projection/jgd2011-inverse/": {
-    "hash": "bdc56e7a3a5006af",
+    "hash": "91b2a062c7f983db",
+    "lastmod": "2026-11-16"
+  },
+  "/geodesy/projection/lambert93-forward/": {
+    "hash": "6380837805100509",
+    "lastmod": "2026-11-16"
+  },
+  "/geodesy/projection/lambert93-inverse/": {
+    "hash": "ab5c9bc57ddf1d1f",
     "lastmod": "2026-11-16"
   },
   "/geodesy/projection/lcc-forward/": {
-    "hash": "a3274d5b27fc82cf",
+    "hash": "9c531cda4442eca6",
     "lastmod": "2026-11-16"
   },
   "/geodesy/projection/lcc-inverse/": {
@@ -1616,7 +1624,7 @@
     "lastmod": "2026-11-14"
   },
   "/methodology/": {
-    "hash": "e6651f615dc01bb9",
+    "hash": "dab803bc8bbe5de5",
     "lastmod": "2026-11-16"
   },
   "/navigation/": {
@@ -1872,7 +1880,7 @@
     "lastmod": "2026-10-20"
   },
   "/quality/": {
-    "hash": "08088ab02848275d",
+    "hash": "95c12a6cccd5b9bb",
     "lastmod": "2026-11-16"
   },
   "/raster/": {
@@ -2028,7 +2036,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "c0910441cb69d5a2",
+    "hash": "b9d3b8bfdb38a70b",
     "lastmod": "2026-11-16"
   },
   "/survey/": {
@@ -2464,7 +2472,7 @@
     "lastmod": "2026-11-14"
   },
   "/tools/": {
-    "hash": "30f12ee00a735227",
+    "hash": "aed0488db50e2aee",
     "lastmod": "2026-11-16"
   },
   "/units/": {
@@ -2728,7 +2736,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "99d9293e705eace8",
+    "hash": "9e8fc1ef1112a7cd",
     "lastmod": "2026-11-16"
   },
   "/workflows/": {

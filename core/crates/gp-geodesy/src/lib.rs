@@ -3280,6 +3280,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &methods::JGD2011_INVERSE,
     &methods::LO_FORWARD,
     &methods::LO_INVERSE,
+    &methods::LAMBERT93_FORWARD,
+    &methods::LAMBERT93_INVERSE,
     &pairs::LATLON_TO_BNG,
     &pairs::BNG_TO_LATLON,
     &pairs::MGA_TO_LATLON,

@@ -4313,3 +4313,410 @@ fn run_lo_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("frame", Json::str(LO_FRAME)),
     ]))
 }
+
+// -------------------------------------------- France (RGF93 Lambert-93, CC)
+
+const IGN_NTG71: Reference = Reference {
+    title: "Projection cartographique conique conforme de Lambert, IGN Notes techniques NT/G 71",
+    issuer: "Institut national de l'information géographique et forestière (IGN), Service de géodésie et nivellement",
+    year: 1995,
+    edition: "1st edition, January 1995, as IGN publishes it, read 2026-11-16",
+    locator: "Algorithms ALG0001 (isometric latitude), ALG0003 (geographic to Lambert), ALG0004 (Lambert to geographic), and ALG0054 (secant cone constants), and the table of constants of the Lambert projections in use in France: Lambert-93 n = 0.7256077650, c = 11 754 255.426 m, Xs = 700 000.0 m, Ys = 12 655 612.050 m",
+    url: "https://data.geopf.fr/annexes/ressources/documentation/geodesie/algorithmes/NTG_71.pdf",
+};
+
+const EPSG_L93: Reference = Reference {
+    title: "EPSG Geodetic Parameter Dataset (EPSG v13.102 CRS registry)",
+    issuer: "IOGP, from IGN France",
+    year: 2026,
+    edition: "v13.102, as shipped in PROJ 9.9.0",
+    locator: "RGF93 v1 / Lambert-93 (EPSG 2154): Lambert Conic Conformal (2SP) on GRS 1980, false origin 46°30'N 3°E, standard parallels 49°N and 44°N, false easting 700,000 m, false northing 6,600,000 m; RGF93 v1 / CC42 to CC50 (EPSG 3942 to 3950): false origin on the zone's parallel and 3°E, standard parallels 0.75° either side, false easting 1,700,000 m, false northing (zone − 41) × 1,000,000 + 200,000 m; each with its area of use",
+    url: "https://epsg.org/crs/2154",
+};
+
+/// Lambert-93 (0) or a CC zone by its origin latitude (42 to 50).
+fn l93_which(ctx: &Ctx) -> Result<i32, ToolError> {
+    Ok(match ctx.choice("grid")? {
+        Some(g) if g.starts_with("CC") => g[2..].parse().expect("the choice lists CC42 to CC50"),
+        _ => 0,
+    })
+}
+
+fn l93_grid(zone: i32) -> Lcc {
+    let g = crate::gridref::grs80();
+    if zone == 0 {
+        Lcc::two_sp(g.a, g.f, 46.5, 3.0, 49.0, 44.0, 700_000.0, 6_600_000.0)
+    } else {
+        let lat0 = f64::from(zone);
+        Lcc::two_sp(
+            g.a,
+            g.f,
+            lat0,
+            3.0,
+            lat0 - 0.75,
+            lat0 + 0.75,
+            1_700_000.0,
+            f64::from(zone - 41) * 1_000_000.0 + 200_000.0,
+        )
+    }
+}
+
+fn l93_name(zone: i32) -> String {
+    if zone == 0 {
+        "Lambert-93".into()
+    } else {
+        format!("CC{zone}")
+    }
+}
+
+fn l93_epsg(zone: i32) -> String {
+    if zone == 0 {
+        "EPSG:2154 (RGF93 v1 / Lambert-93)".into()
+    } else {
+        format!("EPSG:{} (RGF93 v1 / CC{zone})", 3900 + zone)
+    }
+}
+
+/// EPSG's area of use for each grid: south, west, north, east.
+fn l93_area(zone: i32) -> [f64; 4] {
+    match zone {
+        42 => [41.31, -1.06, 43.07, 9.63],
+        43 => [42.33, -1.79, 44.01, 7.65],
+        44 => [42.92, -1.79, 45.0, 7.71],
+        45 => [44.0, -1.46, 46.0, 7.71],
+        46 => [45.0, -2.21, 47.0, 7.16],
+        47 => [46.0, -4.77, 48.0, 7.63],
+        48 => [47.0, -4.87, 49.0, 8.23],
+        49 => [48.0, -4.87, 50.0, 8.23],
+        50 => [49.0, -2.03, 51.14, 8.08],
+        _ => [41.15, -9.86, 51.56, 10.38],
+    }
+}
+
+fn l93_area_warning(ctx: &mut Ctx, zone: i32, lat: f64, lon: f64) {
+    let [s, w, n, e] = l93_area(zone);
+    if !((s..=n).contains(&lat) && (w..=e).contains(&lon)) {
+        let name = l93_name(zone);
+        ctx.warnings.push(Warning::new(
+            "OUTSIDE_AREA_OF_USE",
+            format!(
+                "The point is outside the area EPSG publishes for {name}, {s}° to {n}° north and {w}° to {e}° east. The arithmetic still holds, but the grid's scale error grows quickly away from it."
+            ),
+        ));
+    }
+}
+
+const L93_FRAME: &str = "The coordinates are taken to be on RGF93, France's datum, the European ETRS89 as realized in France. Its realizations v1, v2, and v2b differ by a few centimetres and share these grids. Coordinates on the older NTF datum are on the Clarke 1880 ellipsoid with Paris as prime meridian, and go through the NTF Lambert zones, not this grid.";
+
+const L93_GRID_IN: Field = Field::new(
+    "grid",
+    "Grid",
+    "Lambert-93, or a CC conic zone named by its origin latitude, like CC49 around Paris; the default is Lambert-93",
+    Kind::Choice(&[
+        "Lambert-93",
+        "CC42",
+        "CC43",
+        "CC44",
+        "CC45",
+        "CC46",
+        "CC47",
+        "CC48",
+        "CC49",
+        "CC50",
+    ]),
+);
+
+const L93_GRID_OUT: Field = Field::new(
+    "grid",
+    "Grid",
+    "The grid the coordinates are on",
+    Kind::Text { max_len: 20 },
+);
+
+pub static LAMBERT93_FORWARD: ToolDef = ToolDef {
+    id: "geodesy.projection.lambert93-forward",
+    title: "Latitude and longitude to Lambert-93",
+    summary: "Converts an RGF93 latitude and longitude to Lambert-93 easting and northing, France's national grid, or to one of the nine CC conic zones, with the grid convergence and the point scale factor.",
+    aliases: &[
+        "lat long to Lambert 93",
+        "Lambert-93 converter",
+        "French grid coordinates",
+        "RGF93 to Lambert 93",
+        "conique conforme CC49",
+    ],
+    keywords: &[
+        "Lambert-93",
+        "Lambert 93",
+        "RGF93",
+        "France",
+        "CC49",
+        "conic conformal",
+        "EPSG 2154",
+    ],
+    inputs: &[
+        Field::new(
+            "lat",
+            "Latitude",
+            "North positive, like 48.858370",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(9))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "East positive, so west of Greenwich is negative, like 2.294481",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .required()
+        .core()
+        .precision(Precision::Decimals(9))
+        .angle_range("[-180,180)"),
+        L93_GRID_IN,
+    ],
+    outputs: &[
+        // The last explain step ends on the easting, which the trace gate
+        // requires to be this first output.
+        MGA_EASTING_OUT,
+        MGA_NORTHING_OUT,
+        L93_GRID_OUT,
+        MGA_CONVERGENCE,
+        MGA_SCALE,
+        MGA_EPSG_OUT,
+        MGA_FRAME_OUT,
+    ],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
+    warnings: &[
+        "REALIZATION_ASSUMED",
+        "OUTSIDE_AREA_OF_USE",
+        "EXPERIMENTAL_TOOL",
+    ],
+    model: "Lambert Conic Conformal (2SP), EPSG method 9802, on GRS 80 with the parameters EPSG registers for RGF93 / Lambert-93 (origin 46°30'N 3°E, standard parallels 49°N and 44°N, false origin 700,000 m east and 6,600,000 m north) and for CC42 to CC50 (origin on the zone's parallel and 3°E, standard parallels 0.75° either side, false origin 1,700,000 m east and (zone − 41) × 1,000,000 + 200,000 m north), in closed form",
+    accuracy: "The projection is closed form and agrees with PROJ applying each grid's EPSG record, and with the constants IGN prints for Lambert-93 in NT/G 71, within a millimetre at every test place. The coordinates are taken to be on RGF93",
+    when_to_use: "Use this to put a latitude and longitude onto the grid French cadastral plans, IGN maps, and public datasets are drawn in. Lambert-93 covers mainland France and Corsica in one grid; a CC zone keeps the scale error under 1 in 100,000 within its band, which is why large-scale surveys use them. The answer returns the grid convergence and the point scale factor beside the coordinates.",
+    limitations: "The tool projects and does not transform: a position on the older NTF datum must first be moved to RGF93 by IGN's grid, which this tool does not carry. It covers mainland France and Corsica; the overseas departments use UTM on their own datums. Heights are untouched: RAF20 is a separate asset. Lambert-93's scale error reaches about 3 in 1,000 at the edges of France, so a ground distance needs the point scale factor.",
+    references: &[IGN_NTG71, EPSG_L93],
+    examples: &[Example {
+        id: "primary",
+        title: "The Eiffel Tower",
+        source: "PROJ 9.9.0 applying EPSG:2154 (RGF93 v1 / Lambert-93): 48.858370°N 2.294481°E gives E 648235.878 N 6862268.358",
+        input: r#"{"lat":48.85837,"lon":2.294481}"#,
+    }],
+    primary_example: "primary",
+    visualization: FORWARD_LAYER,
+    related: &[
+        Related {
+            id: "geodesy.projection.lambert93-inverse",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.projection.lcc-forward",
+            reason: "parent",
+        },
+    ],
+    sentence: "That point is E {easting}, N {northing} on {grid}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_lambert93_forward,
+    ..ToolDef::BLANK
+};
+
+fn run_lambert93_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    let zone = l93_which(ctx)?;
+    if lat <= -90.0 {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "The cone opens toward the South Pole, which is at infinity on this grid.",
+        )
+        .at("/lat"));
+    }
+    let g = l93_grid(zone).forward(lat, lon);
+    ctx.warnings
+        .push(Warning::new("REALIZATION_ASSUMED", L93_FRAME));
+    l93_area_warning(ctx, zone, lat, lon);
+    let name = l93_name(zone);
+    if ctx.explaining() {
+        ctx.step(
+            "The grid",
+            "Lambert-93 for all of France, or a CC zone one degree of latitude wide",
+            name.clone(),
+            l93_epsg(zone),
+        );
+        ctx.step(
+            "On the cone",
+            "Lambert conic conformal on GRS 80, two standard parallels, central meridian 3°E",
+            format!("{lat:.6}°, {lon:.6}°"),
+            format!(
+                "{} m",
+                gp_base::display::number(g.e, Precision::Decimals(3), ctx.options.format)
+            ),
+        );
+    }
+    Ok(Json::obj([
+        ("easting", ctx.out("easting", meters(g.e))),
+        ("northing", ctx.out("northing", meters(g.n))),
+        ("grid", Json::str(name)),
+        ("convergence", ctx.out("convergence", deg(g.convergence))),
+        ("scale_factor", Json::Num(g.k)),
+        ("epsg", Json::str(l93_epsg(zone))),
+        ("frame", Json::str(L93_FRAME)),
+    ]))
+}
+
+pub static LAMBERT93_INVERSE: ToolDef = ToolDef {
+    id: "geodesy.projection.lambert93-inverse",
+    title: "Lambert-93 to latitude and longitude",
+    summary: "Converts a Lambert-93 easting and northing, or one on a CC conic zone, back to an RGF93 latitude and longitude, with the grid convergence and the point scale factor there.",
+    aliases: &[
+        "Lambert 93 to lat long",
+        "Lambert-93 to latitude longitude",
+        "read French grid coordinates",
+        "CC49 to lat long",
+    ],
+    keywords: &[
+        "Lambert-93",
+        "Lambert 93",
+        "RGF93",
+        "France",
+        "CC49",
+        "inverse",
+        "EPSG 2154",
+    ],
+    inputs: &[
+        length(
+            "easting",
+            "Easting",
+            "Metres on the grid, with its false easting, like 648235.878 m",
+        )
+        .required()
+        .core(),
+        length(
+            "northing",
+            "Northing",
+            "Metres on the grid, with its false northing, like 6862268.358 m",
+        )
+        .required()
+        .core(),
+        L93_GRID_IN,
+    ],
+    outputs: &[
+        Field::new(
+            "lat",
+            "Latitude",
+            "On RGF93, north positive",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .angle_range("[-90,90]"),
+        Field::new(
+            "lon",
+            "Longitude",
+            "On RGF93, east positive",
+            Kind::Quantity {
+                q: QT::Angle,
+                unit: "deg",
+            },
+        )
+        .precision(Precision::Decimals(9))
+        .angle_range("[-180,180)"),
+        L93_GRID_OUT,
+        MGA_CONVERGENCE,
+        MGA_SCALE,
+        MGA_EPSG_OUT,
+        MGA_FRAME_OUT,
+    ],
+    errors: &[ErrorCode::InvalidInput],
+    warnings: &[
+        "REALIZATION_ASSUMED",
+        "OUTSIDE_AREA_OF_USE",
+        "EXPERIMENTAL_TOOL",
+    ],
+    model: "The inverse Lambert Conic Conformal (2SP), EPSG method 9802, on GRS 80 with the grid's EPSG parameters, the latitude recovered from the isometric latitude by iteration",
+    accuracy: "The round trip returns every test place to within a nanodegree, and the answer agrees with PROJ applying the grid's EPSG record. The answer is on RGF93",
+    when_to_use: "Use this to read an easting and northing off a French cadastral plan, IGN map, or public dataset and get the latitude and longitude a phone or a web map wants. Lambert-93 is the default; a CC zone is named on the plan, and its northing in millions of metres is the zone number less 41, like 7.2 million for CC48.",
+    limitations: "Lambert-93 and the CC zones overlap in their numbers' range, so read the grid off the plan rather than guessing it. Coordinates on the older NTF Lambert zones are another datum and another projection, and are not this grid. Heights are untouched.",
+    references: &[IGN_NTG71, EPSG_L93],
+    examples: &[Example {
+        id: "primary",
+        title: "The Eiffel Tower",
+        source: "PROJ 9.9.0 applying EPSG:2154 in reverse: E 648235.878 N 6862268.358 on Lambert-93 gives 48.858370°N 2.294481°E on RGF93",
+        input: r#"{"easting":"648235.8777 m","northing":"6862268.3583 m"}"#,
+    }],
+    primary_example: "primary",
+    visualization: INVERSE_LAYER,
+    related: &[
+        Related {
+            id: "geodesy.projection.lambert93-forward",
+            reason: "inverse",
+        },
+        Related {
+            id: "geodesy.projection.lcc-inverse",
+            reason: "parent",
+        },
+    ],
+    sentence: "That is {lat}, {lon}.",
+    limits: &[("batchRows", 10_000)],
+    run: run_lambert93_inverse,
+    ..ToolDef::BLANK
+};
+
+fn run_lambert93_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
+    let zone = l93_which(ctx)?;
+    let (e, n) = grid_in(ctx)?;
+    if !e.is_finite() || !n.is_finite() {
+        return Err(ToolError::invalid(
+            "/easting",
+            "The easting and northing are metres on the grid.",
+        ));
+    }
+    let grid = l93_grid(zone);
+    let (lat, lon) = grid.inverse(e, n);
+    if !lat.is_finite() || !lon.is_finite() || !(-90.0..=90.0).contains(&lat) {
+        return Err(ToolError::invalid(
+            "/northing",
+            "That easting and northing is not a place on the grid.",
+        ));
+    }
+    let back = grid.forward(lat, lon);
+    ctx.warnings
+        .push(Warning::new("REALIZATION_ASSUMED", L93_FRAME));
+    l93_area_warning(ctx, zone, lat, lon);
+    let name = l93_name(zone);
+    if ctx.explaining() {
+        ctx.step(
+            "The grid",
+            "Lambert-93 for all of France, or a CC zone one degree of latitude wide",
+            name.clone(),
+            l93_epsg(zone),
+        );
+        ctx.step(
+            "Off the cone",
+            "the inverse Lambert conic conformal on GRS 80, central meridian 3°E",
+            format!("E {e:.3} m, N {n:.3} m"),
+            format!(
+                "{}°",
+                gp_base::display::number(lat, Precision::Decimals(9), ctx.options.format)
+            ),
+        );
+    }
+    Ok(Json::obj([
+        ("lat", ctx.out("lat", deg(lat))),
+        ("lon", ctx.out("lon", deg(lon))),
+        ("grid", Json::str(name)),
+        ("convergence", ctx.out("convergence", deg(back.convergence))),
+        ("scale_factor", Json::Num(back.k)),
+        ("epsg", Json::str(l93_epsg(zone))),
+        ("frame", Json::str(L93_FRAME)),
+    ]))
+}

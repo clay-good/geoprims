@@ -1182,6 +1182,13 @@
           ]
         },
         {
+          "want": "convert French Lambert-93 or CC zone coordinates",
+          "tools": [
+            "geodesy.projection.lambert93-forward",
+            "geodesy.projection.lambert93-inverse"
+          ]
+        },
+        {
           "want": "go straight from Australian or New Zealand grid coordinates to latitude and longitude",
           "tools": [
             "geodesy.projection.mga-to-latlon",

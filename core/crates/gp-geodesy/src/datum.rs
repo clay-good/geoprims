@@ -2392,6 +2392,7 @@ const GDA2020_NOTE: &str = "This is the conformal transformation, which carries 
 
 pub static GDA2020: ToolDef = ToolDef {
     id: "geodesy.datum.gda2020",
+    stability: gp_base::tool::Stability::Stable,
     title: "GDA94 and GDA2020",
     summary: "Transforms an Australian position between GDA94 and GDA2020 by ICSM's conformal transformation, which moves the country about 1.8 m north-east, and says what it does not model.",
     aliases: &[
@@ -2674,6 +2675,7 @@ const ETRF_EPOCH: f64 = 2010.0;
 
 pub static ETRF: ToolDef = ToolDef {
     id: "geodesy.datum.etrf",
+    stability: gp_base::tool::Stability::Stable,
     title: "ITRF or WGS 84 to ETRS89",
     summary: "Carries a position between a global frame (ITRF or WGS 84) and ETRS89, the European frame national grids are built on, which is fixed to the plate and so drifts from the global frames by about 2.5 cm a year.",
     aliases: &[

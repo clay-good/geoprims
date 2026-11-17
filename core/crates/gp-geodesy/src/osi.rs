@@ -139,6 +139,7 @@ const SHARED_OUT: [Field; 5] = [
 
 pub static OSI_POLYNOMIAL: ToolDef = ToolDef {
     id: "geodesy.datum.osi-polynomial",
+    stability: gp_base::tool::Stability::Stable,
     title: "Irish Grid to ETRS89 by the OSi and LPS polynomial",
     summary: "Turns an Irish Grid easting, northing, and height on the Malin Head or Belfast datum into an ETRS89 latitude, longitude, and ellipsoidal height, and Irish Transverse Mercator, by the official polynomial and OSGM15.",
     aliases: &[
@@ -335,6 +336,7 @@ fn run_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static OSI_POLYNOMIAL_INVERSE: ToolDef = ToolDef {
     id: "geodesy.datum.osi-polynomial-inverse",
+    stability: gp_base::tool::Stability::Stable,
     title: "ETRS89 to Irish Grid by the OSi and LPS polynomial",
     summary: "Turns an ETRS89 latitude, longitude, and ellipsoidal height from a GNSS receiver into an Irish Grid easting and northing and a height above Malin Head or Belfast, by iterating the official polynomial and OSGM15.",
     aliases: &[
@@ -421,7 +423,7 @@ pub static OSI_POLYNOMIAL_INVERSE: ToolDef = ToolDef {
         ErrorCode::AssetUnavailable,
         ErrorCode::AssetIntegrity,
     ],
-    warnings: &["REALIZATION_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["REALIZATION_ASSUMED"],
     model: "The OSi/LPS polynomial inverted by fixed-point iteration, TM75 = ETRS89 less the shifts at the latest TM75 estimate, until the estimate moves by under 1e-11 degrees; the TM75 point onto the Irish Grid transverse Mercator by Ordnance Survey's annexe B, and the OSGM15 geoid height on the datum named subtracted from the ellipsoidal height",
     accuracy: ACCURACY,
     when_to_use: "Use this to put GNSS survey data into Irish Grid coordinates and levelled heights, to match older Ordnance Survey Ireland and OSNI mapping, plans, and records. Name the height datum: Belfast for Northern Ireland, Malin Head for the Republic.",
@@ -447,6 +449,10 @@ pub static OSI_POLYNOMIAL_INVERSE: ToolDef = ToolDef {
         Related {
             id: "geodesy.grid-ref.irish-forward",
             reason: "next",
+        },
+        Related {
+            id: "geodesy.grid-ref.itm-inverse",
+            reason: "alternative",
         },
     ],
     sentence: "That point is E {easting}, N {northing} on the Irish Grid, {orthometric_height} above {height_datum}.",

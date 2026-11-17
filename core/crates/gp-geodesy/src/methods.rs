@@ -2630,6 +2630,7 @@ const NZTM_FRAME_OUT: Field = Field::new(
 
 pub static NZTM_FORWARD: ToolDef = ToolDef {
     id: "geodesy.projection.nztm-forward",
+    stability: gp_base::tool::Stability::Stable,
     title: "Latitude and longitude to NZTM2000",
     summary: "Converts an NZGD2000 latitude and longitude to New Zealand Transverse Mercator 2000 easting and northing, the national grid, with the grid convergence and the point scale factor.",
     aliases: &[
@@ -2684,7 +2685,7 @@ pub static NZTM_FORWARD: ToolDef = ToolDef {
         NZTM_FRAME_OUT,
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["REALIZATION_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["REALIZATION_ASSUMED"],
     model: "Transverse Mercator on GRS 80 with the parameters LINZS25002 states and EPSG registers as 2193: origin latitude 0°, central meridian 173°E, scale 0.9996 on that meridian, false easting 1,600,000 m and false northing 10,000,000 m, by Karney's series",
     accuracy: "The projection is exact to the series' nanometre over New Zealand, and agrees with PROJ applying EPSG 2193 within a millimetre at every test place. The coordinates are taken as NZGD2000: read as a satellite's WGS 84 they are out by the plate motion LINZ states, 5 cm a year since 2000",
     when_to_use: "Use this to put a latitude and longitude onto the grid every New Zealand map, title, and council dataset is drawn in. It gives the grid convergence and the point scale factor beside the coordinates, which is what turns a true bearing into a grid bearing and a ground distance into a grid distance.",
@@ -2757,6 +2758,7 @@ fn run_nztm_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static NZTM_INVERSE: ToolDef = ToolDef {
     id: "geodesy.projection.nztm-inverse",
+    stability: gp_base::tool::Stability::Stable,
     title: "NZTM2000 to latitude and longitude",
     summary: "Converts New Zealand Transverse Mercator 2000 easting and northing back to an NZGD2000 latitude and longitude, with the grid convergence and the point scale factor there.",
     aliases: &[
@@ -2807,7 +2809,7 @@ pub static NZTM_INVERSE: ToolDef = ToolDef {
         NZTM_FRAME_OUT,
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["REALIZATION_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["REALIZATION_ASSUMED"],
     model: "The inverse transverse Mercator on GRS 80 with LINZS25002's parameters, which EPSG registers as 2193 (origin 0° 173°E, scale 0.9996, false easting 1,600,000 m, false northing 10,000,000 m), by Karney's series",
     accuracy: "The inverse is the forward's own inverse rather than a separate approximation, and the round trip returns every test place to within a nanodegree. The answer is on NZGD2000: read as a satellite's WGS 84 it is out by the plate motion LINZ states, 5 cm a year since 2000",
     when_to_use: "Use this to read an easting and northing off a New Zealand map, title plan, or council dataset and get the latitude and longitude a phone or a web map wants. It returns the convergence and the point scale factor as well, which is what turns a grid bearing back into a true one.",
@@ -3080,6 +3082,7 @@ fn mga_area_warning(ctx: &mut Ctx, lat: f64, lon: f64) {
 
 pub static MGA_FORWARD: ToolDef = ToolDef {
     id: "geodesy.projection.mga-forward",
+    stability: gp_base::tool::Stability::Stable,
     title: "Latitude and longitude to MGA2020",
     summary: "Converts a GDA2020 latitude and longitude to Map Grid of Australia easting and northing, picking the zone or taking yours, with the grid convergence and the point scale factor; takes MGA94 on GDA94 too.",
     aliases: &[
@@ -3154,7 +3157,6 @@ pub static MGA_FORWARD: ToolDef = ToolDef {
         "REALIZATION_ASSUMED",
         "NONSTANDARD_ZONE",
         "OUTSIDE_AREA_OF_USE",
-        "EXPERIMENTAL_TOOL",
     ],
     model: "Universal Transverse Mercator on GRS 80 with the parameters Geoscience Australia states and EPSG registers for the MGA zones: origin latitude 0°, the zone's central meridian at 6n − 183, scale 0.9996 on it, false easting 500,000 m and false northing 10,000,000 m, by Karney's series",
     accuracy: "The projection is exact to the series' nanometre over Australia, and agrees with PROJ applying the zone's own EPSG record within a millimetre at every test place. The coordinates are taken to be on the datum named: a GDA94 latitude and longitude run as MGA2020 is out by the 1.8 m between the datums",
@@ -3255,6 +3257,7 @@ fn run_mga_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static MGA_INVERSE: ToolDef = ToolDef {
     id: "geodesy.projection.mga-inverse",
+    stability: gp_base::tool::Stability::Stable,
     title: "MGA2020 to latitude and longitude",
     summary: "Converts a Map Grid of Australia zone, easting, and northing back to a GDA2020 latitude and longitude, with the grid convergence and the point scale factor there; reads MGA94 on GDA94 too.",
     aliases: &[
@@ -3331,11 +3334,7 @@ pub static MGA_INVERSE: ToolDef = ToolDef {
         MGA_FRAME_OUT,
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &[
-        "REALIZATION_ASSUMED",
-        "OUTSIDE_AREA_OF_USE",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["REALIZATION_ASSUMED", "OUTSIDE_AREA_OF_USE"],
     model: "The inverse Universal Transverse Mercator on GRS 80 with the MGA zone's parameters (origin 0°, central meridian 6n − 183, scale 0.9996, false easting 500,000 m, false northing 10,000,000 m), by Karney's series",
     accuracy: "The inverse is the forward's own inverse rather than a separate approximation, and the round trip returns every test place to within a nanodegree. The answer is on the datum named: read as the other one it is out by the 1.8 m between GDA94 and GDA2020",
     when_to_use: "Use this to read an easting and northing off an Australian survey plan, title, or council dataset and get the latitude and longitude a phone or a web map wants. MGA coordinates do not carry their zone, so the zone is asked for; the answer returns the convergence and the point scale factor as well, which is what turns a grid bearing back into a true one.",
@@ -3593,6 +3592,7 @@ const JGD_NORTHING_OUT: Field = Field::new(
 
 pub static JGD2011_FORWARD: ToolDef = ToolDef {
     id: "geodesy.projection.jgd2011-forward",
+    stability: gp_base::tool::Stability::Stable,
     title: "Latitude and longitude to Japan plane rectangular",
     summary: "Converts a JGD2011 latitude and longitude to X and Y on one of Japan's nineteen plane rectangular systems, with the grid convergence and the point scale factor.",
     aliases: &[
@@ -3653,11 +3653,7 @@ pub static JGD2011_FORWARD: ToolDef = ToolDef {
         MGA_FRAME_OUT,
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &[
-        "REALIZATION_ASSUMED",
-        "OUTSIDE_AREA_OF_USE",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["REALIZATION_ASSUMED", "OUTSIDE_AREA_OF_USE"],
     model: "Gauss conformal (transverse Mercator) projection on GRS 80 with the parameters of MLIT Notice No. 9 of 2002 and EPSG 6669 to 6687: the system's own origin latitude and longitude, scale 0.9999 on its meridian, X = 0 and Y = 0 at the origin, by Karney's series",
     accuracy: "The projection is exact to the series' nanometre across Japan, and agrees with PROJ applying each system's own EPSG record within a millimetre at every test place. The coordinates are taken to be on JGD2011: a latitude and longitude on the older Tokyo datum is out by about 400 m",
     when_to_use: "Use this to put a latitude and longitude onto the grid Japanese public surveys, cadastral maps, and municipal datasets are drawn in. The system is set by prefecture rather than by longitude, so it is asked for: 9 for Tokyo and the Kanto prefectures, 6 for Osaka and Kyoto, 12 for most of Hokkaido. The answer returns the grid convergence and the point scale factor beside X and Y.",
@@ -3679,6 +3675,10 @@ pub static JGD2011_FORWARD: ToolDef = ToolDef {
         Related {
             id: "geodesy.utm.forward",
             reason: "parent",
+        },
+        Related {
+            id: "geodesy.projection.tm-forward",
+            reason: "alternative",
         },
     ],
     sentence: "That point is X {northing}, Y {easting} on system {zone}.",
@@ -3734,6 +3734,7 @@ fn run_jgd2011_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static JGD2011_INVERSE: ToolDef = ToolDef {
     id: "geodesy.projection.jgd2011-inverse",
+    stability: gp_base::tool::Stability::Stable,
     title: "Japan plane rectangular to latitude and longitude",
     summary: "Converts X and Y on one of Japan's nineteen plane rectangular systems back to a JGD2011 latitude and longitude, with the grid convergence and the point scale factor there.",
     aliases: &[
@@ -3799,11 +3800,7 @@ pub static JGD2011_INVERSE: ToolDef = ToolDef {
         MGA_FRAME_OUT,
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &[
-        "REALIZATION_ASSUMED",
-        "OUTSIDE_AREA_OF_USE",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["REALIZATION_ASSUMED", "OUTSIDE_AREA_OF_USE"],
     model: "The inverse Gauss conformal (transverse Mercator) projection on GRS 80 with the system's parameters from MLIT Notice No. 9 of 2002 (its origin, scale 0.9999, X = 0 and Y = 0 at the origin), by Karney's series",
     accuracy: "The inverse is the forward's own inverse rather than a separate approximation, and the round trip returns every test place to within a nanodegree. The answer is on JGD2011",
     when_to_use: "Use this to read X and Y off a Japanese survey drawing, cadastral map, or municipal dataset and get the latitude and longitude a phone or a web map wants. X is the northing and Y the easting, the opposite of the order most other grids print, so check which column is which. The coordinates do not carry their system, so it is asked for.",
@@ -3825,6 +3822,10 @@ pub static JGD2011_INVERSE: ToolDef = ToolDef {
         Related {
             id: "geodesy.utm.inverse",
             reason: "parent",
+        },
+        Related {
+            id: "geodesy.projection.tm-inverse",
+            reason: "alternative",
         },
     ],
     sentence: "That is {lat}, {lon}.",
@@ -3991,6 +3992,7 @@ const LO_SOUTHING_OUT: Field = Field::new(
 
 pub static LO_FORWARD: ToolDef = ToolDef {
     id: "geodesy.projection.lo-forward",
+    stability: gp_base::tool::Stability::Stable,
     title: "Latitude and longitude to South African Lo",
     summary: "Converts a Hartebeesthoek94 latitude and longitude to the Y and X of South Africa's Lo system, picking the two-degree belt or taking yours, with the grid convergence and the point scale factor.",
     aliases: &[
@@ -4062,7 +4064,6 @@ pub static LO_FORWARD: ToolDef = ToolDef {
         "REALIZATION_ASSUMED",
         "NONSTANDARD_ZONE",
         "OUTSIDE_AREA_OF_USE",
-        "EXPERIMENTAL_TOOL",
     ],
     model: "Transverse Mercator (South Orientated), EPSG method 9808, on WGS 84 with the Lo belt's parameters (EPSG 2046 to 2055): origin on the equator and the belt's odd central meridian, scale 1, no false westing or southing, westing and southing positive to the west and south, by Karney's series",
     accuracy: "The projection is exact to the series' nanometre across South Africa, and agrees with PROJ applying each belt's own EPSG record within a millimetre at every test place. IOGP's worked example prints a westing 1 cm larger, because its formula is a shorter series. The coordinates are taken to be on Hartebeesthoek94",
@@ -4088,6 +4089,10 @@ pub static LO_FORWARD: ToolDef = ToolDef {
         Related {
             id: "geodesy.projection.tm-forward",
             reason: "parent",
+        },
+        Related {
+            id: "geodesy.utm.forward",
+            reason: "alternative",
         },
     ],
     sentence: "That point is Y {westing}, X {southing} on Lo{zone}.",
@@ -4153,6 +4158,7 @@ fn run_lo_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static LO_INVERSE: ToolDef = ToolDef {
     id: "geodesy.projection.lo-inverse",
+    stability: gp_base::tool::Stability::Stable,
     title: "South African Lo to latitude and longitude",
     summary: "Converts the Y and X of a South African Lo belt back to a Hartebeesthoek94 latitude and longitude, with the grid convergence and the point scale factor there.",
     aliases: &[
@@ -4226,11 +4232,7 @@ pub static LO_INVERSE: ToolDef = ToolDef {
         MGA_FRAME_OUT,
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &[
-        "REALIZATION_ASSUMED",
-        "OUTSIDE_AREA_OF_USE",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["REALIZATION_ASSUMED", "OUTSIDE_AREA_OF_USE"],
     model: "The inverse Transverse Mercator (South Orientated), EPSG method 9808, on WGS 84 with the Lo belt's parameters (origin on the equator and the belt's central meridian, scale 1, no false westing or southing), by Karney's series",
     accuracy: "The inverse is the forward's own inverse rather than a separate approximation, and the round trip returns every test place to within a nanodegree. The answer is on Hartebeesthoek94",
     when_to_use: "Use this to read Y and X off a South African survey diagram, general plan, or municipal dataset and get the latitude and longitude a phone or a web map wants. Y is the westing and X the southing, so a point east of the belt's meridian has a negative Y. The coordinates do not carry their belt, so it is asked for.",
@@ -4252,6 +4254,10 @@ pub static LO_INVERSE: ToolDef = ToolDef {
         Related {
             id: "geodesy.projection.tm-inverse",
             reason: "parent",
+        },
+        Related {
+            id: "geodesy.utm.inverse",
+            reason: "alternative",
         },
     ],
     sentence: "That is {lat}, {lon}.",
@@ -4435,6 +4441,7 @@ const L93_GRID_OUT: Field = Field::new(
 
 pub static LAMBERT93_FORWARD: ToolDef = ToolDef {
     id: "geodesy.projection.lambert93-forward",
+    stability: gp_base::tool::Stability::Stable,
     title: "Latitude and longitude to Lambert-93",
     summary: "Converts an RGF93 latitude and longitude to Lambert-93 easting and northing, France's national grid, or to one of the nine CC conic zones, with the grid convergence and the point scale factor.",
     aliases: &[
@@ -4494,11 +4501,7 @@ pub static LAMBERT93_FORWARD: ToolDef = ToolDef {
         MGA_FRAME_OUT,
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &[
-        "REALIZATION_ASSUMED",
-        "OUTSIDE_AREA_OF_USE",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["REALIZATION_ASSUMED", "OUTSIDE_AREA_OF_USE"],
     model: "Lambert Conic Conformal (2SP), EPSG method 9802, on GRS 80 with the parameters EPSG registers for RGF93 / Lambert-93 (origin 46°30'N 3°E, standard parallels 49°N and 44°N, false origin 700,000 m east and 6,600,000 m north) and for CC42 to CC50 (origin on the zone's parallel and 3°E, standard parallels 0.75° either side, false origin 1,700,000 m east and (zone − 41) × 1,000,000 + 200,000 m north), in closed form",
     accuracy: "The projection is closed form and agrees with PROJ applying each grid's EPSG record, and with the constants IGN prints for Lambert-93 in NT/G 71, within a millimetre at every test place. The coordinates are taken to be on RGF93",
     when_to_use: "Use this to put a latitude and longitude onto the grid French cadastral plans, IGN maps, and public datasets are drawn in. Lambert-93 covers mainland France and Corsica in one grid; a CC zone keeps the scale error under 1 in 100,000 within its band, which is why large-scale surveys use them. The answer returns the grid convergence and the point scale factor beside the coordinates.",
@@ -4520,6 +4523,10 @@ pub static LAMBERT93_FORWARD: ToolDef = ToolDef {
         Related {
             id: "geodesy.projection.lcc-forward",
             reason: "parent",
+        },
+        Related {
+            id: "geodesy.projection.etrs89-forward",
+            reason: "alternative",
         },
     ],
     sentence: "That point is E {easting}, N {northing} on {grid}.",
@@ -4573,6 +4580,7 @@ fn run_lambert93_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static LAMBERT93_INVERSE: ToolDef = ToolDef {
     id: "geodesy.projection.lambert93-inverse",
+    stability: gp_base::tool::Stability::Stable,
     title: "Lambert-93 to latitude and longitude",
     summary: "Converts a Lambert-93 easting and northing, or one on a CC conic zone, back to an RGF93 latitude and longitude, with the grid convergence and the point scale factor there.",
     aliases: &[
@@ -4637,11 +4645,7 @@ pub static LAMBERT93_INVERSE: ToolDef = ToolDef {
         MGA_FRAME_OUT,
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &[
-        "REALIZATION_ASSUMED",
-        "OUTSIDE_AREA_OF_USE",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["REALIZATION_ASSUMED", "OUTSIDE_AREA_OF_USE"],
     model: "The inverse Lambert Conic Conformal (2SP), EPSG method 9802, on GRS 80 with the grid's EPSG parameters, the latitude recovered from the isometric latitude by iteration",
     accuracy: "The round trip returns every test place to within a nanodegree, and the answer agrees with PROJ applying the grid's EPSG record. The answer is on RGF93",
     when_to_use: "Use this to read an easting and northing off a French cadastral plan, IGN map, or public dataset and get the latitude and longitude a phone or a web map wants. Lambert-93 is the default; a CC zone is named on the plan, and its northing in millions of metres is the zone number less 41, like 7.2 million for CC48.",
@@ -4663,6 +4667,10 @@ pub static LAMBERT93_INVERSE: ToolDef = ToolDef {
         Related {
             id: "geodesy.projection.lcc-inverse",
             reason: "parent",
+        },
+        Related {
+            id: "geodesy.projection.etrs89-inverse",
+            reason: "alternative",
         },
     ],
     sentence: "That is {lat}, {lon}.",
@@ -4816,6 +4824,7 @@ const ETRS_K: Field = Field::new(
 
 pub static ETRS89_FORWARD: ToolDef = ToolDef {
     id: "geodesy.projection.etrs89-forward",
+    stability: gp_base::tool::Stability::Stable,
     title: "Latitude and longitude to LAEA Europe",
     summary: "Converts an ETRS89 latitude and longitude to the pan-European grids: LAEA Europe (EPSG 3035), the equal-area grid of European statistics and the INSPIRE grid cells, or LCC Europe (EPSG 3034) for conformal maps, with the convergence and the scales.",
     aliases: &[
@@ -4877,11 +4886,7 @@ pub static ETRS89_FORWARD: ToolDef = ToolDef {
         MGA_FRAME_OUT,
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &[
-        "REALIZATION_ASSUMED",
-        "OUTSIDE_AREA_OF_USE",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["REALIZATION_ASSUMED", "OUTSIDE_AREA_OF_USE"],
     model: "LAEA Europe: Lambert Azimuthal Equal Area (EPSG method 9820), oblique ellipsoidal aspect on GRS 80, origin 52°N 10°E, false easting 4,321,000 m and false northing 3,210,000 m, by Guidance Note 7-2's formulas. LCC Europe: Lambert Conic Conformal (2SP, EPSG 9802), origin 52°N 10°E, standard parallels 35°N and 65°N, false easting 4,000,000 m and false northing 2,800,000 m, in closed form. The convergence and the scales of LAEA are measured from the projection itself over 100 m chords",
     accuracy: "Both grids are closed form and agree with PROJ applying their EPSG records within a millimetre at every test place, and LAEA Europe reproduces Guidance Note 7-2's worked example to the centimetre it prints. The convergence and scales agree with PROJ's to 1e-8. The coordinates are taken to be on ETRS89",
     when_to_use: "Use LAEA Europe to place a point in the grid of European statistics: Eurostat's population grid, the INSPIRE 1 km and 10 km grid cells, and the European Environment Agency's reference grid are all squares in it, because areas are true. Use LCC Europe for a conformal map of the continent, where shapes and angles are true over small areas.",
@@ -4976,6 +4981,7 @@ fn run_etrs89_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static ETRS89_INVERSE: ToolDef = ToolDef {
     id: "geodesy.projection.etrs89-inverse",
+    stability: gp_base::tool::Stability::Stable,
     title: "LAEA Europe to latitude and longitude",
     summary: "Converts an easting and northing on LAEA Europe (EPSG 3035) or LCC Europe (EPSG 3034) back to an ETRS89 latitude and longitude, with the convergence and the scales there.",
     aliases: &[
@@ -5042,11 +5048,7 @@ pub static ETRS89_INVERSE: ToolDef = ToolDef {
         MGA_FRAME_OUT,
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &[
-        "REALIZATION_ASSUMED",
-        "OUTSIDE_AREA_OF_USE",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["REALIZATION_ASSUMED", "OUTSIDE_AREA_OF_USE"],
     model: "The inverse of LAEA Europe (EPSG 3035) or LCC Europe (EPSG 3034) on GRS 80; the LAEA latitude is recovered from the authalic latitude by Newton's method rather than Guidance Note 7-2's series, which is truncated near a centimetre",
     accuracy: "The round trip returns every test place to within a nanodegree, and the answer agrees with PROJ applying the grid's EPSG record. The answer is on ETRS89",
     when_to_use: "Use this to read a coordinate off a European statistical grid, an INSPIRE grid cell's corner, or a Eurostat or European Environment Agency dataset, and get the latitude and longitude a web map wants. LAEA Europe is the default; LCC Europe is named where a dataset uses it.",
@@ -5068,6 +5070,10 @@ pub static ETRS89_INVERSE: ToolDef = ToolDef {
         Related {
             id: "geodesy.projection.lcc-inverse",
             reason: "parent",
+        },
+        Related {
+            id: "geodesy.datum.etrf",
+            reason: "next",
         },
     ],
     sentence: "That is {lat}, {lon}.",

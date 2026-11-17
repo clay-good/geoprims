@@ -117,6 +117,7 @@ const SHIFT_OUTPUTS: [Field; 6] = [
 
 pub static OSTN15_FORWARD: ToolDef = ToolDef {
     id: "geodesy.datum.ostn15",
+    stability: gp_base::tool::Stability::Stable,
     title: "GNSS position to British National Grid by OSTN15",
     summary: "Turns an ETRS89 latitude, longitude, and ellipsoidal height from a GNSS receiver into an OSGB36 National Grid easting and northing by OSTN15, and an orthometric height above the local datum by OSGM15, exactly as Ordnance Survey defines them.",
     aliases: &[
@@ -203,7 +204,7 @@ pub static OSTN15_FORWARD: ToolDef = ToolDef {
         ErrorCode::AssetUnavailable,
         ErrorCode::AssetIntegrity,
     ],
-    warnings: &["REALIZATION_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["REALIZATION_ASSUMED"],
     model: "OSTN15 and OSGM15 on Ordnance Survey's native 1 km grid: the ETRS89 latitude and longitude projected on the National Grid transverse Mercator with GRS 80, the easting, northing and geoid shifts bilinearly interpolated from the four corners of the kilometre square and added (the geoid height subtracted from the ellipsoidal height), and the height datum flag taken by quadrant where the corners disagree",
     accuracy: ACCURACY,
     when_to_use: "Use this to put a GNSS survey onto Ordnance Survey mapping and levels: it is the transformation that defines the National Grid, so the easting and northing it gives are the right ones by definition, and the orthometric height is on the local datum, Newlyn on the mainland or the island datums offshore. For a quick map position the seven-parameter path in geodesy.grid-ref.bng-forward is about 2 m; this is the one to use for survey work.",
@@ -314,6 +315,7 @@ fn run_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static OSTN15_INVERSE: ToolDef = ToolDef {
     id: "geodesy.datum.ostn15-inverse",
+    stability: gp_base::tool::Stability::Stable,
     title: "British National Grid to GNSS position by OSTN15",
     summary: "Turns an OSGB36 National Grid easting and northing and an orthometric height into the ETRS89 latitude, longitude, and ellipsoidal height a GNSS receiver works in, by Ordnance Survey's iterative inverse of OSTN15 and OSGM15.",
     aliases: &[
@@ -446,6 +448,10 @@ pub static OSTN15_INVERSE: ToolDef = ToolDef {
         Related {
             id: "geodesy.grid-ref.bng-inverse",
             reason: "alternative",
+        },
+        Related {
+            id: "geodesy.datum.etrf",
+            reason: "next",
         },
     ],
     sentence: "That is {lat}, {lon} on ETRS89, {ellipsoidal_height} above the ellipsoid.",

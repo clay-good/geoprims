@@ -11,10 +11,21 @@ export const TOOLSETS = {
   // Coordinate-notation parsing and formatting is its own toolset too, since
   // with it the core passes the cap.
   'geodesy-core': [
-    'geodesy.grid-ref.',
+    'geodesy.grid-ref.gars-',
+    'geodesy.grid-ref.georef-',
+    'geodesy.grid-ref.grid-zone-lookup',
+    'geodesy.grid-ref.maidenhead-',
+    'geodesy.grid-ref.mgrs-',
+    'geodesy.grid-ref.usng-',
     'geodesy.utm.',
     'geodesy.ups.',
-    'geodesy.datum.',
+    'geodesy.datum.helmert',
+    'geodesy.datum.itrf',
+    'geodesy.datum.legacy',
+    'geodesy.datum.nad83',
+    'geodesy.datum.nadcon5',
+    'geodesy.datum.plate-motion',
+    'geodesy.datum.transform',
     'geodesy.ellipsoid.',
     'geodesy.frame.',
   ],
@@ -23,7 +34,47 @@ export const TOOLSETS = {
   // core passes the 40-tool cap.
   heights: ['geodesy.geoid.', 'geodesy.height.'],
   magnetic: ['geodesy.magnetic.'],
-  projections: ['geodesy.projection.', 'geodesy.utm.', 'geodesy.ups.', 'geodesy.spcs.'],
+  // The projections you set the parameters of, beside UTM, UPS, and State
+  // Plane; the national grids are their own toolset, since with them this
+  // passes the 40-tool cap.
+  projections: [
+    'geodesy.projection.albers-',
+    'geodesy.projection.arc-to-chord',
+    'geodesy.projection.azimuthal-equidistant-',
+    'geodesy.projection.convergence',
+    'geodesy.projection.equidistant-cylindrical-',
+    'geodesy.projection.gnomonic-',
+    'geodesy.projection.hotine-',
+    'geodesy.projection.lcc-',
+    'geodesy.projection.orthographic-',
+    'geodesy.projection.polar-stereographic-',
+    'geodesy.projection.scale-factor',
+    'geodesy.projection.tm-',
+    'geodesy.projection.web-mercator-',
+    'geodesy.utm.',
+    'geodesy.ups.',
+    'geodesy.spcs.',
+  ],
+  // Other countries' grids and the official transformations onto them:
+  // Britain, Ireland, Europe, France, Switzerland, Japan, South Africa,
+  // Australia, and New Zealand.
+  'national-grids': [
+    'geodesy.grid-ref.bng-',
+    'geodesy.grid-ref.latlon-to-bng',
+    'geodesy.grid-ref.irish-',
+    'geodesy.grid-ref.itm-',
+    'geodesy.datum.etrf',
+    'geodesy.datum.gda2020',
+    'geodesy.datum.ostn15',
+    'geodesy.datum.osi-polynomial',
+    'geodesy.projection.etrs89-',
+    'geodesy.projection.jgd2011-',
+    'geodesy.projection.lambert93-',
+    'geodesy.projection.lo-',
+    'geodesy.projection.lv95-',
+    'geodesy.projection.mga-',
+    'geodesy.projection.nztm-',
+  ],
   // Navigation and geometry together pass the cap, so each is its own toolset.
   navigation: ['navigation.'],
   geometry: ['geometry.'],

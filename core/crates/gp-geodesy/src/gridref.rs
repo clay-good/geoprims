@@ -912,6 +912,7 @@ const BNG_NOTICE: &str = "Without the OSTN15 grid this uses Ordnance Survey's pu
 
 pub static BNG_FORWARD: ToolDef = ToolDef {
     id: "geodesy.grid-ref.bng-forward",
+    stability: gp_base::tool::Stability::Stable,
     title: "Latitude and longitude to a British National Grid reference",
     summary: "Turns a position into its National Grid reference, like TQ 30624 78388, with the easting and northing behind it and the square it names.",
     aliases: &[
@@ -1024,7 +1025,7 @@ pub static BNG_FORWARD: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &["LOW_ACCURACY_TRANSFORM", "EXPERIMENTAL_TOOL"],
+    warnings: &["LOW_ACCURACY_TRANSFORM"],
     model: "Latitude and longitude on WGS 84 carried to OSGB36 by Ordnance Survey's published seven-parameter transformation (EPSG 1314, position-vector), projected on the National Grid transverse Mercator (Airy 1830, true origin 49°N 2°W, scale 0.9996012717, false origin 400 km west and 100 km north), then lettered: the grid's 100 km squares carry a two-letter code with I left out, and the figures are truncated, never rounded",
     accuracy: "The projection is exact to the series' nanometre; from WGS 84 the seven-parameter transformation is about 2 m, which is what Ordnance Survey states for it, so a ten-figure reference is more precise than it is accurate",
     when_to_use: "Use this to turn a phone's or a chart's latitude and longitude into the grid reference a British map, a rights-of-way notice, or a rescue report is written in. Pick how many figures you need: two for a 10 km square, six for a 100 m square, ten for a metre. Give the datum your coordinates are on, WGS 84 or OSGB36 itself.",
@@ -1822,6 +1823,7 @@ fn irish_area_warning(ctx: &mut Ctx, lat: f64, lon: f64) {
 
 pub static IRISH_FORWARD: ToolDef = ToolDef {
     id: "geodesy.grid-ref.irish-forward",
+    stability: gp_base::tool::Stability::Stable,
     title: "Latitude and longitude to an Irish Grid reference",
     summary: "Turns a position into its Irish Grid reference, like O 15899 34671, with the easting and northing behind it and the square it names.",
     aliases: &[
@@ -1934,11 +1936,7 @@ pub static IRISH_FORWARD: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &[
-        "LOW_ACCURACY_TRANSFORM",
-        "OUTSIDE_AREA_OF_USE",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["LOW_ACCURACY_TRANSFORM", "OUTSIDE_AREA_OF_USE"],
     model: "Latitude and longitude on WGS 84 carried to TM75 by EPSG's seven-parameter transformation (operation 1954, position vector), projected on the Irish Grid transverse Mercator (Airy Modified 1849, true origin 53°30'N 8°W, scale 1.000035, false origin 200 km west and 250 km south), then lettered: the grid's 100 km squares carry one letter, A to Z without I, and the figures are truncated, never rounded",
     accuracy: "The projection is exact to the series' nanometre; from WGS 84 the seven-parameter transformation is about 1 m, which is what EPSG states for it, so a ten-figure reference is more precise than it is accurate",
     when_to_use: "Use this to turn a phone's or a chart's latitude and longitude into the grid reference an Irish or Northern Irish map, a walking guide, or a mountain rescue report is written in. Pick how many figures you need: two for a 10 km square, six for a 100 m square, ten for a metre. Give the datum your coordinates are on, WGS 84 or TM75 itself.",
@@ -2042,6 +2040,7 @@ fn run_irish_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static IRISH_INVERSE: ToolDef = ToolDef {
     id: "geodesy.grid-ref.irish-inverse",
+    stability: gp_base::tool::Stability::Stable,
     title: "Irish Grid reference to latitude and longitude",
     summary: "Reads an Irish Grid reference like O 15 34 and gives the square it names: its south-west corner, its center, its size, and the latitude and longitude of that center.",
     aliases: &[
@@ -2139,11 +2138,7 @@ pub static IRISH_INVERSE: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &[
-        "LOW_ACCURACY_TRANSFORM",
-        "OUTSIDE_AREA_OF_USE",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["LOW_ACCURACY_TRANSFORM", "OUTSIDE_AREA_OF_USE"],
     model: "The letter gives the 100 km square, the figures the offset inside it, truncated, so a reference names a square rather than a point: its south-west corner, and its center half a square further. The center is unprojected from the Irish Grid transverse Mercator onto TM75, and carried to WGS 84 by EPSG's seven-parameter transformation (operation 1954) when WGS 84 is asked for",
     accuracy: "The square's corner and size are exact. The latitude and longitude on TM75 are exact to the series' nanometre; on WGS 84 the seven-parameter transformation is about 1 m, which is what EPSG states for it",
     when_to_use: "Use this to read an Irish Grid reference off an Irish or Northern Irish map, a walking guide, or a rescue call and find where it is. It answers with the square the reference actually names: two figures name a 10 km square, six a 100 m square, ten a metre, and the result gives the size as well as the corner and the center.",

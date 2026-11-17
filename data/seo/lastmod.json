@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "ad7ccc08180a1bcd",
+    "hash": "f4a6d6006cdc135b",
     "lastmod": "2026-11-17"
   },
   "/accuracy/": {
@@ -8,8 +8,8 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "e4d69039155ca8e6",
-    "lastmod": "2026-11-07"
+    "hash": "46a02ecf4ab424c5",
+    "lastmod": "2026-11-17"
   },
   "/aviation/": {
     "hash": "4dcbefcaa54954ae",
@@ -316,7 +316,7 @@
     "lastmod": "2026-11-14"
   },
   "/changelog/": {
-    "hash": "8ffd5a9386b26fa9",
+    "hash": "ad7948e65f64c66c",
     "lastmod": "2026-11-17"
   },
   "/disclaimer/": {
@@ -596,12 +596,12 @@
     "lastmod": "2026-11-16"
   },
   "/geodesy/datum/etrf/": {
-    "hash": "ff6b50a743b80b19",
-    "lastmod": "2026-11-14"
+    "hash": "197812efeefdcdfe",
+    "lastmod": "2026-11-17"
   },
   "/geodesy/datum/gda2020/": {
-    "hash": "818fc91e1ffff6f3",
-    "lastmod": "2026-11-14"
+    "hash": "2a444bbfc7117ed0",
+    "lastmod": "2026-11-17"
   },
   "/geodesy/datum/helmert/": {
     "hash": "87531c212f580c9e",
@@ -624,20 +624,20 @@
     "lastmod": "2026-11-16"
   },
   "/geodesy/datum/osi-polynomial-inverse/": {
-    "hash": "f42ccc32a3e2f7ed",
-    "lastmod": "2026-11-16"
+    "hash": "6533298fe21ba0e5",
+    "lastmod": "2026-11-17"
   },
   "/geodesy/datum/osi-polynomial/": {
-    "hash": "18f963625fed4b1c",
-    "lastmod": "2026-11-16"
+    "hash": "d6c6bc215d1fe851",
+    "lastmod": "2026-11-17"
   },
   "/geodesy/datum/ostn15-inverse/": {
-    "hash": "9e6626b7b779df2e",
-    "lastmod": "2026-11-16"
+    "hash": "4606739c8a387291",
+    "lastmod": "2026-11-17"
   },
   "/geodesy/datum/ostn15/": {
-    "hash": "e8d00854ed056d88",
-    "lastmod": "2026-11-16"
+    "hash": "e20fa7ba3a0ebf52",
+    "lastmod": "2026-11-17"
   },
   "/geodesy/datum/plate-motion/": {
     "hash": "5de1d2910889be99",
@@ -720,8 +720,8 @@
     "lastmod": "2026-11-16"
   },
   "/geodesy/grid-ref/bng-forward/": {
-    "hash": "9f70ec0a120902a8",
-    "lastmod": "2026-11-14"
+    "hash": "e01831f258d6ad32",
+    "lastmod": "2026-11-17"
   },
   "/geodesy/grid-ref/bng-inverse/": {
     "hash": "59b8d0fb839391f9",
@@ -748,12 +748,12 @@
     "lastmod": "2026-11-16"
   },
   "/geodesy/grid-ref/irish-forward/": {
-    "hash": "6f539f2d30844f3a",
-    "lastmod": "2026-11-16"
+    "hash": "fc6bdcadb90d7df7",
+    "lastmod": "2026-11-17"
   },
   "/geodesy/grid-ref/irish-inverse/": {
-    "hash": "ce734cc1ec201956",
-    "lastmod": "2026-11-16"
+    "hash": "e1fc1c30ebceee54",
+    "lastmod": "2026-11-17"
   },
   "/geodesy/grid-ref/itm-forward/": {
     "hash": "b87b9bde5054eabc",
@@ -916,12 +916,12 @@
     "lastmod": "2026-11-16"
   },
   "/geodesy/projection/etrs89-forward/": {
-    "hash": "0fd1534312f13c96",
-    "lastmod": "2026-11-16"
+    "hash": "ffafa52f3d9f6852",
+    "lastmod": "2026-11-17"
   },
   "/geodesy/projection/etrs89-inverse/": {
-    "hash": "672dfa60eb85f5c6",
-    "lastmod": "2026-11-16"
+    "hash": "ee9a0e498570b070",
+    "lastmod": "2026-11-17"
   },
   "/geodesy/projection/gnomonic-forward/": {
     "hash": "7388dcc6744c1246",
@@ -940,20 +940,20 @@
     "lastmod": "2026-11-16"
   },
   "/geodesy/projection/jgd2011-forward/": {
-    "hash": "216c331b7cbaddd4",
-    "lastmod": "2026-11-16"
+    "hash": "b5a9af083d628180",
+    "lastmod": "2026-11-17"
   },
   "/geodesy/projection/jgd2011-inverse/": {
-    "hash": "91b2a062c7f983db",
-    "lastmod": "2026-11-16"
+    "hash": "4f7c859d9662b6a3",
+    "lastmod": "2026-11-17"
   },
   "/geodesy/projection/lambert93-forward/": {
-    "hash": "6380837805100509",
-    "lastmod": "2026-11-16"
+    "hash": "feeb8e56acf6c64f",
+    "lastmod": "2026-11-17"
   },
   "/geodesy/projection/lambert93-inverse/": {
-    "hash": "ab5c9bc57ddf1d1f",
-    "lastmod": "2026-11-16"
+    "hash": "6cd1a591f40db6da",
+    "lastmod": "2026-11-17"
   },
   "/geodesy/projection/lcc-forward/": {
     "hash": "9c531cda4442eca6",
@@ -964,12 +964,12 @@
     "lastmod": "2026-11-16"
   },
   "/geodesy/projection/lo-forward/": {
-    "hash": "31f736cf40254a07",
-    "lastmod": "2026-11-16"
+    "hash": "5fd92a1d69f26814",
+    "lastmod": "2026-11-17"
   },
   "/geodesy/projection/lo-inverse/": {
-    "hash": "3dc842e85936c1df",
-    "lastmod": "2026-11-16"
+    "hash": "25c53229163c459a",
+    "lastmod": "2026-11-17"
   },
   "/geodesy/projection/lv95-forward/": {
     "hash": "c49ae8595d2a20bb",
@@ -980,20 +980,20 @@
     "lastmod": "2026-11-14"
   },
   "/geodesy/projection/mga-forward/": {
-    "hash": "94439b92645539f4",
-    "lastmod": "2026-11-14"
+    "hash": "660d91f96616ecdd",
+    "lastmod": "2026-11-17"
   },
   "/geodesy/projection/mga-inverse/": {
-    "hash": "68cb144abe7f832d",
-    "lastmod": "2026-11-14"
+    "hash": "f4e54c560c4924aa",
+    "lastmod": "2026-11-17"
   },
   "/geodesy/projection/nztm-forward/": {
-    "hash": "dd31f3917b9b1e0e",
-    "lastmod": "2026-11-14"
+    "hash": "a81f4b49a4ef5379",
+    "lastmod": "2026-11-17"
   },
   "/geodesy/projection/nztm-inverse/": {
-    "hash": "c22713095900917d",
-    "lastmod": "2026-11-14"
+    "hash": "4f14d70af3fc9457",
+    "lastmod": "2026-11-17"
   },
   "/geodesy/projection/orthographic-forward/": {
     "hash": "a4c5b0df8e983afc",
@@ -1656,8 +1656,8 @@
     "lastmod": "2026-11-16"
   },
   "/methodology/": {
-    "hash": "d33adfef7e3d3bf1",
-    "lastmod": "2026-11-16"
+    "hash": "4fbd358f8748a274",
+    "lastmod": "2026-11-17"
   },
   "/navigation/": {
     "hash": "d1235b1179725f44",
@@ -2504,8 +2504,8 @@
     "lastmod": "2026-11-14"
   },
   "/tools/": {
-    "hash": "d5c656c275f31e1f",
-    "lastmod": "2026-11-16"
+    "hash": "d8a1b498ac8c154a",
+    "lastmod": "2026-11-17"
   },
   "/units/": {
     "hash": "227e11d074c56226",
@@ -2768,7 +2768,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "10dadcfb548f2741",
+    "hash": "b565c15692ed5c23",
     "lastmod": "2026-11-17"
   },
   "/workflows/": {

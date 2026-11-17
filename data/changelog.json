@@ -5,6 +5,37 @@
       "date": "2026-11-16",
       "kind": "changed",
       "tools": [
+        "geodesy.datum.etrf",
+        "geodesy.datum.gda2020",
+        "geodesy.datum.ostn15",
+        "geodesy.datum.ostn15-inverse",
+        "geodesy.datum.osi-polynomial",
+        "geodesy.datum.osi-polynomial-inverse",
+        "geodesy.grid-ref.bng-forward",
+        "geodesy.grid-ref.latlon-to-bng",
+        "geodesy.grid-ref.irish-forward",
+        "geodesy.grid-ref.irish-inverse",
+        "geodesy.projection.etrs89-forward",
+        "geodesy.projection.etrs89-inverse",
+        "geodesy.projection.jgd2011-forward",
+        "geodesy.projection.jgd2011-inverse",
+        "geodesy.projection.lambert93-forward",
+        "geodesy.projection.lambert93-inverse",
+        "geodesy.projection.lo-forward",
+        "geodesy.projection.lo-inverse",
+        "geodesy.projection.mga-forward",
+        "geodesy.projection.mga-inverse",
+        "geodesy.projection.mga-to-latlon",
+        "geodesy.projection.nztm-forward",
+        "geodesy.projection.nztm-inverse"
+      ],
+      "vectors": [],
+      "summary": "Twenty-three national-grid tools are now stable: the British and Irish grid references, OSTN15 and the Irish polynomial both ways, the ETRS89 and GDA2020 datum steps, LAEA Europe and LCC Europe, Lambert-93 and the CC zones, Japan's plane rectangular systems, South Africa's Lo belts, the Map Grid of Australia, and NZTM2000. Each has an independent worked example from its issuer or IOGP, at least twenty golden vectors checked against PROJ, GeographicLib, or the issuer's own test points, and invariant tests. Their answers do not change; they no longer carry the experimental warning. For MCP clients they form a new direct toolset, national-grids."
+    },
+    {
+      "date": "2026-11-16",
+      "kind": "changed",
+      "tools": [
         "geodesy.datum.legacy"
       ],
       "vectors": [],

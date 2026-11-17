@@ -25,3 +25,4 @@ node_modules/
 
 # Python bytecode from the vector generators
 __pycache__/
+.openlore/

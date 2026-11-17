@@ -2281,6 +2281,197 @@
         "step": 0,
         "profile": 1
       }
+    },
+    {
+      "slug": "passage-leg",
+      "title": "Passage leg into a tidal port",
+      "audience": "Mariners",
+      "summary": "From the rhumb-line course and distance, to the course to steer through the current, to the low water at the port, to the clearance under the keel at the shoalest point.",
+      "job": "Plan a leg into port: the course and distance, what to steer for the current, the tide you will meet, and whether there is enough water under the keel.",
+      "inputs": [
+        {
+          "name": "from_lat",
+          "tool": "navigation.sailing.mercator",
+          "field": "lat1",
+          "example": "42°03.0'N"
+        },
+        {
+          "name": "from_lon",
+          "tool": "navigation.sailing.mercator",
+          "field": "lon1",
+          "example": "70°11.0'W"
+        },
+        {
+          "name": "to_lat",
+          "tool": "navigation.sailing.mercator",
+          "field": "lat2",
+          "example": "42°20.0'N"
+        },
+        {
+          "name": "to_lon",
+          "tool": "navigation.sailing.mercator",
+          "field": "lon2",
+          "example": "70°55.0'W"
+        },
+        {
+          "name": "speed",
+          "tool": "navigation.piloting.set-and-drift",
+          "field": "speed",
+          "example": "10 kt"
+        },
+        {
+          "name": "start",
+          "tool": "navigation.tide.predict",
+          "field": "start",
+          "example": "2026-10-21"
+        },
+        {
+          "name": "charted_depth",
+          "tool": "navigation.vessel.under-keel-clearance",
+          "field": "charted_depth",
+          "example": "12.0 m"
+        },
+        {
+          "name": "draft",
+          "tool": "navigation.vessel.under-keel-clearance",
+          "field": "draft",
+          "example": "10.4 m"
+        },
+        {
+          "name": "set",
+          "tool": "navigation.piloting.set-and-drift",
+          "field": "set",
+          "example": "200 deg",
+          "advanced": true
+        },
+        {
+          "name": "drift",
+          "tool": "navigation.piloting.set-and-drift",
+          "field": "drift",
+          "example": "1.5 kt",
+          "advanced": true
+        },
+        {
+          "name": "margin",
+          "tool": "navigation.vessel.under-keel-clearance",
+          "field": "margin",
+          "example": "1.0 m",
+          "advanced": true
+        },
+        {
+          "name": "constituents",
+          "tool": "navigation.tide.predict",
+          "field": "constituents",
+          "example": "{\"units\":\"feet\",\"HarmonicConstituents\":[{\"name\":\"M2\",\"amplitude\":4.498,\"phase_GMT\":109.2,\"speed\":28.984104},{\"name\":\"S2\",\"amplitude\":0.682,\"phase_GMT\":146.2,\"speed\":30.0},{\"name\":\"N2\",\"amplitude\":1.001,\"phase_GMT\":76.7,\"speed\":28.43973},{\"name\":\"K1\",\"amplitude\":0.469,\"phase_GMT\":205.6,\"speed\":15.041069},{\"name\":\"M4\",\"amplitude\":0.075,\"phase_GMT\":29.0,\"speed\":57.96821},{\"name\":\"O1\",\"amplitude\":0.381,\"phase_GMT\":187.1,\"speed\":13.943035},{\"name\":\"M6\",\"amplitude\":0.095,\"phase_GMT\":281.3,\"speed\":86.95232},{\"name\":\"MK3\",\"amplitude\":0.02,\"phase_GMT\":231.8,\"speed\":44.025173},{\"name\":\"S4\",\"amplitude\":0.007,\"phase_GMT\":119.3,\"speed\":60.0},{\"name\":\"MN4\",\"amplitude\":0.036,\"phase_GMT\":13.7,\"speed\":57.423832},{\"name\":\"NU2\",\"amplitude\":0.217,\"phase_GMT\":84.0,\"speed\":28.512583},{\"name\":\"S6\",\"amplitude\":0.007,\"phase_GMT\":246.8,\"speed\":90.0},{\"name\":\"MU2\",\"amplitude\":0.033,\"phase_GMT\":53.3,\"speed\":27.968208},{\"name\":\"2N2\",\"amplitude\":0.135,\"phase_GMT\":53.7,\"speed\":27.895355},{\"name\":\"OO1\",\"amplitude\":0.013,\"phase_GMT\":218.7,\"speed\":16.139101},{\"name\":\"LAM2\",\"amplitude\":0.066,\"phase_GMT\":140.1,\"speed\":29.455626},{\"name\":\"S1\",\"amplitude\":0.016,\"phase_GMT\":131.6,\"speed\":15.0},{\"name\":\"M1\",\"amplitude\":0.016,\"phase_GMT\":223.2,\"speed\":14.496694},{\"name\":\"J1\",\"amplitude\":0.033,\"phase_GMT\":210.0,\"speed\":15.5854435},{\"name\":\"MM\",\"amplitude\":0.0,\"phase_GMT\":0.0,\"speed\":0.5443747},{\"name\":\"SSA\",\"amplitude\":0.072,\"phase_GMT\":97.5,\"speed\":0.0821373},{\"name\":\"SA\",\"amplitude\":0.161,\"phase_GMT\":136.3,\"speed\":0.0410686},{\"name\":\"MSF\",\"amplitude\":0.0,\"phase_GMT\":0.0,\"speed\":1.0158958},{\"name\":\"MF\",\"amplitude\":0.0,\"phase_GMT\":0.0,\"speed\":1.0980331},{\"name\":\"RHO\",\"amplitude\":0.016,\"phase_GMT\":179.3,\"speed\":13.471515},{\"name\":\"Q1\",\"amplitude\":0.062,\"phase_GMT\":172.1,\"speed\":13.398661},{\"name\":\"T2\",\"amplitude\":0.059,\"phase_GMT\":120.1,\"speed\":29.958933},{\"name\":\"R2\",\"amplitude\":0.013,\"phase_GMT\":13.1,\"speed\":30.041067},{\"name\":\"2Q1\",\"amplitude\":0.007,\"phase_GMT\":211.3,\"speed\":12.854286},{\"name\":\"P1\",\"amplitude\":0.154,\"phase_GMT\":204.8,\"speed\":14.958931},{\"name\":\"2SM2\",\"amplitude\":0.01,\"phase_GMT\":110.3,\"speed\":31.015896},{\"name\":\"M3\",\"amplitude\":0.007,\"phase_GMT\":149.2,\"speed\":43.47616},{\"name\":\"L2\",\"amplitude\":0.223,\"phase_GMT\":160.4,\"speed\":29.528479},{\"name\":\"2MK3\",\"amplitude\":0.023,\"phase_GMT\":204.7,\"speed\":42.92714},{\"name\":\"K2\",\"amplitude\":0.194,\"phase_GMT\":146.1,\"speed\":30.082138},{\"name\":\"M8\",\"amplitude\":0.02,\"phase_GMT\":241.3,\"speed\":115.93642},{\"name\":\"MS4\",\"amplitude\":0.03,\"phase_GMT\":74.0,\"speed\":58.984104}]}",
+          "advanced": true
+        },
+        {
+          "name": "datum_sheet",
+          "tool": "navigation.tide.predict",
+          "field": "datum_sheet",
+          "example": "{\"units\":\"feet\",\"datums\":[{\"name\":\"STND\",\"value\":0.0},{\"name\":\"MHHW\",\"value\":13.8},{\"name\":\"MHW\",\"value\":13.35},{\"name\":\"DTL\",\"value\":8.66},{\"name\":\"MTL\",\"value\":8.61},{\"name\":\"MSL\",\"value\":8.73},{\"name\":\"MLW\",\"value\":3.86},{\"name\":\"MLLW\",\"value\":3.53},{\"name\":\"NAVD88\",\"value\":9.03}]}",
+          "advanced": true
+        },
+        {
+          "name": "block_coefficient",
+          "tool": "navigation.vessel.under-keel-clearance",
+          "field": "block_coefficient",
+          "example": 0.8,
+          "advanced": true
+        }
+      ],
+      "steps": [
+        {
+          "tool": "navigation.sailing.mercator",
+          "why": "The rhumb-line course and distance from the departure to the port's approach.",
+          "input": {
+            "lat1": {
+              "input": "from_lat"
+            },
+            "lon1": {
+              "input": "from_lon"
+            },
+            "lat2": {
+              "input": "to_lat"
+            },
+            "lon2": {
+              "input": "to_lon"
+            }
+          }
+        },
+        {
+          "tool": "navigation.piloting.set-and-drift",
+          "why": "Allow for the current: the course to steer to make good that course, and the speed it leaves you.",
+          "input": {
+            "problem": "course-to-steer",
+            "course": {
+              "from": [
+                0,
+                "course"
+              ]
+            },
+            "speed": {
+              "input": "speed"
+            },
+            "set": {
+              "input": "set"
+            },
+            "drift": {
+              "input": "drift"
+            }
+          }
+        },
+        {
+          "tool": "navigation.tide.predict",
+          "why": "The tide at the port over the day of arrival: the lowest water you could meet.",
+          "input": {
+            "constituents": {
+              "input": "constituents"
+            },
+            "datum_sheet": {
+              "input": "datum_sheet"
+            },
+            "start": {
+              "input": "start"
+            },
+            "days": 1,
+            "interval": "60 min"
+          }
+        },
+        {
+          "tool": "navigation.vessel.under-keel-clearance",
+          "why": "With that low water over the charted depth, the clearance under the keel at your speed, squat included, against the margin you need.",
+          "input": {
+            "charted_depth": {
+              "input": "charted_depth"
+            },
+            "draft": {
+              "input": "draft"
+            },
+            "margin": {
+              "input": "margin"
+            },
+            "tide": {
+              "from": [
+                2,
+                "low"
+              ]
+            },
+            "speed": {
+              "from": [
+                1,
+                "speed_to_use"
+              ]
+            },
+            "block_coefficient": {
+              "input": "block_coefficient"
+            }
+          }
+        }
+      ],
+      "visual": {
+        "step": 3
+      }
     }
   ]
 }

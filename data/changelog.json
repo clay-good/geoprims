@@ -4,6 +4,13 @@
     {
       "date": "2026-11-16",
       "kind": "added",
+      "tools": [],
+      "vectors": [],
+      "summary": "A new workflow, Passage leg into a tidal port, plans a leg from start to keel: the rhumb-line course and distance by Mercator sailing, the course to steer through the current, the low water at the port from its tidal constituents, and the clearance under the keel at the shoalest point with squat, against the margin you need. Its example runs into Boston with the station's own NOAA constituents and datums."
+    },
+    {
+      "date": "2026-11-16",
+      "kind": "added",
       "tools": [
         "geodesy.datum.osi-polynomial",
         "geodesy.datum.osi-polynomial-inverse"

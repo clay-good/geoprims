@@ -1,7 +1,7 @@
 {
   "/": {
-    "hash": "edca9809610f2d32",
-    "lastmod": "2026-11-16"
+    "hash": "ad7ccc08180a1bcd",
+    "lastmod": "2026-11-17"
   },
   "/accuracy/": {
     "hash": "c114ed2bae28332d",
@@ -316,8 +316,8 @@
     "lastmod": "2026-11-14"
   },
   "/changelog/": {
-    "hash": "e5762c28ffc85725",
-    "lastmod": "2026-11-16"
+    "hash": "05f9fb568f333c7d",
+    "lastmod": "2026-11-17"
   },
   "/disclaimer/": {
     "hash": "e80b39ff27cd55c5",
@@ -1484,8 +1484,8 @@
     "lastmod": "2026-09-19"
   },
   "/learn/": {
-    "hash": "f1d1891f9bd2033a",
-    "lastmod": "2026-10-28"
+    "hash": "e4e61934538941ac",
+    "lastmod": "2026-11-17"
   },
   "/learn/crosswind-components/": {
     "hash": "53035f6fd50c0b66",
@@ -1760,8 +1760,8 @@
     "lastmod": "2026-11-14"
   },
   "/navigation/piloting/": {
-    "hash": "e80bb30211e85e26",
-    "lastmod": "2026-10-20"
+    "hash": "3bbe59c5c12e32ce",
+    "lastmod": "2026-11-17"
   },
   "/navigation/piloting/compass-conversion/": {
     "hash": "8d7cb9fd08be53ff",
@@ -1840,8 +1840,8 @@
     "lastmod": "2026-11-14"
   },
   "/navigation/sailing/": {
-    "hash": "40ff580a852c088d",
-    "lastmod": "2026-10-20"
+    "hash": "6d5d3cd0c8deb195",
+    "lastmod": "2026-11-17"
   },
   "/navigation/sailing/great-circle/": {
     "hash": "60c01aea1fe71c66",
@@ -1868,8 +1868,8 @@
     "lastmod": "2026-11-14"
   },
   "/navigation/tide/": {
-    "hash": "cc5067824ea004e5",
-    "lastmod": "2026-10-21"
+    "hash": "cd45dcffc2d7d8ed",
+    "lastmod": "2026-11-17"
   },
   "/navigation/tide/datums/": {
     "hash": "c12f696c14f83973",
@@ -1900,8 +1900,8 @@
     "lastmod": "2026-11-14"
   },
   "/navigation/vessel/": {
-    "hash": "07e63d0d228428c3",
-    "lastmod": "2026-11-07"
+    "hash": "5a63a61ab0fc578b",
+    "lastmod": "2026-11-17"
   },
   "/navigation/vessel/under-keel-clearance/": {
     "hash": "854d96ce2e33d4bb",
@@ -1912,8 +1912,8 @@
     "lastmod": "2026-10-20"
   },
   "/quality/": {
-    "hash": "eb96457edaa72091",
-    "lastmod": "2026-11-16"
+    "hash": "f1a86b63e3db2984",
+    "lastmod": "2026-11-17"
   },
   "/raster/": {
     "hash": "4e92b0b57ee810e6",
@@ -2772,8 +2772,8 @@
     "lastmod": "2026-11-16"
   },
   "/workflows/": {
-    "hash": "ae01dae8923fdd1d",
-    "lastmod": "2026-10-09"
+    "hash": "266be28b6b5199c8",
+    "lastmod": "2026-11-17"
   },
   "/workflows/boundary-retracement/": {
     "hash": "04077d4d82c33fdb",
@@ -2810,6 +2810,10 @@
   "/workflows/mapping-flight/": {
     "hash": "4ae3a64f018df805",
     "lastmod": "2026-11-14"
+  },
+  "/workflows/passage-leg/": {
+    "hash": "f48d15a7f793996a",
+    "lastmod": "2026-11-17"
   },
   "/workflows/preflight-check/": {
     "hash": "8da72df168fbb53c",

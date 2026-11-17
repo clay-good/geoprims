@@ -1136,6 +1136,7 @@ fn run_bng_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static BNG_INVERSE: ToolDef = ToolDef {
     id: "geodesy.grid-ref.bng-inverse",
+    stability: gp_base::tool::Stability::Stable,
     title: "British National Grid reference to latitude and longitude",
     summary: "Reads a National Grid reference like TQ 30 80 and gives the square it names: its south-west corner, its center, its size, and the latitude and longitude of that center.",
     aliases: &[
@@ -1233,7 +1234,7 @@ pub static BNG_INVERSE: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["LOW_ACCURACY_TRANSFORM", "EXPERIMENTAL_TOOL"],
+    warnings: &["LOW_ACCURACY_TRANSFORM"],
     model: "The two letters give the 100 km square, the figures the offset inside it, truncated, so a reference names a square rather than a point: its south-west corner, and its center half a square further. The center is unprojected from the National Grid transverse Mercator onto OSGB36, and carried to WGS 84 by Ordnance Survey's published seven-parameter transformation (EPSG 1314) when WGS 84 is asked for",
     accuracy: "The square's corner and size are exact. The latitude and longitude on OSGB36 are exact to the series' nanometre; on WGS 84 the seven-parameter transformation is about 2 m, which is what Ordnance Survey states for it",
     when_to_use: "Use this to read a British grid reference off a map, a notice, or a rescue call and find where it is. It answers with the square the reference actually names, not a false point: two figures name a 10 km square, six a 100 m square, ten a metre, and the result gives the size as well as the corner and the center.",
@@ -1374,6 +1375,7 @@ const ITM_FRAME: &str = "ITM is defined on ETRS89, which is fixed to the Europea
 
 pub static ITM_FORWARD: ToolDef = ToolDef {
     id: "geodesy.grid-ref.itm-forward",
+    stability: gp_base::tool::Stability::Stable,
     title: "Latitude and longitude to Irish Transverse Mercator",
     summary: "Turns a position into Irish Transverse Mercator easting and northing, the grid Ireland and Northern Ireland have used since 2001, with the scale factor and convergence at the point.",
     aliases: &[
@@ -1467,7 +1469,7 @@ pub static ITM_FORWARD: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["REALIZATION_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["REALIZATION_ASSUMED"],
     model: "Transverse Mercator on GRS 80 with EPSG 2157's parameters: latitude of origin 53°30′N, central meridian 8°W, scale 0.999820 on that meridian, false easting 600,000 m and false northing 750,000 m, by Karney's series",
     accuracy: "The projection is exact to the series' nanometre over Ireland. The coordinates are taken as ETRS89: read as WGS 84 or ITRF they are about half a metre out today, which is plate motion, not projection",
     when_to_use: "Use this to put a latitude and longitude onto the Irish national grid in use since 2001, north and south of the border, for a map, a planning reference, or a survey record. It gives the convergence and the point scale factor beside the coordinates, which is what you need to turn a true bearing into a grid bearing or a ground distance into a grid distance.",
@@ -1545,6 +1547,7 @@ fn run_itm_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static ITM_INVERSE: ToolDef = ToolDef {
     id: "geodesy.grid-ref.itm-inverse",
+    stability: gp_base::tool::Stability::Stable,
     title: "Irish Transverse Mercator to latitude and longitude",
     summary: "Turns an Irish Transverse Mercator easting and northing back into a latitude and longitude, with the scale factor and convergence at the point.",
     aliases: &[
@@ -1638,7 +1641,7 @@ pub static ITM_INVERSE: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["REALIZATION_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["REALIZATION_ASSUMED"],
     model: "The inverse transverse Mercator on GRS 80 with EPSG 2157's parameters (origin 53°30′N 8°W, scale 0.999820, false easting 600,000 m, false northing 750,000 m), by Karney's series",
     accuracy: "The projection is exact to the series' nanometre over Ireland, and the inverse is the forward's own inverse rather than a separate approximation. The answer is on ETRS89: read as WGS 84 or ITRF it is about half a metre out today",
     when_to_use: "Use this to read Irish Transverse Mercator coordinates off a plan, a planning file, or a survey record and get the latitude and longitude for a map or a phone. It returns the convergence and the point scale factor as well, which is what turns a grid bearing back into a true one.",

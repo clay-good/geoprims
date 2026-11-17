@@ -75,9 +75,51 @@ rows_i.append({
     "tolerance": {"result.lat.value": {"abs": 1e-9}, "result.lon.value": {"abs": 1e-9}},
 })
 
+import sys
+
+# Added 2026-11-16 to bring both tools to the twenty vectors the stable bar
+# asks for. `gen_itm.py --append FORWARD INVERSE` appends these after the rows
+# the published files already hold (which include five GeographicLib rows
+# added by hand), numbering on, and refuses if they are already there.
+EXTRA = [
+    ("Limerick, King John's Castle", 52.669700, -8.625700),
+    ("Waterford, Reginald's Tower", 52.260600, -7.105600),
+    ("Kilkenny Castle", 52.650300, -7.249300),
+    ("Dundalk", 54.001000, -6.404900),
+    ("Achill Island, Keem Bay", 53.966600, -10.193800),
+    ("Ballycastle, County Antrim", 55.204300, -6.244100),
+    ("Dingle", 52.140800, -10.268800),
+    ("Rosslare Harbour", 52.252600, -6.338200),
+]
+if len(sys.argv) == 4 and sys.argv[1] == "--append":
+    fwd_path, inv_path = sys.argv[2], sys.argv[3]
+    for path in (fwd_path, inv_path):
+        if any(name in open(path).read() for name, _, _ in EXTRA):
+            sys.exit(f"{path} already holds the added places")
+    nf = sum(1 for _ in open(fwd_path))
+    ni = sum(1 for _ in open(inv_path))
+    with open(fwd_path, "a") as ff, open(inv_path, "a") as fi:
+        for k, (name, lat, lon) in enumerate(EXTRA):
+            e, n = cs2cs(ETRS, ITM, lon, lat)
+            ff.write(json.dumps({"id": f"v{nf + k + 1:03d}",
+                "input": {"lat": lat, "lon": lon},
+                "expect": {"ok": True, "result.easting.value": e, "result.northing.value": n},
+                "source": f"PROJ 9.9.0 cs2cs applying EPSG:2157: {name}",
+                "sourceVersion": "PROJ 9.9.0, EPSG v13.102",
+                "tolerance": {"result.easting.value": {"abs": 1e-3}, "result.northing.value": {"abs": 1e-3}},
+            }, ensure_ascii=False, separators=(",", ":")) + "\n")
+            blon, blat = cs2cs(ITM, ETRS, e, n)
+            fi.write(json.dumps({"id": f"v{ni + k + 1:03d}",
+                "input": {"easting": f"{e:.6f} m", "northing": f"{n:.6f} m"},
+                "expect": {"ok": True, "result.lat.value": blat, "result.lon.value": blon},
+                "source": f"PROJ 9.9.0 cs2cs applying EPSG:2157 in reverse: {name}",
+                "sourceVersion": "PROJ 9.9.0, EPSG v13.102",
+                "tolerance": {"result.lat.value": {"abs": 1e-9}, "result.lon.value": {"abs": 1e-9}},
+            }, ensure_ascii=False, separators=(",", ":")) + "\n")
+    sys.exit(0)
+
 print("\n".join(json.dumps({"id": f"v{i:03d}", **r}, ensure_ascii=False, separators=(",", ":"))
                 for i, r in enumerate(rows_f, 1)))
-import sys
 with open(sys.argv[1] if len(sys.argv) > 1 else "/dev/null", "w") as f:
     f.write("\n".join(json.dumps({"id": f"v{i:03d}", **r}, ensure_ascii=False, separators=(",", ":"))
                       for i, r in enumerate(rows_i, 1)) + "\n")

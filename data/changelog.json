@@ -5,6 +5,20 @@
       "date": "2026-11-16",
       "kind": "changed",
       "tools": [
+        "geodesy.grid-ref.bng-inverse",
+        "geodesy.grid-ref.bng-to-latlon",
+        "geodesy.grid-ref.itm-forward",
+        "geodesy.grid-ref.itm-inverse",
+        "geodesy.projection.lv95-forward",
+        "geodesy.projection.lv95-inverse"
+      ],
+      "vectors": [],
+      "summary": "Six more national-grid tools are stable: reading a British National Grid reference (and its pair to GPS latitude and longitude), Irish Transverse Mercator both ways, and the Swiss LV95 grid both ways. Each now has more than twenty golden vectors: eleven more British references read at every precision on both datums, eight more Irish places, and thirteen more Swiss ones out to the country's corners, all checked against PROJ. Their answers do not change."
+    },
+    {
+      "date": "2026-11-16",
+      "kind": "changed",
+      "tools": [
         "geodesy.datum.etrf",
         "geodesy.datum.gda2020",
         "geodesy.datum.ostn15",

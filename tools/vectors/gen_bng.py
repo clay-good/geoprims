@@ -129,5 +129,51 @@ rows.append({"input": {"lat": 48.0, "lon": -2.0, "datum": "OSGB36", "figures": 1
              "source": GUIDE + " section 7.1: south of the lettered grid there is no reference to give",
              "sourceVersion": "v3.6 (2020)", "tolerance": {}})
 
+# Added 2026-11-16 to bring bng-inverse to the twenty vectors the stable bar
+# asks for. `gen_bng.py --append-inverse INVERSE` appends these after the
+# published rows, numbering on, and refuses if they are already there: a
+# reference at every precision from real places, read back to the square it
+# names and that square's centre, on OSGB36 and on WGS 84.
+import sys
+WGS_LL = "+proj=longlat +datum=WGS84 +no_defs"
+EXTRA_READS = [
+    ("Ben Nevis", 56.796900, -5.003600, 6, "OSGB36"),
+    ("Snowdon", 53.068500, -4.076200, 8, "OSGB36"),
+    ("Land's End", 50.066000, -5.714700, 4, "OSGB36"),
+    ("Lerwick", 60.155000, -1.145000, 10, "OSGB36"),
+    ("Edinburgh Castle", 55.948600, -3.199900, 2, "OSGB36"),
+    ("Cardiff Castle", 51.482200, -3.181200, 6, "WGS84"),
+    ("York Minster", 53.962100, -1.081900, 8, "WGS84"),
+    ("St Mary's, Isles of Scilly", 49.915200, -6.316000, 6, "WGS84"),
+    ("Stornoway", 58.209000, -6.386500, 4, "WGS84"),
+    ("Dover Castle", 51.129400, 1.322400, 10, "WGS84"),
+    ("The Lizard", 49.959800, -5.205400, 6, "OSGB36"),
+]
+if len(sys.argv) == 3 and sys.argv[1] == "--append-inverse":
+    path = sys.argv[2]
+    if any(name in open(path).read() for name, *_ in EXTRA_READS):
+        sys.exit(f"{path} already holds the added places")
+    count = sum(1 for _ in open(path))
+    with open(path, "a") as f:
+        for k, (name, lat, lon, figures, datum) in enumerate(EXTRA_READS):
+            (ll, grid) = (OSGB_LL, BNG) if datum == "OSGB36" else (WGS_LL, BNG_FROM_WGS)
+            e, n = cs2cs(ll, grid, lon, lat)
+            ref = reference(e, n, figures)
+            side = 100000 / 10 ** (figures // 2)
+            se, sn = (e // side) * side, (n // side) * side
+            clon, clat = cs2cs(grid, ll, se + side / 2, sn + side / 2)
+            f.write(json.dumps({"id": f"v{count + k + 1:03d}",
+                "input": {"reference": ref, "datum": datum},
+                "expect": {"ok": True, "result.easting.value": se, "result.northing.value": sn,
+                           "result.square_size.value": side, "result.square": square(e, n),
+                           "result.lat.value": clat, "result.lon.value": clon},
+                "source": f"{PROJ}: {name}'s {figures}-figure reference {ref}, the square it names, and its centre on {datum}",
+                "sourceVersion": "PROJ 9.9.0",
+                "tolerance": {k2: {"abs": 1e-6} for k2 in
+                              ("result.easting.value", "result.northing.value", "result.square_size.value",
+                               "result.lat.value", "result.lon.value")},
+            }, ensure_ascii=False, separators=(",", ":")) + "\n")
+    sys.exit(0)
+
 for i, r in enumerate(rows, 1):
     print(json.dumps({"id": f"v{i:03d}", **r}, ensure_ascii=False, separators=(",", ":")))

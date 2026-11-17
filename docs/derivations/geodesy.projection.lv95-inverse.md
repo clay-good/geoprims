@@ -45,7 +45,7 @@ None in the projection: these are swisstopo's rigorous formulas, not the approxi
 
 ## Differential tests
 
-- `tools/vectors/gen_lv95.py` builds the 13 vectors in `core/vectors/geodesy.projection.lv95-inverse.jsonl` from PROJ 9.9.0 through `cs2cs` applying EPSG:2056, so the second implementation is PROJ's oblique Mercator with the EPSG dataset's parameters rather than swisstopo's own formulas: Rigi, the fundamental point in Bern, and ten places from Geneva to Davos and from Basel to Lugano, all within a nanodegree, and the same Rigi point given in the older LV03 grid, which the tool recognises by its six-figure easting and shifts.
+- `tools/vectors/gen_lv95.py` builds the 26 vectors in `core/vectors/geodesy.projection.lv95-inverse.jsonl` from PROJ 9.9.0 through `cs2cs` applying EPSG:2056, so the second implementation is PROJ's oblique Mercator with the EPSG dataset's parameters rather than swisstopo's own formulas: Rigi, the fundamental point in Bern, and twenty-three places from Geneva to Mustair and from Porrentruy to Chiasso, all within a nanodegree, and the same Rigi point given in the older LV03 grid, which the tool recognises by its six-figure easting and shifts.
 
 ## Invariants
 

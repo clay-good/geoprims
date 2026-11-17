@@ -80,6 +80,46 @@ rows_i.append({
     "tolerance": {"result.lat.value": {"abs": 1e-9}, "result.lon.value": {"abs": 1e-9}},
 })
 
+# Added 2026-11-16 to bring both tools to the twenty vectors the stable bar
+# asks for, appended after the published rows so their ids stay put: the
+# corners and edges of the country as well as its towns.
+EXTRA = [
+    ("Lausanne Cathedral", 46.522500, 6.635100),
+    ("Lucerne, the Chapel Bridge", 47.051600, 8.307500),
+    ("Winterthur", 47.499900, 8.724100),
+    ("Schaffhausen, the Munot", 47.696700, 8.638300),
+    ("Locarno", 46.170800, 8.799500),
+    ("Interlaken", 46.686300, 7.863200),
+    ("Zermatt", 46.020700, 7.749100),
+    ("Fribourg", 46.806500, 7.161900),
+    ("St. Moritz", 46.497200, 9.838500),
+    ("Chiasso, the southern border", 45.832400, 9.031200),
+    ("Porrentruy, in the north-west", 47.415300, 7.075200),
+    ("Mustair, at the eastern border", 46.629700, 10.449100),
+    ("Rheinfelden, on the Rhine", 47.554200, 7.794000),
+]
+for name, lat, lon in EXTRA:
+    e, n = cs2cs(CH1903, LV95, lon, lat)
+    rows_f.append({
+        "input": {"lat": lat, "lon": lon},
+        "expect": {"ok": True, "result.easting.value": e, "result.northing.value": n,
+                   "result.lv03_easting.value": e - 2_000_000, "result.lv03_northing.value": n - 1_000_000},
+        "source": f"{PROJ}: {name}",
+        "sourceVersion": "PROJ 9.9.0, EPSG v13.102",
+        "tolerance": {k: {"abs": 1e-3} for k in
+                      ("result.easting.value", "result.northing.value",
+                       "result.lv03_easting.value", "result.lv03_northing.value")},
+    })
+    blon, blat = cs2cs(LV95, CH1903, e, n)
+    rows_i.append({
+        "input": {"easting": f"{e:.6f} m", "northing": f"{n:.6f} m"},
+        "expect": {"ok": True, "result.lat.value": blat, "result.lon.value": blon,
+                   "result.grid": "read as LV95"},
+        "source": f"{PROJ}: {name}, read back",
+        "sourceVersion": "PROJ 9.9.0, EPSG v13.102",
+        "tolerance": {"result.lat.value": {"abs": 1e-9}, "result.lon.value": {"abs": 1e-9}},
+    })
+
 print("\n".join(json.dumps({"id": f"v{i:03d}", **r}, ensure_ascii=False, separators=(",", ":"))
                 for i, r in enumerate(rows_f, 1)))
 with open(sys.argv[1], "w") as f:

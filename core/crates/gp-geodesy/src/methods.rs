@@ -2245,6 +2245,7 @@ const LV95_NOTE: &str = "The latitude and longitude are on CH1903 (the Bessel el
 
 pub static LV95_FORWARD: ToolDef = ToolDef {
     id: "geodesy.projection.lv95-forward",
+    stability: gp_base::tool::Stability::Stable,
     title: "Latitude and longitude to Swiss LV95",
     summary: "Converts a CH1903 latitude and longitude to LV95 easting and northing, the Swiss national grid, by swisstopo's rigorous formulas.",
     aliases: &[
@@ -2399,6 +2400,7 @@ fn run_lv95_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static LV95_INVERSE: ToolDef = ToolDef {
     id: "geodesy.projection.lv95-inverse",
+    stability: gp_base::tool::Stability::Stable,
     title: "Swiss LV95 to latitude and longitude",
     summary: "Converts LV95 easting and northing back to a CH1903 latitude and longitude by swisstopo's rigorous formulas, taking LV03 coordinates too.",
     aliases: &[

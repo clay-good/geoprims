@@ -46,7 +46,7 @@ The square is exact; the latitude and longitude of its center are as good as the
 
 ## Differential tests
 
-- `tools/vectors/gen_bng.py` builds the 10 vectors in `core/vectors/geodesy.grid-ref.bng-inverse.jsonl`: six references read back, from a bare `TQ` (a whole 100 km square) to a ten-figure reference (a metre), with their centers unprojected by PROJ 9.9.0 through `cs2cs` using the OS guide's National Grid parameters, and four refusals, each from a rule the guide states.
+- `tools/vectors/gen_bng.py` builds the 21 vectors in `core/vectors/geodesy.grid-ref.bng-inverse.jsonl`: six references read back, from a bare `TQ` (a whole 100 km square) to a ten-figure reference (a metre), with their centers unprojected by PROJ 9.9.0 through `cs2cs` using the OS guide's National Grid parameters, and four refusals, each from a rule the guide states; then eleven real places, Land's End to Lerwick and the Isles of Scilly to Dover, each at a different precision from 2 to 10 figures and on OSGB36 or WGS 84, read back to the square their reference names and its centre.
 - The lettering is written again in Python in the same generator, so the encoding and the decoding are each checked against a separate implementation.
 
 ## Invariants

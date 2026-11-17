@@ -5,6 +5,15 @@
       "date": "2026-11-16",
       "kind": "changed",
       "tools": [
+        "geodesy.datum.gda2020"
+      ],
+      "vectors": [],
+      "summary": "Moving a position between GDA94 and GDA2020 now reports the shift as its north, east, and up parts as well as its total and direction, the form ICSM's manual and most Australian survey reports give it. For the ALIC station that is 1.5236 m north, 0.8487 m east, and 0.0977 m down. No existing answer changes. Version 1.1.0."
+    },
+    {
+      "date": "2026-11-16",
+      "kind": "changed",
+      "tools": [
         "navigation.sailing.great-circle",
         "navigation.sailing.mercator",
         "navigation.sailing.mid-latitude",

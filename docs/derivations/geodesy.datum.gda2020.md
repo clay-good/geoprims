@@ -13,7 +13,7 @@ This tool applies the conformal transformation, in the seven-parameter form EPSG
 
 - Geographic to earth-centred Cartesian on GRS 80, the Helmert of EPSG 8048, then back:
   `V₂ = T + (1 + dS)·R(r)·V₁`, with the coordinate-frame rotation matrix, `T = (0.06155, −0.01087, −0.04019) m`, `r = (−0.0394924, −0.0327221, −0.0328979)″` and `dS = −0.009994 ppm`.
-- The shift reported is the east-north offset between the two coordinates of the point, which is what moves on the ground.
+- The shift reported is the east-north offset between the two coordinates of the point, which is what moves on the ground, given as a total and direction and, since version 1.1.0, as its north, east, and up parts: `ΔN` and `ΔE` are the local east-north-up components of the move at the original point, and `ΔU` is the change in ellipsoidal height.
 
 ## Symbols and units
 

@@ -2392,6 +2392,7 @@ const GDA2020_NOTE: &str = "This is the conformal transformation, which carries 
 
 pub static GDA2020: ToolDef = ToolDef {
     id: "geodesy.datum.gda2020",
+    version: "1.1.0",
     stability: gp_base::tool::Stability::Stable,
     title: "GDA94 and GDA2020",
     summary: "Transforms an Australian position between GDA94 and GDA2020 by ICSM's conformal transformation, which moves the country about 1.8 m north-east, and says what it does not model.",
@@ -2510,6 +2511,36 @@ pub static GDA2020: ToolDef = ToolDef {
         )
         .precision(Precision::Decimals(1))
         .angle_range("[0,360)"),
+        Field::new(
+            "shift_north",
+            "Shift north",
+            "How far it moved north, negative to the south",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(4)),
+        Field::new(
+            "shift_east",
+            "Shift east",
+            "How far it moved east, negative to the west",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(4)),
+        Field::new(
+            "shift_up",
+            "Shift up",
+            "How much the ellipsoidal height changed",
+            Kind::Quantity {
+                q: QT::Length,
+                unit: "m",
+            },
+        )
+        .precision(Precision::Decimals(4)),
         Field::new(
             "method",
             "What was applied",
@@ -2635,6 +2666,9 @@ fn run_gda2020(ctx: &mut Ctx) -> Result<Json, ToolError> {
         ("lat", ctx.out("lat", q_deg(lat2))),
         ("lon", ctx.out("lon", q_deg(lon2))),
         ("height", ctx.out("height", q_m(h2))),
+        ("shift_north", ctx.out("shift_north", q_m(enu[1]))),
+        ("shift_east", ctx.out("shift_east", q_m(enu[0]))),
+        ("shift_up", ctx.out("shift_up", q_m(h2 - h))),
         ("shift", ctx.out("shift", q_m(s12))),
         ("azimuth", ctx.out("azimuth", q_deg(az))),
         (

@@ -316,7 +316,7 @@
     "lastmod": "2026-11-14"
   },
   "/changelog/": {
-    "hash": "d0790b9bff7f7968",
+    "hash": "bd7779c166a26d5c",
     "lastmod": "2026-11-17"
   },
   "/disclaimer/": {
@@ -600,7 +600,7 @@
     "lastmod": "2026-11-17"
   },
   "/geodesy/datum/gda2020/": {
-    "hash": "2a444bbfc7117ed0",
+    "hash": "57fdc5f2f1dc3ab8",
     "lastmod": "2026-11-17"
   },
   "/geodesy/datum/helmert/": {
@@ -1656,7 +1656,7 @@
     "lastmod": "2026-11-16"
   },
   "/methodology/": {
-    "hash": "ad7cec22025a96b2",
+    "hash": "4310b0f9f539010a",
     "lastmod": "2026-11-17"
   },
   "/navigation/": {
@@ -2768,7 +2768,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "83f986a0fa80a606",
+    "hash": "56458fb6c9cecae6",
     "lastmod": "2026-11-17"
   },
   "/workflows/": {

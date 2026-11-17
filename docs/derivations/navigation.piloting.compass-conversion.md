@@ -43,4 +43,4 @@ Linear interpolation between the deviation table's rows.
 
 ## Invariants
 
-- `compass_bowditch_402`: the example and three problem rows; a deviation table gives the same headings as `gp_geo::compass::true_to_compass` and converts back to true within 1e-9°.
+- `core/crates/gp-navigation/tests/piloting.rs` `compass_bowditch_402`: the example and three problem rows; a deviation table gives the same headings as `gp_geo::compass::true_to_compass` and converts back to true within 1e-9°.

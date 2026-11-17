@@ -1112,6 +1112,7 @@ const PHASE_WORDS: &[(&str, &str)] = &[
 
 pub static PHASE: ToolDef = ToolDef {
     id: "time.moon.phase",
+    stability: gp_base::tool::Stability::Stable,
     title: "Moon phase and illumination",
     summary: "How much of the moon is lit at an instant, its phase angle, its age since the new moon, the phase it is in, and when the next new moon, first quarter, full moon, and last quarter fall",
     aliases: &[
@@ -1165,6 +1166,10 @@ pub static PHASE: ToolDef = ToolDef {
         Related {
             id: "time.moon.position",
             reason: "next",
+        },
+        Related {
+            id: "time.sun.position",
+            reason: "alternative",
         },
     ],
     sentence: "{answer}.",

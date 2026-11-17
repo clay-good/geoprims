@@ -5,6 +5,27 @@
       "date": "2026-11-16",
       "kind": "changed",
       "tools": [
+        "navigation.sailing.great-circle",
+        "navigation.sailing.mercator",
+        "navigation.sailing.mid-latitude",
+        "navigation.sailing.parallel",
+        "navigation.sailing.traverse",
+        "navigation.piloting.compass-conversion",
+        "navigation.piloting.distance-by-vertical-angle",
+        "navigation.piloting.running-fix",
+        "navigation.celestial.polaris-latitude",
+        "navigation.celestial.sun-azimuth-check",
+        "survey.astro.polaris-azimuth",
+        "survey.astro.solar-azimuth",
+        "time.moon.phase"
+      ],
+      "vectors": [],
+      "summary": "Thirteen marine, celestial, and astronomic tools are now stable: five of Bowditch's sailings (great circle, Mercator, mid-latitude, parallel, and traverse), compass conversion, distance by vertical angle, the running fix, latitude by Polaris, the Sun compass check, the surveyor's Polaris and solar azimuths, and the Moon's phase. Each already had its Bowditch or published worked example, twenty or more golden vectors, and invariant tests; what was missing was a third related tool for five of them and, for eight, a derivation note naming its test by file. Their answers do not change. For MCP clients the marine tools are a new direct toolset, marine, and the survey field tools another, survey-field."
+    },
+    {
+      "date": "2026-11-16",
+      "kind": "changed",
+      "tools": [
         "geodesy.grid-ref.bng-inverse",
         "geodesy.grid-ref.bng-to-latlon",
         "geodesy.grid-ref.itm-forward",

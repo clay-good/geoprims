@@ -42,4 +42,4 @@ Bowditch's sphere. On WGS 84 a minute of longitude is up to about 0.5% longer th
 
 ## Invariants
 
-- `bowditch_chapter_13_examples`: the §1304 example and its inverse (to 1e-4°, as Bowditch rounds cos L to 0.64945).
+- `core/crates/gp-navigation/tests/sailing.rs` `bowditch_chapter_13_examples`: the §1304 example and its inverse (to 1e-4°, as Bowditch rounds cos L to 0.64945).

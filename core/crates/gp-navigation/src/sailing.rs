@@ -272,6 +272,7 @@ const LEG: &[Field] = &[
 
 pub static TRAVERSE: ToolDef = ToolDef {
     id: "navigation.sailing.traverse",
+    stability: gp_base::tool::Stability::Stable,
     title: "Traverse sailing",
     summary: "The single course and distance made good over several legs, by summing each leg's difference of latitude and departure (Bowditch's traverse sailing).",
     aliases: &[
@@ -314,7 +315,7 @@ pub static TRAVERSE: ToolDef = ToolDef {
         text_out("p_label", "p", ""),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "Each leg l = D cos C, p = D sin C; sums Σl, Σp; course made good tan C = Σp / Σl, distance √(Σl² + Σp²) (Bowditch §1303)",
     accuracy: "Exact sums; Bowditch's traverse tables round each leg to 0.1 NM, so its totals can differ by a few tenths",
     when_to_use: "Use this to find the single course and distance made good after several legs, such as a sailing vessel tacking or a ship on a survey pattern. A current can be added as one more leg: its set as the course and its drift times the hours as the distance. To find a bearing and distance from a light rather than from the start, enter the bearing and distance from the light to the start as the first leg, as Bowditch suggests.",
@@ -406,6 +407,7 @@ fn run_traverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static PARALLEL: ToolDef = ToolDef {
     id: "navigation.sailing.parallel",
+    stability: gp_base::tool::Stability::Stable,
     title: "Parallel sailing",
     summary: "Departure from difference of longitude on a parallel of latitude, or the reverse: p = DLo cos L (Bowditch's parallel sailing).",
     aliases: &[
@@ -463,7 +465,7 @@ pub static PARALLEL: ToolDef = ToolDef {
         text_out("p_label", "p", ""),
     ],
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "p = DLo cos L, DLo = p sec L, with DLo in minutes and p in NM on Bowditch's sphere (Bowditch §1304)",
     accuracy: "Exact on the sphere of 1 NM per minute of arc; on WGS 84 a minute of longitude is up to 0.5% longer",
     when_to_use: "Use this when a ship runs due east or west along a parallel and you need the longitude change from the distance run, or the distance from the longitude change. It is the simplest of the spherical sailings and the step that mid-latitude sailing uses to turn departure into longitude. Enter the latitude and either the difference of longitude or the departure; the other comes back, labeled east or west.",
@@ -762,6 +764,7 @@ fn sailing_out(
 
 pub static MID_LATITUDE: ToolDef = ToolDef {
     id: "navigation.sailing.mid-latitude",
+    stability: gp_base::tool::Stability::Stable,
     title: "Mid-latitude sailing",
     summary: "Course and distance between two places, or the place reached from a course and distance, by Bowditch's mid-latitude sailing, with the exact ellipsoidal rhumb line beside it.",
     aliases: &[
@@ -781,7 +784,7 @@ pub static MID_LATITUDE: ToolDef = ToolDef {
     inputs: &POS_INPUTS,
     outputs: SAILING_OUTPUTS,
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
     model: "l = D cos C, p = D sin C, Lm = (L₁ + L₂)/2, DLo = p sec Lm; or p = DLo cos Lm, tan C = p / l, D = l sec C (Bowditch §1305), with no middle-latitude correction as Bowditch advises; the exact rhumb line on WGS 84 (Karney) beside it",
     accuracy: "Bowditch's sphere of 1 NM per minute; the difference from the ellipsoidal rhumb is reported with every answer",
     when_to_use: "Use this for a run of a few hundred miles that does not cross the equator: the course and distance between two positions, or the position reached, the way Bowditch works it with the mean latitude. The exact rhumb line on WGS 84 is shown beside it, so you can see how much the short form gives away.",
@@ -890,6 +893,7 @@ fn run_mid_latitude(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static MERCATOR: ToolDef = ToolDef {
     id: "navigation.sailing.mercator",
+    stability: gp_base::tool::Stability::Stable,
     title: "Mercator sailing",
     summary: "Course and distance between two places, or the place reached, by Bowditch's Mercator sailing with meridional parts on WGS 84, with the exact ellipsoidal rhumb line beside it.",
     aliases: &[
@@ -909,7 +913,7 @@ pub static MERCATOR: ToolDef = ToolDef {
     inputs: &POS_INPUTS,
     outputs: SAILING_OUTPUTS,
     errors: &[ErrorCode::InvalidInput, ErrorCode::OutOfDomain],
-    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
     model: "M = (10800/π)[atanh(sin L) − e·atanh(e sin L)] on WGS 84, the closed form of Bowditch Table 6's series; m = M₂ − M₁; tan C = DLo / m; D = l sec C, or DLo cos L along a parallel (Bowditch §1306); the exact rhumb line on WGS 84 (Karney) beside it",
     accuracy: "Course as exact as the meridional parts; distance on Bowditch's sphere of 1 NM per minute of latitude, which the ellipsoidal rhumb beside it corrects",
     when_to_use: "Use this for the rhumb-line course between two places far apart, the line a Mercator chart draws straight, worked as Bowditch does with meridional parts. It also gives the place reached on a course and distance.",
@@ -1069,6 +1073,7 @@ const GC_LEG: &[Field] = &[
 
 pub static GREAT_CIRCLE: ToolDef = ToolDef {
     id: "navigation.sailing.great-circle",
+    stability: gp_base::tool::Stability::Stable,
     title: "Great-circle and composite sailing",
     summary: "The great-circle distance, initial and final courses, vertex, and points along the track by Bowditch's spherical formulas, with the WGS 84 geodesic beside it and a composite track under a limiting latitude.",
     aliases: &[
@@ -1180,7 +1185,7 @@ pub static GREAT_CIRCLE: ToolDef = ToolDef {
         ErrorCode::DegenerateGeometry,
         ErrorCode::OutOfDomain,
     ],
-    warnings: &["INPUT_NORMALIZED", "EXPERIMENTAL_TOOL"],
+    warnings: &["INPUT_NORMALIZED"],
     model: "cos D = sin L₁ sin L₂ + cos L₁ cos L₂ cos DLo; tan C = sin DLo / (cos L₁ tan L₂ − sin L₁ cos DLo) (Bowditch §1307); vertex cos Lv = cos L₁ |sin C|; track points tan L = tan Lv cos(λ − λv); composite cos DLov = tan Lx / tan Lv with the legs tangent to the limiting parallel (§1308); the WGS 84 geodesic (Karney) beside it",
     accuracy: "Exact on the sphere of 1 NM per minute of arc; the WGS 84 geodesic beside it differs by up to about 0.5%",
     when_to_use: "Use this to plan an ocean passage on the shortest track: the distance, the course to start on, the vertex where the track is farthest from the equator, and points to steer for every so many degrees of longitude. Give a limiting latitude to keep the track out of high latitudes with a composite sailing.",

@@ -42,4 +42,4 @@ Plane sailing on every leg. Bowditch works the example with traverse tables roun
 
 ## Invariants
 
-- `bowditch_chapter_13_examples`: the §1303 example within the table rounding.
+- `core/crates/gp-navigation/tests/sailing.rs` `bowditch_chapter_13_examples`: the §1303 example within the table rounding.

@@ -629,6 +629,7 @@ static ASTRO_OUT: [Field; 11] = [
 
 pub static SOLAR_AZIMUTH: ToolDef = ToolDef {
     id: "survey.astro.solar-azimuth",
+    stability: gp_base::tool::Stability::Stable,
     title: "Astronomic azimuth from a solar observation",
     summary: "The azimuth of a survey line from timed pointings on the sun by the hour-angle method, with the limb correction, each pointing's azimuth, the mean, and the scatter",
     aliases: &[
@@ -698,6 +699,10 @@ pub static SOLAR_AZIMUTH: ToolDef = ToolDef {
             id: "survey.cogo.azimuth-bearing",
             reason: "next",
         },
+        Related {
+            id: "survey.cogo.traverse-closure",
+            reason: "next",
+        },
     ],
     sentence: "{answer}.",
     limits: &[("batchRows", 200)],
@@ -707,6 +712,7 @@ pub static SOLAR_AZIMUTH: ToolDef = ToolDef {
 
 pub static POLARIS_AZIMUTH: ToolDef = ToolDef {
     id: "survey.astro.polaris-azimuth",
+    stability: gp_base::tool::Stability::Stable,
     title: "Astronomic azimuth from a Polaris observation",
     summary: "The azimuth of a survey line from timed pointings on Polaris by the hour-angle method, with each pointing's azimuth, the mean, and the scatter",
     aliases: &[
@@ -762,6 +768,10 @@ pub static POLARIS_AZIMUTH: ToolDef = ToolDef {
         },
         Related {
             id: "survey.cogo.azimuth-bearing",
+            reason: "next",
+        },
+        Related {
+            id: "survey.cogo.traverse-closure",
             reason: "next",
         },
     ],

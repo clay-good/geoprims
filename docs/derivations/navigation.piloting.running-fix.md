@@ -43,4 +43,4 @@ The course and speed made good between the bearings must be known; an unknown cu
 
 ## Invariants
 
-- `bearings_and_fixes`: the §1121 example; the fix lies at that distance from the object, on the second bearing within the meridians' convergence.
+- `core/crates/gp-navigation/tests/piloting.rs` `bearings_and_fixes`: the §1121 example; the fix lies at that distance from the object, on the second bearing within the meridians' convergence.

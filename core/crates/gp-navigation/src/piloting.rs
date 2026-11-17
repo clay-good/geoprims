@@ -680,6 +680,7 @@ const LOP_POINT: &[Field] = &[
 
 pub static RUNNING_FIX: ToolDef = ToolDef {
     id: "navigation.piloting.running-fix",
+    stability: gp_base::tool::Stability::Stable,
     title: "Running fix from one object",
     summary: "A running fix from two true bearings of one charted object and the ship's course and speed between them: the earlier bearing advanced by the run and crossed with the later one, with the fix, the run, and both lines of position for the chart.",
     aliases: &[
@@ -794,7 +795,7 @@ pub static RUNNING_FIX: ToolDef = ToolDef {
         ),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["INPUT_NORMALIZED", "UNIT_ASSUMED"],
     model: "Relative bearings A = bearing₁ − course and B = bearing₂ − course; the object's distance at the second bearing run × sin A / sin(B − A), the solution of advancing the first line of position by the run (Bowditch §1112, §1121, Table 18); the fix placed from the object along the reciprocal of the second bearing by the WGS 84 geodesic",
     accuracy: "Exact for the plane triangle; as good as the bearings and the run made good",
     when_to_use: "Use this when only one charted object is in sight and you take its bearing twice: the first line of position is advanced along the course by the distance run and crossed with the second. Give the object's charted position to get the fix itself and the lines to plot.",
@@ -919,6 +920,7 @@ fn run_running_fix(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static VERTICAL_ANGLE: ToolDef = ToolDef {
     id: "navigation.piloting.distance-by-vertical-angle",
+    stability: gp_base::tool::Stability::Stable,
     title: "Distance by vertical sextant angle",
     summary: "Distance off an object of charted height from its vertical sextant angle: above the sea horizon for an object beyond it (Bowditch Table 15), or from its waterline for one within the horizon (Table 16).",
     aliases: &[
@@ -981,7 +983,7 @@ pub static VERTICAL_ANGLE: ToolDef = ToolDef {
         ErrorCode::OutOfDomain,
         ErrorCode::NoSolution,
     ],
-    warnings: &["BEYOND_HORIZON", "UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["BEYOND_HORIZON", "UNIT_ASSUMED"],
     model: "Sea horizon (Table 15): D = √((tan a / 0.0002419)² + (H − h) / 0.7349) − tan a / 0.0002419, the constants for terrestrial refraction; waterline (Table 16): the plane right triangle D = H / tan a, in NM of 6,076.1 ft; horizon 1.17 √h NM",
     accuracy: "Table 15's refraction constants hold for standard conditions; the result matches the tables to their 0.1 NM",
     when_to_use: "Use this to get a distance off a lighthouse, peak, or other object of known height with a sextant: measure the angle from the sea horizon up to the top, correct it for index error and dip, and enter the heights. For an object inside the horizon, measure from its waterline instead.",
@@ -1145,6 +1147,7 @@ fn ew(v: f64) -> String {
 
 pub static COMPASS_CONVERSION: ToolDef = ToolDef {
     id: "navigation.piloting.compass-conversion",
+    stability: gp_base::tool::Stability::Stable,
     title: "Compass conversion (true, magnetic, compass)",
     summary: "Converts a heading or bearing among true, magnetic, and compass with variation and deviation (east and west as Bowditch signs them), the compass error, a deviation table interpolated by magnetic heading, and the relative bearing.",
     aliases: &[
@@ -1226,7 +1229,7 @@ pub static COMPASS_CONVERSION: ToolDef = ToolDef {
         .optional(),
     ],
     errors: &[ErrorCode::InvalidInput],
-    warnings: &["UNIT_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["UNIT_ASSUMED"],
     model: "True − variation = magnetic; magnetic − deviation = compass (east positive), the deviation read from the table at the magnetic heading by the function the aviation heading chain uses (gp_geo::compass); compass to true by fixed-point iteration on the table; a bearing takes the ship's heading's deviation (Bowditch Vol. II §402)",
     accuracy: "Exact arithmetic; a deviation table is interpolated linearly between its rows",
     when_to_use: "Use this for the TVMDC chain: turning a true course into the compass course to steer, or a compass bearing of a light into a true bearing to plot. Enter the variation from the chart and the deviation for the heading, or paste the ship's deviation table.",

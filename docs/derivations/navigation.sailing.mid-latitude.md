@@ -42,4 +42,4 @@ The mean latitude stands for the true middle latitude, and the Earth is Bowditch
 
 ## Invariants
 
-- `bowditch_chapter_13_examples`: the §1305 example at full precision.
+- `core/crates/gp-navigation/tests/sailing.rs` `bowditch_chapter_13_examples`: the §1305 example at full precision.

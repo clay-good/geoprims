@@ -75,8 +75,11 @@ export const TOOLSETS = {
     'geodesy.projection.mga-',
     'geodesy.projection.nztm-',
   ],
-  // Navigation and geometry together pass the cap, so each is its own toolset.
-  navigation: ['navigation.'],
+  // Navigation and geometry together pass the cap, so each is its own toolset;
+  // and the marine tools (sailings, piloting, celestial, tides, and the
+  // vessel) are their own beside navigation, since together they pass it.
+  navigation: ['navigation.geodesic.', 'navigation.route.', 'navigation.los.', 'navigation.vector.', 'navigation.rhumb.'],
+  marine: ['navigation.sailing.', 'navigation.piloting.', 'navigation.celestial.', 'navigation.tide.', 'navigation.vessel.'],
   geometry: ['geometry.'],
   e6b: ['aviation.airspeed.', 'aviation.altimetry.', 'aviation.wind.', 'aviation.performance.'],
   atmosphere: ['aviation.atmosphere.', 'aviation.altimetry.', 'time.sun.'],
@@ -84,7 +87,10 @@ export const TOOLSETS = {
   // toolset, since together with photogrammetry and mission they pass the cap.
   'drone-mapping': ['drone.photogrammetry.', 'drone.mission.'],
   'drone-ops': ['drone.power.', 'drone.ops.', 'drone.sensors.', 'drone.links.'],
-  'survey-cogo': ['survey.'],
+  // Office computation, and the field tools (GNSS, land records, and
+  // astronomic azimuths) beside it, since together they pass the cap.
+  'survey-cogo': ['survey.cogo.', 'survey.curves.', 'survey.reduction.', 'survey.earthwork.'],
+  'survey-field': ['survey.gnss.', 'survey.land.', 'survey.astro.'],
   // H3 alone passes the cap, so it is its own toolset beside the other indexes.
   indexing: ['indexing.s2.', 'indexing.tile.', 'indexing.geohash.', 'indexing.plus-code.', 'indexing.a5.', 'indexing.convert.'],
   h3: ['indexing.h3.'],

@@ -45,4 +45,4 @@ A sphere of one nautical mile per minute of arc; the WGS 84 geodesic beside it i
 
 ## Invariants
 
-- `bowditch_chapter_13_examples`: the §1307 and §1308 examples. `sailing_invariants`: the great circle equals `navigation.geodesic.spherical-inverse` on a sphere of 10800/π NM to 1e-9 in distance and both courses; a composite under 45°N has three legs, the middle on 45°N, and is longer than the great circle; antipodes are refused.
+- `core/crates/gp-navigation/tests/sailing.rs` `bowditch_chapter_13_examples`: the §1307 and §1308 examples. `core/crates/gp-navigation/tests/sailing.rs` `sailing_invariants`: the great circle equals `navigation.geodesic.spherical-inverse` on a sphere of 10800/π NM to 1e-9 in distance and both courses; a composite under 45°N has three legs, the middle on 45°N, and is longer than the great circle; antipodes are refused.

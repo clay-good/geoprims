@@ -1446,6 +1446,7 @@ fn error_label(e: f64) -> String {
 
 pub static POLARIS_LATITUDE: ToolDef = ToolDef {
     id: "navigation.celestial.polaris-latitude",
+    stability: gp_base::tool::Stability::Stable,
     title: "Latitude by Polaris",
     summary: "Turns one observed altitude of Polaris into a latitude, from the computed polar distance and hour angle rather than the Almanac's a0, a1, and a2 tables, and gives Polaris's true azimuth for the line of position",
     aliases: &[
@@ -1571,6 +1572,10 @@ pub static POLARIS_LATITUDE: ToolDef = ToolDef {
             id: "navigation.celestial.sight-reduction",
             reason: "alternative",
         },
+        Related {
+            id: "navigation.celestial.almanac",
+            reason: "parent",
+        },
     ],
     sentence: "{answer}.",
     limits: &[("batchRows", 5_000)],
@@ -1649,6 +1654,7 @@ fn run_polaris_latitude(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static SUN_AZIMUTH_CHECK: ToolDef = ToolDef {
     id: "navigation.celestial.sun-azimuth-check",
+    stability: gp_base::tool::Stability::Stable,
     title: "Compass check by the Sun",
     summary: "The Sun's true azimuth at a time and place, its amplitude at rising or setting, and the gyro or compass error against a bearing you observed",
     aliases: &[
@@ -1799,6 +1805,10 @@ pub static SUN_AZIMUTH_CHECK: ToolDef = ToolDef {
         Related {
             id: "geodesy.magnetic.declination",
             reason: "alternative",
+        },
+        Related {
+            id: "navigation.piloting.compass-conversion",
+            reason: "next",
         },
     ],
     sentence: "{answer}.",

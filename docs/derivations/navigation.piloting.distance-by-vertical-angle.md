@@ -43,4 +43,4 @@ Standard terrestrial refraction, as the tables assume. Volume I §1209 notes the
 
 ## Invariants
 
-- `vertical_angle_table_15`: six Table 15 entries; a waterline answer beyond the horizon warns `BEYOND_HORIZON`.
+- `core/crates/gp-navigation/tests/piloting.rs` `vertical_angle_table_15`: six Table 15 entries; a waterline answer beyond the horizon warns `BEYOND_HORIZON`.

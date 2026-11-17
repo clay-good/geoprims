@@ -43,4 +43,4 @@ The course is as exact as the meridional parts. The distance l sec C counts a mi
 
 ## Invariants
 
-- `bowditch_chapter_13_examples`: the §1306 example; the exact rhumb's course agrees within 0.01° and the sphere's distance runs long by under 0.5%. `sailing_invariants`: a course and distance from the inverse lead back to the place given within 1e-9°.
+- `core/crates/gp-navigation/tests/sailing.rs` `bowditch_chapter_13_examples`: the §1306 example; the exact rhumb's course agrees within 0.01° and the sphere's distance runs long by under 0.5%. `core/crates/gp-navigation/tests/sailing.rs` `sailing_invariants`: a course and distance from the inverse lead back to the place given within 1e-9°.

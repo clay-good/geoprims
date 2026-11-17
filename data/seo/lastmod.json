@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "ca5645eb241f3fee",
+    "hash": "edca9809610f2d32",
     "lastmod": "2026-11-16"
   },
   "/accuracy/": {
@@ -316,7 +316,7 @@
     "lastmod": "2026-11-14"
   },
   "/changelog/": {
-    "hash": "0d94e133d60fc909",
+    "hash": "e5762c28ffc85725",
     "lastmod": "2026-11-16"
   },
   "/disclaimer/": {
@@ -576,7 +576,7 @@
     "lastmod": "2026-11-14"
   },
   "/geodesy/": {
-    "hash": "ae4078906be24bcb",
+    "hash": "19a717c1f425655e",
     "lastmod": "2026-11-16"
   },
   "/geodesy/crs/": {
@@ -592,7 +592,7 @@
     "lastmod": "2026-11-14"
   },
   "/geodesy/datum/": {
-    "hash": "cdd8282d235b8441",
+    "hash": "65dd61a8fdb9ba1d",
     "lastmod": "2026-11-16"
   },
   "/geodesy/datum/etrf/": {
@@ -620,7 +620,15 @@
     "lastmod": "2026-11-14"
   },
   "/geodesy/datum/nadcon5/": {
-    "hash": "0c9c40e414061861",
+    "hash": "100b4e5f1e1b0eb6",
+    "lastmod": "2026-11-16"
+  },
+  "/geodesy/datum/osi-polynomial-inverse/": {
+    "hash": "f42ccc32a3e2f7ed",
+    "lastmod": "2026-11-16"
+  },
+  "/geodesy/datum/osi-polynomial/": {
+    "hash": "18f963625fed4b1c",
     "lastmod": "2026-11-16"
   },
   "/geodesy/datum/ostn15-inverse/": {
@@ -628,7 +636,7 @@
     "lastmod": "2026-11-16"
   },
   "/geodesy/datum/ostn15/": {
-    "hash": "3782252e01942baa",
+    "hash": "e8d00854ed056d88",
     "lastmod": "2026-11-16"
   },
   "/geodesy/datum/plate-motion/": {
@@ -1644,11 +1652,11 @@
     "lastmod": "2026-11-14"
   },
   "/licenses/": {
-    "hash": "b3cfb8e9ce19ec04",
+    "hash": "f261b1debbc0963c",
     "lastmod": "2026-11-16"
   },
   "/methodology/": {
-    "hash": "caa67f224a891966",
+    "hash": "d33adfef7e3d3bf1",
     "lastmod": "2026-11-16"
   },
   "/navigation/": {
@@ -1904,7 +1912,7 @@
     "lastmod": "2026-10-20"
   },
   "/quality/": {
-    "hash": "fd966bf02f506dc8",
+    "hash": "eb96457edaa72091",
     "lastmod": "2026-11-16"
   },
   "/raster/": {
@@ -2060,7 +2068,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "c6eab81ec0d51221",
+    "hash": "83f9dc876fb40c35",
     "lastmod": "2026-11-16"
   },
   "/survey/": {
@@ -2496,7 +2504,7 @@
     "lastmod": "2026-11-14"
   },
   "/tools/": {
-    "hash": "b4a2536ccf7348f6",
+    "hash": "d5c656c275f31e1f",
     "lastmod": "2026-11-16"
   },
   "/units/": {
@@ -2760,7 +2768,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "c87b2444510e1621",
+    "hash": "49aa09393ad303e9",
     "lastmod": "2026-11-16"
   },
   "/workflows/": {

@@ -40,30 +40,71 @@ pub fn datum_name(flag: u8) -> &'static str {
 pub struct OsProjection {
     a: f64,
     b: f64,
+    f0: f64,
+    phi0: f64,
+    lam0: f64,
+    e0: f64,
+    n0: f64,
 }
 
-const F0: f64 = 0.999_601_271_7;
-const PHI0: f64 = 49.0;
-const LAM0: f64 = -2.0;
-const E0: f64 = 400_000.0;
-const N0: f64 = -100_000.0;
+impl OsProjection {
+    /// Any of OS's transverse Mercator grids: the ellipsoid's semi-axes,
+    /// then the scale on the central meridian, the true origin in degrees,
+    /// and the false easting and northing of that origin.
+    pub const fn new(a: f64, b: f64, f0: f64, phi0: f64, lam0: f64, e0: f64, n0: f64) -> Self {
+        OsProjection {
+            a,
+            b,
+            f0,
+            phi0,
+            lam0,
+            e0,
+            n0,
+        }
+    }
+}
+
+const NG: (f64, f64, f64, f64, f64) = (0.999_601_271_7, 49.0, -2.0, 400_000.0, -100_000.0);
 
 /// The ETRS89 side of the National Grid: GRS 80 as OS states it,
 /// a 6 378 137.000 m and b 6 356 752.3141 m.
 pub fn etrs89_grid() -> OsProjection {
-    OsProjection {
-        a: 6_378_137.0,
-        b: 6_356_752.314_1,
-    }
+    OsProjection::new(6_378_137.0, 6_356_752.314_1, NG.0, NG.1, NG.2, NG.3, NG.4)
 }
 
 /// The OSGB36 National Grid itself: Airy 1830, a 6 377 563.396 m and
 /// b 6 356 256.909 m.
 pub fn airy_grid() -> OsProjection {
-    OsProjection {
-        a: 6_377_563.396,
-        b: 6_356_256.909,
-    }
+    OsProjection::new(6_377_563.396, 6_356_256.909, NG.0, NG.1, NG.2, NG.3, NG.4)
+}
+
+/// The Irish Grid (TM75): Airy Modified 1849, a 6 377 340.189 m and
+/// b 6 356 034.447 m, true origin 53°30'N 8°W, scale 1.000035, false origin
+/// 200 km west and 250 km south (User Guide annexe B).
+pub fn irish_grid() -> OsProjection {
+    OsProjection::new(
+        6_377_340.189,
+        6_356_034.447,
+        1.000_035,
+        53.5,
+        -8.0,
+        200_000.0,
+        250_000.0,
+    )
+}
+
+/// Irish Transverse Mercator on GRS 80: true origin 53°30'N 8°W, scale
+/// 0.99982, false origin 600 km west and 750 km south (annexe B).
+pub fn itm_grid() -> OsProjection {
+    OsProjection::new(
+        6_378_137.0,
+        6_356_752.314_1,
+        0.999_82,
+        53.5,
+        -8.0,
+        600_000.0,
+        750_000.0,
+    )
 }
 
 /// A projected point.
@@ -82,10 +123,10 @@ impl OsProjection {
     fn m(&self, phi: f64) -> f64 {
         let n = (self.a - self.b) / (self.a + self.b);
         let (n2, n3) = (n * n, n * n * n);
-        let p0 = PHI0.to_radians();
+        let p0 = self.phi0.to_radians();
         let (d, s) = (phi - p0, phi + p0);
         self.b
-            * F0
+            * self.f0
             * ((1.0 + n + 1.25 * n2 + 1.25 * n3) * d
                 - (3.0 * n + 3.0 * n2 + 21.0 / 8.0 * n3) * d.sin() * s.cos()
                 + (15.0 / 8.0 * n2 + 15.0 / 8.0 * n3) * (2.0 * d).sin() * (2.0 * s).cos()
@@ -96,8 +137,8 @@ impl OsProjection {
     fn radii(&self, phi: f64) -> (f64, f64, f64) {
         let e2 = self.e2();
         let w = 1.0 - e2 * phi.sin().powi(2);
-        let nu = self.a * F0 / w.sqrt();
-        let rho = self.a * F0 * (1.0 - e2) / w.powf(1.5);
+        let nu = self.a * self.f0 / w.sqrt();
+        let rho = self.a * self.f0 * (1.0 - e2) / w.powf(1.5);
         (nu, rho, nu / rho - 1.0)
     }
 
@@ -107,8 +148,8 @@ impl OsProjection {
         let (nu, rho, eta2) = self.radii(phi);
         let (s, c, t) = (phi.sin(), phi.cos(), phi.tan());
         let t2 = t * t;
-        let p = (lon - LAM0).to_radians();
-        let i = self.m(phi) + N0;
+        let p = (lon - self.lam0).to_radians();
+        let i = self.m(phi) + self.n0;
         let ii = nu / 2.0 * s * c;
         let iii = nu / 24.0 * s * c.powi(3) * (5.0 - t2 + 9.0 * eta2);
         let iiia = nu / 720.0 * s * c.powi(5) * (61.0 - 58.0 * t2 + t2 * t2);
@@ -117,7 +158,7 @@ impl OsProjection {
         let vi =
             nu / 120.0 * c.powi(5) * (5.0 - 18.0 * t2 + t2 * t2 + 14.0 * eta2 - 58.0 * t2 * eta2);
         En {
-            e: E0 + iv * p + v * p.powi(3) + vi * p.powi(5),
+            e: self.e0 + iv * p + v * p.powi(3) + vi * p.powi(5),
             n: i + ii * p * p + iii * p.powi(4) + iiia * p.powi(6),
         }
     }
@@ -125,13 +166,13 @@ impl OsProjection {
     /// Easting and northing to latitude and longitude in degrees (annexe C),
     /// iterating on the meridian arc until it is within 0.01 mm.
     pub fn inverse(&self, e: f64, n: f64) -> (f64, f64) {
-        let mut phi = (n - N0) / (self.a * F0) + PHI0.to_radians();
+        let mut phi = (n - self.n0) / (self.a * self.f0) + self.phi0.to_radians();
         for _ in 0..100 {
-            let r = n - N0 - self.m(phi);
+            let r = n - self.n0 - self.m(phi);
             if r.abs() < 1e-5 {
                 break;
             }
-            phi += r / (self.a * F0);
+            phi += r / (self.a * self.f0);
         }
         let (nu, rho, eta2) = self.radii(phi);
         let (t, sec) = (phi.tan(), 1.0 / phi.cos());
@@ -144,10 +185,10 @@ impl OsProjection {
         let xii = sec / (120.0 * nu.powi(5)) * (5.0 + 28.0 * t2 + 24.0 * t2 * t2);
         let xiia = sec / (5040.0 * nu.powi(7))
             * (61.0 + 662.0 * t2 + 1320.0 * t2 * t2 + 720.0 * t2 * t2 * t2);
-        let de = e - E0;
+        let de = e - self.e0;
         let lat = phi - vii * de * de + viii * de.powi(4) - ix * de.powi(6);
-        let lon =
-            LAM0.to_radians() + x * de - xi * de.powi(3) + xii * de.powi(5) - xiia * de.powi(7);
+        let lon = self.lam0.to_radians() + x * de - xi * de.powi(3) + xii * de.powi(5)
+            - xiia * de.powi(7);
         (lat.to_degrees(), lon.to_degrees())
     }
 }

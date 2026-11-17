@@ -66,6 +66,16 @@ fn catalog_lint_examples_vectors() {
             &std::fs::read(&path).unwrap(),
         );
     }
+    for g in ["malin", "belfast"] {
+        gp_base::assets::put(
+            &format!("osgm15-ireland@2016/{g}.grid"),
+            &std::fs::read(format!(
+                "{}/../../../assets/data/osgm15-ireland/2016/{g}.grid",
+                env!("CARGO_MANIFEST_DIR")
+            ))
+            .unwrap(),
+        );
+    }
     gp_base::assets::put(
         "ostn15@2016/ostn15-osgm15.grid",
         &std::fs::read(format!(

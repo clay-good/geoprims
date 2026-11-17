@@ -5,6 +5,16 @@
       "date": "2026-11-16",
       "kind": "added",
       "tools": [
+        "geodesy.datum.osi-polynomial",
+        "geodesy.datum.osi-polynomial-inverse"
+      ],
+      "vectors": [],
+      "summary": "The official Irish Grid transformation, both ways. Older Irish and Northern Irish mapping, plans, and survey records are on the Irish Grid; GNSS and current mapping work in ETRS89 and Irish Transverse Mercator. The pair moves between them by the polynomial Ordnance Survey Ireland and Land & Property Services publish, good to 0.4 m against the old triangulation, and turns heights between the ellipsoid and the Malin Head or Belfast datum by OSGM15. It reproduces all 200 of the official Northern Ireland test results, positions to the printed millionth of a second and heights within a millimetre. Both tools are experimental."
+    },
+    {
+      "date": "2026-11-16",
+      "kind": "added",
+      "tools": [
         "geodesy.datum.ostn15",
         "geodesy.datum.ostn15-inverse"
       ],

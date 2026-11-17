@@ -908,6 +908,13 @@
           ]
         },
         {
+          "want": "move between the Irish Grid and ETRS89 or ITM, with heights on Malin Head or Belfast",
+          "tools": [
+            "osi-polynomial",
+            "osi-polynomial-inverse"
+          ]
+        },
+        {
           "want": "move a position between any two ITRF, WGS 84, or NAD 83 frames, with the steps and their accuracy",
           "tools": [
             "transform"

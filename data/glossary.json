@@ -529,6 +529,8 @@
       "source": "epsg-crs-registry",
       "relatedTools": [
         "geodesy.datum.etrf",
+        "geodesy.datum.osi-polynomial",
+        "geodesy.datum.osi-polynomial-inverse",
         "geodesy.datum.ostn15",
         "geodesy.datum.ostn15-inverse",
         "geodesy.grid-ref.itm-inverse"
@@ -723,6 +725,7 @@
       "definition": "Any satellite positioning system, such as GPS, Galileo, GLONASS, or BeiDou, and the receivers that use them.",
       "source": "os-transformations-osgm15",
       "relatedTools": [
+        "geodesy.datum.osi-polynomial-inverse",
         "geodesy.datum.ostn15",
         "geodesy.datum.ostn15-inverse"
       ]
@@ -1016,6 +1019,7 @@
       "definition": "The national grid of Ireland and Northern Ireland since 2001, a single transverse Mercator zone on ETRS89.",
       "source": "epsg-crs-registry",
       "relatedTools": [
+        "geodesy.datum.osi-polynomial",
         "geodesy.grid-ref.itm-forward",
         "geodesy.grid-ref.itm-inverse"
       ]
@@ -1134,6 +1138,17 @@
         "navigation.celestial.polaris-latitude",
         "navigation.celestial.sight-reduction",
         "navigation.celestial.sun-azimuth-check"
+      ]
+    },
+    {
+      "id": "lps",
+      "term": "LPS",
+      "expansion": "Land & Property Services",
+      "definition": "Northern Ireland's mapping and land registration agency, formerly the Ordnance Survey of Northern Ireland. With OSi it maintains the Irish Grid transformation.",
+      "source": "os-transformations-osgm15",
+      "relatedTools": [
+        "geodesy.datum.osi-polynomial",
+        "geodesy.datum.osi-polynomial-inverse"
       ]
     },
     {

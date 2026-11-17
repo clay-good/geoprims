@@ -316,7 +316,7 @@
     "lastmod": "2026-11-14"
   },
   "/changelog/": {
-    "hash": "05f9fb568f333c7d",
+    "hash": "8ffd5a9386b26fa9",
     "lastmod": "2026-11-17"
   },
   "/disclaimer/": {
@@ -612,8 +612,8 @@
     "lastmod": "2026-11-14"
   },
   "/geodesy/datum/legacy/": {
-    "hash": "974c02413196fba3",
-    "lastmod": "2026-11-14"
+    "hash": "22f2997e8e0acb21",
+    "lastmod": "2026-11-17"
   },
   "/geodesy/datum/nad83/": {
     "hash": "9436aeef3a85ecd9",
@@ -2768,8 +2768,8 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "49aa09393ad303e9",
-    "lastmod": "2026-11-16"
+    "hash": "10dadcfb548f2741",
+    "lastmod": "2026-11-17"
   },
   "/workflows/": {
     "hash": "266be28b6b5199c8",

@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-11-16",
+      "kind": "changed",
+      "tools": [
+        "geodesy.datum.legacy"
+      ],
+      "vectors": [],
+      "summary": "The legacy datum tool now refuses a Tokyo-datum point in Japan instead of answering it. Its Tokyo parameters are the ones EPSG fitted for South Korea, and Korea's published area reaches far enough east to cover northern Kyushu, so a point in Fukuoka got Korea's numbers without a warning. In Japan the official path is the Geospatial Information Authority of Japan's grids, which need approval under Japan's Survey Act; the refusal says so and points to the JGD2011 plane rectangular tools. Points in Korea give the same answers as before. Version 1.1.0."
+    },
+    {
+      "date": "2026-11-16",
       "kind": "added",
       "tools": [],
       "vectors": [],

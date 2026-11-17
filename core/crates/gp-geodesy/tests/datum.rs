@@ -903,3 +903,63 @@ fn etrs89_drifts_from_the_global_frames_with_the_epoch() {
     );
     assert_eq!(old["error"]["code"], "OUT_OF_DOMAIN", "{old}");
 }
+
+#[test]
+fn a_tokyo_datum_point_in_japan_is_unsupported_and_korea_still_answers() {
+    // add-international-grids, geodesy/national-grids, "Japan": a Tokyo-datum
+    // transformation in Japan is UNSUPPORTED, because GSI's grids need Survey
+    // Act approval, with the JGD2011 projection offered. The tool's Tokyo
+    // row is EPSG 1305, fitted for South Korea, whose area box reaches
+    // 131.01°E and so used to answer for Fukuoka without a word.
+    let japan = [
+        (35.68, 139.77, "Tokyo"),
+        (33.59, 130.40, "Fukuoka"),
+        (34.20, 129.29, "Tsushima"),
+        (32.70, 128.84, "the Goto Islands"),
+        (34.00, 131.00, "Shimonoseki"),
+        (26.21, 127.68, "Naha"),
+        (24.34, 124.16, "Ishigaki"),
+        (43.06, 141.35, "Sapporo"),
+        (43.33, 145.58, "Nemuro"),
+        (24.29, 153.98, "Minamitorishima"),
+        (20.43, 136.08, "Okinotorishima"),
+    ];
+    for (lat, lon, place) in japan {
+        for direction in ["to-wgs84", "from-wgs84"] {
+            let r: serde_json::Value = serde_json::from_str(&gp_geodesy::REGISTRY.invoke(
+                "geodesy.datum.legacy",
+                &serde_json::json!({"datum": "Tokyo", "lat": lat, "lon": lon, "direction": direction}).to_string(),
+            ))
+            .unwrap();
+            assert_eq!(r["ok"], false, "{place}: {r}");
+            assert_eq!(r["error"]["code"], "UNSUPPORTED", "{place}: {r}");
+            assert!(
+                r["error"]["message"]
+                    .as_str()
+                    .unwrap()
+                    .contains("jgd2011-inverse"),
+                "the refusal offers the JGD2011 projection: {r}"
+            );
+        }
+    }
+    let elsewhere = [
+        (37.57, 126.98, "Seoul"),
+        (35.10, 129.04, "Busan"),
+        (35.54, 129.31, "Ulsan"),
+        (33.50, 126.53, "Jeju"),
+        (37.50, 130.86, "Ulleungdo"),
+        (39.02, 125.75, "Pyongyang"),
+        (43.12, 131.89, "Vladivostok"),
+        (46.64, 142.78, "Korsakov, Sakhalin"),
+        (31.23, 121.47, "Shanghai"),
+        (25.03, 121.57, "Taipei"),
+    ];
+    for (lat, lon, place) in elsewhere {
+        let r: serde_json::Value = serde_json::from_str(&gp_geodesy::REGISTRY.invoke(
+            "geodesy.datum.legacy",
+            &serde_json::json!({"datum": "Tokyo", "lat": lat, "lon": lon}).to_string(),
+        ))
+        .unwrap();
+        assert_eq!(r["ok"], true, "{place} is not Japan: {r}");
+    }
+}

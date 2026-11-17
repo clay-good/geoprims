@@ -1290,6 +1290,7 @@ const LEGACY_IDS: &[&str] = &[
 
 pub static LEGACY_SHIFT: ToolDef = ToolDef {
     id: "geodesy.datum.legacy",
+    version: "1.1.0",
     stability: gp_base::tool::Stability::Stable,
     title: "Legacy datum to or from WGS 84",
     summary: "Converts a latitude and longitude between a legacy datum (ED50, NAD27, OSGB36, Tokyo, AGD66, NZGD49, Pulkovo 1942, SAD69, or Arc 1960) and WGS 84 with the published EPSG transformation, and states its accuracy, which is meters, not centimeters.",
@@ -1392,7 +1393,7 @@ pub static LEGACY_SHIFT: ToolDef = ToolDef {
         )
         .precision(Precision::Decimals(0)),
     ],
-    errors: &[ErrorCode::InvalidInput],
+    errors: &[ErrorCode::InvalidInput, ErrorCode::Unsupported],
     warnings: &[
         "LOW_ACCURACY_TRANSFORM",
         "OUTSIDE_AREA_OF_USE",
@@ -1434,6 +1435,50 @@ pub static LEGACY_SHIFT: ToolDef = ToolDef {
     ..ToolDef::BLANK
 };
 
+/// A coarse outline of Japan's islands and waters, (longitude, latitude),
+/// drawn for one decision: whether a Tokyo-datum request is about Japan
+/// rather than South Korea. Through the Korea Strait it follows the median
+/// between Busan and Tsushima, so Tsushima, the Goto Islands, and northern
+/// Kyushu fall inside and Busan, Ulsan, Jeju, and Ulleungdo outside; it keeps
+/// east of Taiwan and south of Sakhalin and Primorye, and reaches the
+/// outlying islands from Yonaguni to Minamitorishima and Okinotorishima.
+const JAPAN_OUTLINE: &[(f64, f64)] = &[
+    (122.5, 23.5),
+    (126.0, 28.5),
+    (127.5, 31.0),
+    (128.0, 33.0),
+    (128.83, 34.2),
+    (129.3, 34.8),
+    (129.8, 35.4),
+    (131.4, 36.6),
+    (133.5, 38.5),
+    (136.5, 41.0),
+    (138.5, 44.0),
+    (140.5, 45.8),
+    (142.5, 45.65),
+    (145.9, 43.2),
+    (148.0, 42.0),
+    (154.5, 27.0),
+    (154.5, 23.5),
+    (136.0, 19.5),
+];
+
+/// Whether a point falls inside `JAPAN_OUTLINE`, by the even-odd rule.
+fn in_japan(lat: f64, lon: f64) -> bool {
+    let n = JAPAN_OUTLINE.len();
+    let mut inside = false;
+    for i in 0..n {
+        let (x1, y1) = JAPAN_OUTLINE[i];
+        let (x2, y2) = JAPAN_OUTLINE[(i + 1) % n];
+        if (y1 > lat) != (y2 > lat) && lon < x1 + (lat - y1) / (y2 - y1) * (x2 - x1) {
+            inside = !inside;
+        }
+    }
+    inside
+}
+
+const TOKYO_IN_JAPAN: &str = "A Tokyo-datum position in Japan is moved to JGD2000 or JGD2011 by the Geospatial Information Authority of Japan's TKY2JGD grids, which need approval under Japan's Survey Act to use, so they are not here. The Tokyo parameters this tool carries, EPSG 1305, were fitted for South Korea; in Japan they differ from EPSG's own Japanese set (operation 15484) by about 7 m, and neither is the official path. For JGD2011 plane rectangular coordinates, geodesy.projection.jgd2011-inverse gives the latitude and longitude.";
+
 fn in_area(area: [f64; 4], lat: f64, lon: f64) -> bool {
     let [w, s, e, n] = area;
     let lon_ok = if w <= e {
@@ -1452,6 +1497,9 @@ fn run_legacy(ctx: &mut Ctx) -> Result<Json, ToolError> {
         .expect("choice lists the table");
     let to_wgs = ctx.choice("direction")? != Some("from-wgs84");
     let (lat, lon) = point::read(ctx, "lat", "lon")?;
+    if d.id == "Tokyo" && in_japan(lat, lon) {
+        return Err(ToolError::new(ErrorCode::Unsupported, TOKYO_IN_JAPAN).at("/lat"));
+    }
     let legacy = Ellipsoid {
         id: "legacy",
         name: d.name,

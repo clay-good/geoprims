@@ -1141,6 +1141,16 @@
       ]
     },
     {
+      "id": "linz",
+      "term": "LINZ",
+      "expansion": "Land Information New Zealand",
+      "definition": "New Zealand's government agency for land titles, mapping, and the national geodetic system, which publishes NZGD2000 and its transformations.",
+      "source": "linz-nzgd1949-nzgd2000",
+      "relatedTools": [
+        "geodesy.datum.nzgd2000"
+      ]
+    },
+    {
       "id": "lps",
       "term": "LPS",
       "expansion": "Land & Property Services",

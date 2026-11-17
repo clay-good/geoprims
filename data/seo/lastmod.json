@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "29eb15ce3d51a63a",
+    "hash": "0cbccad56b1b3044",
     "lastmod": "2026-11-17"
   },
   "/accuracy/": {
@@ -316,7 +316,7 @@
     "lastmod": "2026-11-14"
   },
   "/changelog/": {
-    "hash": "bd7779c166a26d5c",
+    "hash": "504718e2f770dc30",
     "lastmod": "2026-11-17"
   },
   "/disclaimer/": {
@@ -576,8 +576,8 @@
     "lastmod": "2026-11-14"
   },
   "/geodesy/": {
-    "hash": "19a717c1f425655e",
-    "lastmod": "2026-11-16"
+    "hash": "54fbd64815cb1d05",
+    "lastmod": "2026-11-17"
   },
   "/geodesy/crs/": {
     "hash": "8e9dec7fe4cbd30b",
@@ -592,8 +592,8 @@
     "lastmod": "2026-11-14"
   },
   "/geodesy/datum/": {
-    "hash": "65dd61a8fdb9ba1d",
-    "lastmod": "2026-11-16"
+    "hash": "54489db2fccbdf49",
+    "lastmod": "2026-11-17"
   },
   "/geodesy/datum/etrf/": {
     "hash": "197812efeefdcdfe",
@@ -620,15 +620,19 @@
     "lastmod": "2026-11-14"
   },
   "/geodesy/datum/nadcon5/": {
-    "hash": "100b4e5f1e1b0eb6",
-    "lastmod": "2026-11-16"
+    "hash": "4dd143111fd0389e",
+    "lastmod": "2026-11-17"
+  },
+  "/geodesy/datum/nzgd2000/": {
+    "hash": "359579126e411a08",
+    "lastmod": "2026-11-17"
   },
   "/geodesy/datum/osi-polynomial-inverse/": {
     "hash": "6533298fe21ba0e5",
     "lastmod": "2026-11-17"
   },
   "/geodesy/datum/osi-polynomial/": {
-    "hash": "d6c6bc215d1fe851",
+    "hash": "2fe191870c73f750",
     "lastmod": "2026-11-17"
   },
   "/geodesy/datum/ostn15-inverse/": {
@@ -1652,11 +1656,11 @@
     "lastmod": "2026-11-14"
   },
   "/licenses/": {
-    "hash": "f261b1debbc0963c",
-    "lastmod": "2026-11-16"
+    "hash": "d67ecda8ece3b9ad",
+    "lastmod": "2026-11-17"
   },
   "/methodology/": {
-    "hash": "4310b0f9f539010a",
+    "hash": "8c57386a7fcc44be",
     "lastmod": "2026-11-17"
   },
   "/navigation/": {
@@ -1768,8 +1772,8 @@
     "lastmod": "2026-11-17"
   },
   "/navigation/piloting/dead-reckoning/": {
-    "hash": "75336d73f7003629",
-    "lastmod": "2026-11-14"
+    "hash": "945cfac4daf518ab",
+    "lastmod": "2026-11-17"
   },
   "/navigation/piloting/distance-by-vertical-angle/": {
     "hash": "d0d1ca9ba60466cc",
@@ -1912,7 +1916,7 @@
     "lastmod": "2026-10-20"
   },
   "/quality/": {
-    "hash": "f1a86b63e3db2984",
+    "hash": "4320d24532c4f959",
     "lastmod": "2026-11-17"
   },
   "/raster/": {
@@ -2068,8 +2072,8 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "83f9dc876fb40c35",
-    "lastmod": "2026-11-16"
+    "hash": "bc30540ed5fdce8d",
+    "lastmod": "2026-11-17"
   },
   "/survey/": {
     "hash": "3ec77c55d5c6b549",
@@ -2504,7 +2508,7 @@
     "lastmod": "2026-11-14"
   },
   "/tools/": {
-    "hash": "e45dfbdde74723f3",
+    "hash": "e25fae3cf7f4b200",
     "lastmod": "2026-11-17"
   },
   "/units/": {
@@ -2768,7 +2772,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "56458fb6c9cecae6",
+    "hash": "240d17f0914bc6e0",
     "lastmod": "2026-11-17"
   },
   "/workflows/": {

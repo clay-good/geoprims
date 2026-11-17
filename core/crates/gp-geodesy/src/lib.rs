@@ -8,6 +8,7 @@ pub mod geoid;
 pub mod gridref;
 pub mod magnetic;
 pub mod methods;
+pub mod nzgd;
 pub mod osi;
 pub mod ostn15;
 pub mod pairs;
@@ -3290,6 +3291,7 @@ pub static TOOLS: &[&ToolDef] = &[
     &ostn15::OSTN15_INVERSE,
     &osi::OSI_POLYNOMIAL,
     &osi::OSI_POLYNOMIAL_INVERSE,
+    &nzgd::NZGD2000,
     &pairs::LATLON_TO_BNG,
     &pairs::BNG_TO_LATLON,
     &pairs::MGA_TO_LATLON,

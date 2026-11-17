@@ -395,6 +395,16 @@ fn run_dead_reckoning(ctx: &mut Ctx) -> Result<Json, ToolError> {
     if d > 600.0 {
         return Err(ToolError::new(ErrorCode::LimitExceeded, format!("A {d:.0} NM run is past the 600 NM a dead-reckoning plot is good for; work it as a sailing.")).at("/distance"));
     }
+    // A start in the polar cap has no Mercator plot either: at the pole the
+    // meridional parts are infinite, and a run from there came back as an
+    // INTERNAL non-finite number.
+    if lat1.abs() >= 89.0 {
+        return Err(ToolError::new(
+            ErrorCode::OutOfDomain,
+            "The start is in the polar cap, where a Mercator plot fails.",
+        )
+        .at("/lat"));
+    }
     let lat_m = lat1 + d * cos(c.to_radians()) / 60.0;
     if lat_m.abs() >= 89.0 {
         return Err(ToolError::new(

@@ -203,6 +203,8 @@ const REGRESSIONS = [
   ['survey.curves.spiral', { delta: "40°00'00\"", interval: 361, pi_station: -1e300, radius: '1000 ft', spiral_length: 360 }, 'INVALID_INPUT'],
   // A 1,000,000 km cell had corners off the UTM plane and a non-finite latitude.
   ['geometry.sampling.fishnet', { polygon: [{ lat: 40, lon: -105 }, { lat: 40, lon: -104.996 }, { lat: 40.003, lon: -104.996 }, { lat: 40.003, lon: -105 }], width: '1000000000 m' }, 'OUT_OF_DOMAIN'],
+  // A run starting at the pole met infinite meridional parts and a non-finite answer.
+  ['navigation.piloting.dead-reckoning', { course: '50 deg', lat: -90, lon: "76°00'W", speed: '90 kt', time: '2 h' }, 'OUT_OF_DOMAIN'],
 ];
 
 test('fuzzer regressions return structured errors', async () => {

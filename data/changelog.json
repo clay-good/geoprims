@@ -3,6 +3,24 @@
   "entries": [
     {
       "date": "2026-11-16",
+      "kind": "fixed",
+      "tools": [
+        "navigation.piloting.dead-reckoning"
+      ],
+      "vectors": [],
+      "summary": "Dead reckoning now refuses a start inside the polar cap, within a degree of a pole, with a message that says why, instead of an internal error. It already refused a run that ended there, because a Mercator plot fails at the poles; a run that began at one met infinite meridional parts and came back with no answer. Starts outside the cap give the same answers as before."
+    },
+    {
+      "date": "2026-11-16",
+      "kind": "added",
+      "tools": [
+        "geodesy.datum.nzgd2000"
+      ],
+      "vectors": [],
+      "summary": "New Zealand's old datum to its current one by LINZ's distortion grid. A position off an older New Zealand map or plan on NZGD1949 moves to NZGD2000, or back, by the grid Land Information New Zealand publishes, which LINZ states at 0.1 to 1.0 m against 4 m for the seven-parameter set. The move is about 170 to 200 m north-east across the country. It reproduces LINZ's example to a ten-thousandth of a second and PROJ on the same grid to a nanodegree. The grid is a 159 KB download the first time it runs, and an offline pack. The tool is experimental."
+    },
+    {
+      "date": "2026-11-16",
       "kind": "changed",
       "tools": [
         "geodesy.datum.gda2020"

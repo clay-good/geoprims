@@ -4356,6 +4356,26 @@
       "editionCheck": false
     },
     {
+      "id": "linz-nzgd1949-nzgd2000",
+      "name": "Transformations between NZGD1949 and NZGD2000",
+      "issuer": "Land Information New Zealand (LINZ)",
+      "currentEdition": "As published, read 2026-11-16",
+      "currentReleaseDate": "2026-11-16",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-11-16",
+      "verificationNote": "Read at linz.govt.nz on 2026-11-16: coordinates move between NZGD1949 and NZGD2000 by 3-parameter, 7-parameter, or distortion grid transformations, with expected accuracies of 5 m, 4 m, and 0.1 to 1.0 m at the time the grid was calculated, the grid becoming less accurate over time as the datums deform; the transformations are defined in LINZS25000. The grid file is nzgd2kgrid0005 as PROJ-data distributes it (nz_linz_nzgd2kgrid0005.tif, CC BY 4.0, sha256 d4d9649b…86cbb2), because LINZ's proj-datumgrid-nz download refuses scripted requests (403). The specification's LINZ example reproduces to its 0.0001 second, and twenty-six places agree with PROJ's hgridshift on the same grid to a nanodegree both ways.",
+      "freeAccessUrl": "https://www.linz.govt.nz/guidance/geodetic-system/understanding-coordinate-conversions/geodetic-datum-conversions/transformations-nzgd1949-nzgd2000",
+      "matchTerms": [
+        "Transformations between NZGD1949 and NZGD2000"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "linz-nzgd2000-deformation",
       "name": "New Zealand Geodetic Datum 2000 deformation model",
       "issuer": "Land Information New Zealand (LINZ)",

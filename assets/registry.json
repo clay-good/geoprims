@@ -381,6 +381,30 @@
         "mcp-server"
       ],
       "interpolation": "Bilinear on a 1 km Irish Transverse Mercator grid resampled bilinearly from the 48\" by 72\" geodetic grid, as Ordnance Survey's Transformations and OSGM15 User Guide (v1.3, 2020) describes"
+    },
+    {
+      "id": "nzgd2000-grid",
+      "version": "0005",
+      "title": "NZGD1949 to NZGD2000 distortion grid (nzgd2kgrid0005)",
+      "issuer": "Land Information New Zealand (LINZ)",
+      "license": "CC BY 4.0",
+      "attribution": "Sourced from the LINZ Data Service and licensed for reuse under the CC BY 4.0 licence.",
+      "sourceUrl": "https://cdn.proj.org/nz_linz_nzgd2kgrid0005.tif",
+      "retrievedAt": "2026-11-16",
+      "files": {
+        "nzgd2kgrid0005.grid": {
+          "sha256": "bf72216613f47d7f23d78077eb2f07e75e40becbe2634a072d72306e1ecf5c87",
+          "bytes": 159078
+        }
+      },
+      "tiling": "one file for New Zealand, 14° by 14°, far coarser than the 1° privacy floor",
+      "loadPolicy": "on-demand",
+      "consumers": [
+        "web-assets",
+        "mcp-server"
+      ],
+      "offlinePack": "Move New Zealand positions between NZGD1949 and NZGD2000 offline with LINZ's distortion grid.",
+      "interpolation": "Bilinear between the 0.1° nodes, the reverse by iteration, as PROJ's hgridshift applies NTv2 grids"
     }
   ]
 }

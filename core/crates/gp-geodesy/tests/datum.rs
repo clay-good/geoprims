@@ -963,3 +963,56 @@ fn a_tokyo_datum_point_in_japan_is_unsupported_and_korea_still_answers() {
         assert_eq!(r["ok"], true, "{place} is not Japan: {r}");
     }
 }
+
+#[test]
+fn the_nzgd2000_grid_round_trips_and_moves_new_zealand_north_east() {
+    // add-international-grids, geodesy/national-grids: NZGD1949 to NZGD2000
+    // by LINZ's distortion grid, read from the committed package.
+    gp_base::assets::put(
+        "nzgd2000-grid@0005/nzgd2kgrid0005.grid",
+        &std::fs::read(format!(
+            "{}/../../../assets/data/nzgd2000-grid/0005/nzgd2kgrid0005.grid",
+            env!("CARGO_MANIFEST_DIR")
+        ))
+        .unwrap(),
+    );
+    let call = |input: serde_json::Value| -> Value {
+        serde_json::from_str(&REGISTRY.invoke("geodesy.datum.nzgd2000", &input.to_string()))
+            .unwrap()
+    };
+    for (lat, lon) in [
+        (-36.85, 174.76),
+        (-41.28, 174.78),
+        (-43.53, 172.64),
+        (-45.87, 170.50),
+        (-46.41, 168.35),
+    ] {
+        let f = call(serde_json::json!({"lat": lat, "lon": lon}));
+        assert_eq!(f["ok"], true, "{f}");
+        let (a, b) = (
+            f["result"]["lat"]["value"].as_f64().unwrap(),
+            f["result"]["lon"]["value"].as_f64().unwrap(),
+        );
+        // NZGD2000 sits north and east of NZGD1949; at the twenty vector
+        // places from Cape Reinga to Stewart Island the move is 174 to 203 m.
+        let shift = f["result"]["shift"]["value"].as_f64().unwrap();
+        assert!((165.0..210.0).contains(&shift), "{shift} m at {lat}, {lon}");
+        assert!(a > lat && b > lon, "north and east: {f}");
+        // And the reverse lands back on the NZGD1949 point.
+        let r = call(serde_json::json!({"lat": a, "lon": b, "direction": "to-nzgd1949"}));
+        assert_eq!(r["ok"], true, "{r}");
+        assert!(
+            (r["result"]["lat"]["value"].as_f64().unwrap() - lat).abs() < 1e-11,
+            "{r}"
+        );
+        assert!(
+            (r["result"]["lon"]["value"].as_f64().unwrap() - lon).abs() < 1e-11,
+            "{r}"
+        );
+    }
+    // Outside the grid there is no answer.
+    let r = call(serde_json::json!({"lat": -44.0, "lon": -176.5}));
+    assert_eq!(r["error"]["code"], "OUT_OF_DOMAIN", "{r}");
+    let r = call(serde_json::json!({"lat": -33.0, "lon": 172.0}));
+    assert_eq!(r["error"]["code"], "OUT_OF_DOMAIN", "{r}");
+}

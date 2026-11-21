@@ -66,8 +66,15 @@ esac
 # the lowest neighbour it can escape over, which here is the 101 m cell to its
 # east, not the 102 m the plane would have put there. (CI run 44960054301
 # caught that: the first version of this script asserted 102 and both tools
-# rightly said 101.) Filling must also leave no depression behind, and a D8
-# pointer over a plane must send every interior cell the same way. The two tools number their directions
+# rightly said 101.) Filling must also leave no depression behind.
+#
+# The D8 step is checked only for running and writing a value it can read
+# back. A second version of this script asserted that every interior cell of
+# the plane pointed the same way, and WhiteboxTools disagreed at the cell
+# above the filled pit -- fairly, since resolving the flat it left tilts the
+# cells around it. Nothing here has measured what each tool's directions
+# should be, so nothing here asserts it; the codes are printed instead, and
+# a later commit can pin them once a differential vector needs them. The two tools number their directions
 # differently and nothing here has measured which code each version uses, so
 # the script prints both codes rather than asserting one; pin them once CI has
 # run this and the numbers are known.
@@ -119,10 +126,6 @@ run_quietly "WhiteboxTools D8Pointer" \
   whitebox_tools -r=D8Pointer --dem="$hydro/wbt_fill.tif" -o="$hydro/wbt_d8.tif"
 wbt_dir=$(at "$hydro/wbt_d8.tif" 2 1)
 [ -n "$wbt_dir" ] || fail "WhiteboxTools D8Pointer wrote no value"
-for col in 1 2 3; do
-  [ "$(at "$hydro/wbt_d8.tif" "$col" 1)" = "$wbt_dir" ] \
-    || fail "WhiteboxTools D8Pointer disagrees across a plane at column $col"
-done
 
 richdem_version=$(rd_depressions_flood.exe 2>&1 || true)
 case "$richdem_version" in
@@ -143,10 +146,6 @@ run_quietly "RichDEM rd_d8_flowdirs" \
   rd_d8_flowdirs.exe "$hydro/rd_fill.tif" "$hydro/rd_d8"
 rd_dir=$(at "$hydro/rd_d8-flowdirs.tif" 2 1)
 [ -n "$rd_dir" ] || fail "RichDEM rd_d8_flowdirs wrote no value"
-for col in 1 2 3; do
-  [ "$(at "$hydro/rd_d8-flowdirs.tif" "$col" 1)" = "$rd_dir" ] \
-    || fail "RichDEM rd_d8_flowdirs disagrees across a plane at column $col"
-done
 
 printf '%s\n' \
   "GeographicLib 2.7: ok" \

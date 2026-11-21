@@ -144,11 +144,13 @@ RUN curl -fL https://github.com/r-barnes/richdem/archive/refs/tags/v2.3.1.tar.gz
 # one installer, so the architecture is read rather than assumed, and the
 # toolchain goes away with the sources.
 #
-# Not --locked: upstream's committed Cargo.lock carries a checksum for
-# tsp-rs 0.1.0 that no longer matches what crates.io serves, so --locked
-# refuses to build at all (CI run 44957292545). What is pinned here is the
-# source archive's digest and, in the smoke case, the version the binary
-# reports; the dependency tree is cargo's to resolve.
+# The lock file is removed rather than honoured: upstream's committed
+# Cargo.lock carries a checksum for tsp-rs 0.1.0 that no longer matches what
+# crates.io serves, and cargo refuses the build over it whether or not
+# --locked is passed (CI runs 44957292545 and 44959074411). What is pinned
+# here is the source archive's digest and, in the smoke case, the version the
+# binary reports; resolving the dependency tree is cargo's job, and fixing
+# that lock is upstream's.
 RUN arch="$(dpkg --print-architecture)" \
     && case "$arch" in \
         amd64) target=x86_64-unknown-linux-gnu; \
@@ -164,6 +166,7 @@ RUN arch="$(dpkg --print-architecture)" \
     && curl -fL https://github.com/jblindsay/whitebox-tools/archive/refs/tags/v2.4.0.tar.gz -o wbt.tar.gz \
     && echo 'f99f47e3d362cd3a1e8ac3f1e060ad7d0426244520ebd968f3ef01870fc1a955  wbt.tar.gz' | sha256sum -c - \
     && tar -xzf wbt.tar.gz \
+    && rm -f whitebox-tools-2.4.0/Cargo.lock \
     && ( cd whitebox-tools-2.4.0 \
         && . "$HOME/.cargo/env" \
         && cargo build --release -p whitebox_tools ) \

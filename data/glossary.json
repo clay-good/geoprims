@@ -248,6 +248,7 @@
       "definition": "The Swiss datum, on the Bessel 1841 ellipsoid, that the Swiss projection is defined for.",
       "source": "swisstopo-formulas",
       "relatedTools": [
+        "geodesy.datum.ch1903plus",
         "geodesy.projection.lv95-inverse"
       ]
     },
@@ -570,6 +571,7 @@
       "relatedTools": [
         "geodesy.datum.beta2007",
         "geodesy.datum.beta2007-inverse",
+        "geodesy.datum.ch1903plus",
         "geodesy.datum.etrf",
         "geodesy.datum.osi-polynomial",
         "geodesy.datum.osi-polynomial-inverse",

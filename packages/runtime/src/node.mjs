@@ -152,11 +152,28 @@ export function fileAssets(wasmDir, dir, options = {}) {
   };
 }
 
-const MODULE_FOR_DOMAIN = { units: 'base' };
+// A tool's Wasm module is its domain, with two exceptions, both of which are
+// a module boundary that does not follow the domain: the `units` domain is
+// linked into `base`, and the national grids are their own module inside the
+// geodesy domain, because geodesy reached its 400 KB compressed budget. The
+// ids keep their domain, so only this map moves. `moduleForMatchesCatalog` in
+// runtime.test.mjs holds it to the built catalog, so it cannot drift.
+export const MODULE_EXCEPTIONS = [
+  ['units.', 'base'],
+  ['geodesy.datum.beta2007', 'national-grids'],
+  ['geodesy.datum.ch1903plus', 'national-grids'],
+  ['geodesy.datum.chenyx06', 'national-grids'],
+  ['geodesy.datum.nzgd2000', 'national-grids'],
+  ['geodesy.datum.osi-polynomial', 'national-grids'],
+  ['geodesy.datum.ostn15', 'national-grids'],
+  ['geodesy.datum.rdnaptrans', 'national-grids'],
+];
 
 export function moduleFor(toolId) {
-  const domain = toolId.split('.')[0];
-  return MODULE_FOR_DOMAIN[domain] ?? domain;
+  for (const [prefix, module] of MODULE_EXCEPTIONS) {
+    if (toolId.startsWith(prefix)) return module;
+  }
+  return toolId.split('.')[0];
 }
 
 function pathRangeSource(path) {

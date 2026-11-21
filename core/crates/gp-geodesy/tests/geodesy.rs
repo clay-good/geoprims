@@ -147,6 +147,7 @@ fn catalog_lint_examples_vectors() {
         &taxonomy,
         &[
             "aviation.wind.runway-components",
+            "geodesy.datum.chenyx06",
             "geometry.area.polygon",
             "indexing.tile.from-point",
             "navigation.geodesic.direct",

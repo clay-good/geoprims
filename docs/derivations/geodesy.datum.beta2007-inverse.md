@@ -54,7 +54,7 @@ Because the grid is indexed on DHDN90, this direction iterates where the forward
 
 ## Invariants
 
-- `core/crates/gp-geodesy/tests/datum.rs` `beta2007_crosses_the_german_grids_and_picks_its_zones`: at five places the forward answer returns to 0.1 mm on the Gauss-Krüger zone asked for, with the same datum shift the forward direction reported, and a UTM northing in the Mediterranean is refused.
+- `core/crates/gp-grids/tests/grids.rs` `beta2007_crosses_the_german_grids_and_picks_its_zones`: at five places the forward answer returns to 0.1 mm on the Gauss-Krüger zone asked for, with the same datum shift the forward direction reported, and a UTM northing in the Mediterranean is refused.
 - `core/crates/gp-geo/tests/beta2007.rs`: the zone an easting states, and the three things it refuses — no zone digits, a zone Germany does not use, and a point 400 km off the zone's meridian; and the zone each longitude falls in, including the three-degree edge at 7°30′E.
 - `core/crates/gp-geo/src/hgrid.rs` `bilinear_inside_none_outside_and_the_inverse_closes`: the generic reader interpolates bilinearly, refuses points off the grid, and its inverse closes.
 - `tools/data/beta2007-assets.test.mjs`: the committed package has the pinned digest and AdV's extent, with the 10-arcminute spacing exact to 1e-16 degrees and both far edges landing on 15°40′E and 55°18′N.

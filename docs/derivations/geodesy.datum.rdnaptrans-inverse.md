@@ -52,7 +52,7 @@ As in the forward note: NSGI's 0.001 m inside the administrative borders of the 
 
 ## Invariants
 
-- `core/crates/gp-geodesy/tests/datum.rs` `rdnaptrans_round_trips_and_its_factors_behave`: at six places the forward answer comes back to a nanodegree and 0.1 mm in height, with the same grid convergence and point scale factor the forward tool reported, and a point far east of the grid is refused.
+- `core/crates/gp-grids/tests/grids.rs` `rdnaptrans_round_trips_and_its_factors_behave`: at six places the forward answer comes back to a nanodegree and 0.1 mm in height, with the same grid convergence and point scale factor the forward tool reported, and a point far east of the grid is refused.
 - `core/crates/gp-geo/src/hgrid.rs` `nested_grids_pick_the_finest_and_the_inverse_closes`: the nested reader picks the finer grid where it reaches, falls back to the parent outside it, refuses points off both, and its inverse closes.
 - `core/crates/gp-geo/src/vgrid.rs` `bilinear_inside_none_outside`: the vertical reader interpolates bilinearly and refuses points off the grid.
 - `tools/data/rdnaptrans-assets.test.mjs`: the committed packages have the pinned digests and NSGI's own bounds and spacing, parent and subgrid.

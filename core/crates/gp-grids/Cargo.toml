@@ -1,0 +1,23 @@
+[package]
+name = "gp-grids"
+description = "National grids: the official transformations onto other countries' grids, each backed by its issuer's own grid file."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[package.metadata.geoprims]
+module = "national-grids"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+gp-base.workspace = true
+gp-geo = { path = "../gp-geo" }
+libm.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

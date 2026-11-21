@@ -44,7 +44,7 @@ The grid's own 0.1 to 1.0 m at the time it was calculated, degrading since, as L
 - inputs: lat 36°30'00"S, lon 175°00'00"E
 - outputs: 36°29'53.48482"S 175°00'00.69469"E on NZGD2000
 - tolerance: 0.0001 arcseconds
-- verifiedBy: golden vector v001 and `core/crates/gp-geodesy/tests/datum.rs` `the_nzgd2000_grid_round_trips_and_moves_new_zealand_north_east`
+- verifiedBy: golden vector v001 and `core/crates/gp-grids/tests/grids.rs` `the_nzgd2000_grid_round_trips_and_moves_new_zealand_north_east`
 - verifiedOn: 2026-11-16
 
 ## Differential tests
@@ -53,6 +53,6 @@ The grid's own 0.1 to 1.0 m at the time it was calculated, degrading since, as L
 
 ## Invariants
 
-- `core/crates/gp-geodesy/tests/datum.rs` `the_nzgd2000_grid_round_trips_and_moves_new_zealand_north_east`: at five cities the move is north and east and between 165 and 210 m (174 to 203 m at the twenty vector places); each reverses back onto its NZGD1949 point to 1e-11 degrees; and points off the grid, the Chatham Islands and north of it, are refused.
+- `core/crates/gp-grids/tests/grids.rs` `the_nzgd2000_grid_round_trips_and_moves_new_zealand_north_east`: at five cities the move is north and east and between 165 and 210 m (174 to 203 m at the twenty vector places); each reverses back onto its NZGD1949 point to 1e-11 degrees; and points off the grid, the Chatham Islands and north of it, are refused.
 - `core/crates/gp-geo/src/hgrid.rs` `bilinear_inside_none_outside_and_the_inverse_closes`: the generic reader interpolates bilinearly, refuses points off the grid, and its inverse closes.
 - `tools/data/nzgd2000-grid-assets.test.mjs`: the committed package has the pinned digest and LINZ's extent.

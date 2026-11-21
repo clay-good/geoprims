@@ -1,9 +1,6 @@
 //! Geodesy: coordinate parsing and formatting, UTM, UPS, and MGRS
 //! (add-geodesy-suite). The math lives in gp-geo so other modules share it.
 
-pub mod beta2007;
-pub mod ch1903;
-pub mod chenyx06;
 pub mod crs;
 pub mod datum;
 pub mod frames;
@@ -11,11 +8,7 @@ pub mod geoid;
 pub mod gridref;
 pub mod magnetic;
 pub mod methods;
-pub mod nzgd;
-pub mod osi;
-pub mod ostn15;
 pub mod pairs;
-pub mod rdnap;
 pub mod spcs;
 pub mod spcs2022;
 
@@ -3291,17 +3284,6 @@ pub static TOOLS: &[&ToolDef] = &[
     &methods::LAMBERT93_INVERSE,
     &methods::ETRS89_FORWARD,
     &methods::ETRS89_INVERSE,
-    &ostn15::OSTN15_FORWARD,
-    &ostn15::OSTN15_INVERSE,
-    &osi::OSI_POLYNOMIAL,
-    &osi::OSI_POLYNOMIAL_INVERSE,
-    &nzgd::NZGD2000,
-    &beta2007::BETA2007_FORWARD,
-    &beta2007::BETA2007_INVERSE,
-    &ch1903::CH1903PLUS,
-    &chenyx06::CHENYX06,
-    &rdnap::RDNAP_FORWARD,
-    &rdnap::RDNAP_INVERSE,
     &pairs::LATLON_TO_BNG,
     &pairs::BNG_TO_LATLON,
     &pairs::MGA_TO_LATLON,

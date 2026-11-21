@@ -12,9 +12,23 @@ import {
   sourceRange,
 } from './files.mjs';
 import { loadModule } from './module.mjs';
-import { nodeHost } from './node.mjs';
+
+import { moduleFor, nodeHost } from './node.mjs';
 
 const root = new URL('../../..', import.meta.url).pathname;
+
+test('every tool\'s module matches the one the catalog reports', () => {
+  // moduleFor derives a tool's Wasm module from its id, with a short list of
+  // exceptions where a module boundary does not follow the domain. The
+  // catalog's module field is the truth, written by the build from whichever
+  // crate reported each tool, so the two must agree for every tool or the
+  // host would load the wrong module and the tool would look missing.
+  const catalog = JSON.parse(readFileSync(join(root, 'dist/catalog/v1.json'), 'utf8'));
+  const wrong = catalog.tools
+    .filter((t) => moduleFor(t.id) !== t.module)
+    .map((t) => `${t.id}: moduleFor says ${moduleFor(t.id)}, the catalog says ${t.module}`);
+  assert.deepEqual(wrong, []);
+});
 const host = nodeHost(join(root, 'dist/wasm'));
 const run = async (id, input) => JSON.parse(await host.invoke(id, input));
 

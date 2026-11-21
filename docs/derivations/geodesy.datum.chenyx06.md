@@ -56,7 +56,7 @@ swisstopo transforms with FINELTRA, a triangulated affine transformation on the 
 
 ## Invariants
 
-- `core/crates/gp-geodesy/tests/datum.rs` `chenyx06_removes_the_swiss_distortion_and_round_trips`: at six places the answer is the round offset plus the reported distortion exactly, the distortion is between 1 cm and 1.7 m (swisstopo's stated ceiling), the reported magnitude is the hypotenuse of its two parts, the reverse lands back on the LV03 point to 0.1 mm, both directions report the same distortion, and points off the grid are refused.
+- `core/crates/gp-grids/tests/grids.rs` `chenyx06_removes_the_swiss_distortion_and_round_trips`: at six places the answer is the round offset plus the reported distortion exactly, the distortion is between 1 cm and 1.7 m (swisstopo's stated ceiling), the reported magnitude is the hypotenuse of its two parts, the reverse lands back on the LV03 point to 0.1 mm, both directions report the same distortion, and points off the grid are refused.
 - `core/crates/gp-geo/tests/chenyx06.rs` `swisstopos_five_euref_points_both_ways`: swisstopo's five published points reproduce within 8.1 mm, the distortion at each is metres rather than the round offset, the grid's offsets are arcseconds rather than degrees or radians, and each round trips within 0.1 mm in one to six iterations.
 - `core/crates/gp-geo/src/hgrid.rs` `bilinear_inside_none_outside_and_the_inverse_closes`: the generic reader interpolates bilinearly, refuses points off the grid, and its inverse closes.
 - `tools/data/chenyx06-assets.test.mjs`: the committed package has the pinned digest and swisstopo's extent, with the 30-arcsecond spacing exact to 1e-16 degrees and both far edges landing on 11°03′E and 48°04′N.

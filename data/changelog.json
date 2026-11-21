@@ -3,6 +3,13 @@
   "entries": [
     {
       "date": "2026-11-21",
+      "kind": "changed",
+      "tools": [],
+      "vectors": [],
+      "summary": "The eleven national-grid transformations — OSTN15, the Irish polynomial, NZGD2000, RDNAPTRANS2018, CHENyx06, BeTA2007 and CH1903+ — now load as their own WebAssembly module instead of riding along inside the geodesy one, which had reached the 400 KB compressed limit each module is held to. Nothing about the tools changes: same addresses, same pages, same answers. A page that uses one of them now downloads 159 KB instead of 383, and every other geodesy page downloads 26 KB less than it did."
+    },
+    {
+      "date": "2026-11-21",
       "kind": "added",
       "tools": [
         "geodesy.datum.ch1903plus"

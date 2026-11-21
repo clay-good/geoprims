@@ -49,6 +49,7 @@ const fn length(name: &'static str, title: &'static str, help: &'static str) -> 
 
 pub static CHENYX06: ToolDef = ToolDef {
     id: "geodesy.datum.chenyx06",
+    stability: gp_base::tool::Stability::Stable,
     title: "LV03 to LV95 by swisstopo's CHENyx06",
     summary: "Moves Swiss coordinates between LV03 and LV95 by swisstopo's CHENyx06 grid, which removes the up to 1.6 m distortion of the 1903 triangulation that subtracting a round 2,000 km leaves behind.",
     aliases: &[
@@ -126,7 +127,7 @@ pub static CHENYX06: ToolDef = ToolDef {
         ErrorCode::AssetUnavailable,
         ErrorCode::AssetIntegrity,
     ],
-    warnings: &["EXPERIMENTAL_TOOL"],
+    warnings: &[],
     model: "swisstopo's CHENyx06 grid, latitude and longitude offsets at 30-arcsecond nodes from 5°33′E 45°28′N to 11°03′E 48°04′N, interpolated bilinearly: the LV03 coordinates unprojected to CH1903 by the Swiss oblique Mercator, the offsets added to give CH1903+, and the result projected again to LV95; the reverse by iterating the grid, as PROJ's hgridshift does",
     accuracy: ACCURACY,
     when_to_use: "Use this whenever Swiss coordinates have to move between LV03 and LV95 and metres matter: cadastral work, survey control, or joining an older LV03 dataset to current LV95 mapping. Subtracting 2,000,000 m and 1,000,000 m is the one-metre-level shortcut swisstopo allows; this is the transformation it defines for everything finer.",

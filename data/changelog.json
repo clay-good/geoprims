@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-11-21",
+      "kind": "changed",
+      "tools": [
+        "geodesy.datum.chenyx06"
+      ],
+      "vectors": [],
+      "summary": "The Swiss CHENyx06 tool is now stable. It has swisstopo's own five published EUREF points, a derivation note, thirty-nine golden vectors with the distortion itself pinned, and invariant tests; the promotion report finds no problems. Its answers do not change. For MCP clients it joins the national-grids direct toolset."
+    },
+    {
+      "date": "2026-11-21",
       "kind": "added",
       "tools": [
         "geodesy.datum.chenyx06"

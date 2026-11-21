@@ -57,7 +57,7 @@ export const TOOLSETS = {
   ],
   // Other countries' grids and the official transformations onto them:
   // Britain, Ireland, Europe, France, Switzerland, Japan, South Africa,
-  // Australia, New Zealand, and the Netherlands.
+  // Australia, New Zealand, the Netherlands, and Switzerland.
   'national-grids': [
     'geodesy.grid-ref.bng-',
     'geodesy.grid-ref.latlon-to-bng',
@@ -75,6 +75,7 @@ export const TOOLSETS = {
     'geodesy.projection.mga-',
     'geodesy.projection.nztm-',
     'geodesy.datum.rdnaptrans',
+    'geodesy.datum.chenyx06',
   ],
   // Navigation and geometry together pass the cap, so each is its own toolset;
   // and the marine tools (sailings, piloting, celestial, tides, and the

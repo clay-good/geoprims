@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "ac14228a1da67ec8",
+    "hash": "8b8e7f83f47c1d02",
     "lastmod": "2026-11-21"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "068fd35f99794919",
+    "hash": "37dc23c1a402bf7b",
     "lastmod": "2026-11-21"
   },
   "/aviation/": {
@@ -316,7 +316,7 @@
     "lastmod": "2026-11-14"
   },
   "/changelog/": {
-    "hash": "0e9ca32a3b214a0b",
+    "hash": "1f5cd4d3c186ca88",
     "lastmod": "2026-11-21"
   },
   "/disclaimer/": {
@@ -596,7 +596,7 @@
     "lastmod": "2026-11-21"
   },
   "/geodesy/datum/chenyx06/": {
-    "hash": "865ecff9e559f765",
+    "hash": "89560ad19ee4446a",
     "lastmod": "2026-11-21"
   },
   "/geodesy/datum/etrf/": {
@@ -1672,7 +1672,7 @@
     "lastmod": "2026-11-21"
   },
   "/methodology/": {
-    "hash": "bba4c9d2ae8360ae",
+    "hash": "9a90b59b3cb99eaa",
     "lastmod": "2026-11-21"
   },
   "/navigation/": {
@@ -2520,7 +2520,7 @@
     "lastmod": "2026-11-14"
   },
   "/tools/": {
-    "hash": "29cfa3d5eae1ad93",
+    "hash": "b9c03fc5f819e84d",
     "lastmod": "2026-11-21"
   },
   "/units/": {
@@ -2784,7 +2784,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "c4069986df4ece36",
+    "hash": "e57a3992cdcc1561",
     "lastmod": "2026-11-21"
   },
   "/workflows/": {

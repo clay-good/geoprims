@@ -127,9 +127,13 @@ run_quietly "WhiteboxTools D8Pointer" \
 wbt_dir=$(at "$hydro/wbt_d8.tif" 2 1)
 [ -n "$wbt_dir" ] || fail "WhiteboxTools D8Pointer wrote no value"
 
+# The archive is RichDEM's v2.3.1 tag, but the version string compiled into
+# its programs still reads v2.2.9: upstream did not bump it for that release
+# (seen on CI run 44963009277). The digest above is what pins the source;
+# this pins what the binary actually says, so a change in either is noticed.
 richdem_version=$(rd_depressions_flood.exe 2>&1 || true)
 case "$richdem_version" in
-  *2.3*) ;;
+  *"RichDEM v2.2.9"*) ;;
   *) fail "RichDEM version banner: $richdem_version" ;;
 esac
 run_quietly "RichDEM rd_depressions_flood" \
@@ -154,5 +158,5 @@ printf '%s\n' \
   "S2 C++ 0.13.1: ok" \
   "NOAA WMM2025 C: ok" \
   "NGS HTDP 3.6.0: ok" \
-  "WhiteboxTools 2.4.0: ok (D8 code for east on a plane: $wbt_dir)" \
-  "RichDEM 2.3.1: ok (D8 code for east on a plane: $rd_dir)"
+  "WhiteboxTools 2.4.0: ok (D8 code near the plane: $wbt_dir)" \
+  "RichDEM v2.3.1 tag, reporting v2.2.9: ok (D8 code near the plane: $rd_dir)"

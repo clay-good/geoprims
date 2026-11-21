@@ -4236,6 +4236,26 @@
       "editionCheck": false
     },
     {
+      "id": "adv-beta2007",
+      "name": "Bundeseinheitliche Transformation für ATKIS (BeTA2007)",
+      "issuer": "Arbeitsgemeinschaft der Vermessungsverwaltungen der Länder der Bundesrepublik Deutschland (AdV)",
+      "currentEdition": "Documentation version 1.5, grid BETA2007.gsb of 6 November 2009",
+      "currentReleaseDate": "2009-11-06",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-11-21",
+      "verificationNote": "Read at crs.bkg.bund.de on 2026-11-21: AdV's own documentation, version 1.5. Section 3 gives the NTv2 file layout and the bilinear interpolation; section 4.2 describes the 31-point test set in BETA2007testdaten.csv and prints its first six records, which are the issuer figures these tools are held to — for each of two points the DHDN to ETRS89 shift in degrees and the point on two Gauss-Krüger zones carried to ETRS89 UTM zone 32, all of which reproduce here within 2 micrometres; section 6.1.2.3 gives the Gauss-Krüger formulas and notes that the test data's easting carries the zone number in front of it while the formulas do not. AdV states 0.02 m against the state transformations BeTA2007 unified. Access notes: adv-online.de and crs-geo.eu, which the documentation names as the distribution points, did not resolve from here, and the CSV test file could not be fetched; the documentation itself reads by curl at crs.bkg.bund.de/crs/descrtrans/BeTA/BETA2007dokumentationV15.pdf, and the grid is PROJ-data's de_adv_BETA2007.tif (sha256 46e681fc…9388e2), AdV's BETA2007.gsb converted, which AdV allows and welcomes being redistributed.",
+      "freeAccessUrl": "https://crs.bkg.bund.de/crs/descrtrans/BeTA/BETA2007dokumentationV15.pdf",
+      "matchTerms": [
+        "Bundeseinheitliche Transformation für ATKIS"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "linz-nztm2000",
       "name": "New Zealand Transverse Mercator 2000 (NZTM2000), defined by LINZS25002 Standard for New Zealand Geodetic Datum 2000 Projections",
       "issuer": "Land Information New Zealand (LINZ)",

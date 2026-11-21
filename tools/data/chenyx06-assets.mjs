@@ -25,7 +25,7 @@ export const source = {
   url: 'https://cdn.proj.org/ch_swisstopo_CHENyx06a.tif',
   bytes: 1021779,
   sha256: '986d81da9445bdd4cbc3b5e36d8ccdad757d7e09246da68040dd21e53bdfbe40',
-  output: { path: 'assets/data/chenyx06/2009/chenyx06a.grid', bytes: 1655209, sha256: 'c7b772302bd786b9a9f30f81a58473381f032e7038992ef5e401ce296483575d' },
+  output: { path: 'assets/data/chenyx06/2009/chenyx06a.grid', bytes: 1655217, sha256: 'e26833f0e44444ad03a5d1b12a22003ee5b1a6e1a7ead713e8339d54338c644b' },
 };
 
 function check(bytes, expected, label) {

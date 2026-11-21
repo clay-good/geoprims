@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "8b8e7f83f47c1d02",
+    "hash": "a94f735bcb5f89ee",
     "lastmod": "2026-11-21"
   },
   "/accuracy/": {
@@ -316,7 +316,7 @@
     "lastmod": "2026-11-14"
   },
   "/changelog/": {
-    "hash": "1f5cd4d3c186ca88",
+    "hash": "0eea59d0b3a8b468",
     "lastmod": "2026-11-21"
   },
   "/disclaimer/": {
@@ -576,7 +576,7 @@
     "lastmod": "2026-11-14"
   },
   "/geodesy/": {
-    "hash": "88ea19a01ce11589",
+    "hash": "2d90819ff1e87507",
     "lastmod": "2026-11-21"
   },
   "/geodesy/crs/": {
@@ -592,11 +592,19 @@
     "lastmod": "2026-11-14"
   },
   "/geodesy/datum/": {
-    "hash": "3bd505f5173684b7",
+    "hash": "5487840f7d61e27b",
+    "lastmod": "2026-11-21"
+  },
+  "/geodesy/datum/beta2007-inverse/": {
+    "hash": "e94abb0eb602315f",
+    "lastmod": "2026-11-21"
+  },
+  "/geodesy/datum/beta2007/": {
+    "hash": "26018e1063aa26f8",
     "lastmod": "2026-11-21"
   },
   "/geodesy/datum/chenyx06/": {
-    "hash": "89560ad19ee4446a",
+    "hash": "0e5874d7e835fb09",
     "lastmod": "2026-11-21"
   },
   "/geodesy/datum/etrf/": {
@@ -1668,11 +1676,11 @@
     "lastmod": "2026-11-14"
   },
   "/licenses/": {
-    "hash": "85bd4f988ae05249",
+    "hash": "f9bcd613132a2254",
     "lastmod": "2026-11-21"
   },
   "/methodology/": {
-    "hash": "9a90b59b3cb99eaa",
+    "hash": "1205183b101b3bc6",
     "lastmod": "2026-11-21"
   },
   "/navigation/": {
@@ -1928,7 +1936,7 @@
     "lastmod": "2026-10-20"
   },
   "/quality/": {
-    "hash": "242b3c665f847cbf",
+    "hash": "7796524fd5a2b01c",
     "lastmod": "2026-11-21"
   },
   "/raster/": {
@@ -2084,7 +2092,7 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "d7a3f9242aa565b9",
+    "hash": "400ba7bc5fda5821",
     "lastmod": "2026-11-21"
   },
   "/survey/": {
@@ -2520,7 +2528,7 @@
     "lastmod": "2026-11-14"
   },
   "/tools/": {
-    "hash": "b9c03fc5f819e84d",
+    "hash": "80c40009d14b32b6",
     "lastmod": "2026-11-21"
   },
   "/units/": {
@@ -2784,7 +2792,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "e57a3992cdcc1561",
+    "hash": "f4dab77657156f4e",
     "lastmod": "2026-11-21"
   },
   "/workflows/": {

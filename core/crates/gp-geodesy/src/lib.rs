@@ -1,6 +1,7 @@
 //! Geodesy: coordinate parsing and formatting, UTM, UPS, and MGRS
 //! (add-geodesy-suite). The math lives in gp-geo so other modules share it.
 
+pub mod beta2007;
 pub mod chenyx06;
 pub mod crs;
 pub mod datum;
@@ -3294,6 +3295,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &osi::OSI_POLYNOMIAL,
     &osi::OSI_POLYNOMIAL_INVERSE,
     &nzgd::NZGD2000,
+    &beta2007::BETA2007_FORWARD,
+    &beta2007::BETA2007_INVERSE,
     &chenyx06::CHENYX06,
     &rdnap::RDNAP_FORWARD,
     &rdnap::RDNAP_INVERSE,

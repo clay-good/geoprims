@@ -3,6 +3,25 @@
   "entries": [
     {
       "date": "2026-11-21",
+      "kind": "added",
+      "tools": [
+        "geodesy.datum.beta2007",
+        "geodesy.datum.beta2007-inverse"
+      ],
+      "vectors": [],
+      "summary": "German Gauss-Krüger to ETRS89 UTM, and back, by AdV's BeTA2007. Older German survey data is on DHDN, projected on three-degree Gauss-Krüger zones; BeTA2007 is the one national transformation AdV published to replace the state-by-state ones, so it is what official conversions use. The easting already names its Gauss-Krüger zone, so there is no zone to look up, and the UTM zone is picked from where the point lands. All six transformation records AdV prints in its own documentation reproduce within 2 micrometres. The grid is a 42 KB download the first time either tool runs, and an offline pack. Both tools are experimental."
+    },
+    {
+      "date": "2026-11-21",
+      "kind": "fixed",
+      "tools": [
+        "geodesy.datum.chenyx06"
+      ],
+      "vectors": [],
+      "summary": "The CHENyx06 grid file now records its 30-arcsecond node spacing at full precision instead of nine decimals. Measured, the rounding moved the offsets the grid interpolates by up to 1.1 micrometres — far below anything the tool reports — so no answer changes at the precision it prints, but the grid file's digest does, and a page saying a thing is exact should be. The note that shipped with the tool overstated this as 2 cm, which was the drift in where the grid believed its far nodes were rather than an error in any answer; it now gives the measured figure."
+    },
+    {
+      "date": "2026-11-21",
       "kind": "changed",
       "tools": [
         "geodesy.datum.chenyx06"

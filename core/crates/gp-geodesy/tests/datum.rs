@@ -1217,3 +1217,112 @@ fn chenyx06_removes_the_swiss_distortion_and_round_trips() {
         assert_eq!(f["error"]["code"], "OUT_OF_DOMAIN", "{e}, {n}: {f}");
     }
 }
+
+#[test]
+fn beta2007_crosses_the_german_grids_and_picks_its_zones() {
+    // add-international-grids, geodesy/national-grids: DHDN Gauss-Krüger to
+    // ETRS89 UTM by AdV's BeTA2007, read from the committed package.
+    gp_base::assets::put(
+        "beta2007@2009/beta2007.grid",
+        &std::fs::read(format!(
+            "{}/../../../assets/data/beta2007/2009/beta2007.grid",
+            env!("CARGO_MANIFEST_DIR")
+        ))
+        .unwrap(),
+    );
+    let fwd = |input: serde_json::Value| -> Value {
+        serde_json::from_str(&REGISTRY.invoke("geodesy.datum.beta2007", &input.to_string()))
+            .unwrap()
+    };
+    let inv = |input: serde_json::Value| -> Value {
+        serde_json::from_str(&REGISTRY.invoke("geodesy.datum.beta2007-inverse", &input.to_string()))
+            .unwrap()
+    };
+    let num = |v: &Value, path: [&str; 2]| v["result"][path[0]][path[1]].as_f64().unwrap();
+
+    // AdV's first point, given on Gauss-Krüger zones 2 and 3: the same ground
+    // point, so the same UTM answer, which is the zone-prefixed easting
+    // working as intended.
+    let a = fwd(serde_json::json!({"easting": "2598417.333192 m", "northing": "5930677.980308 m"}));
+    let b = fwd(serde_json::json!({"easting": "3399371.190396 m", "northing": "5930724.531323 m"}));
+    assert_eq!(a["ok"], true, "{a}");
+    assert_eq!(b["ok"], true, "{b}");
+    for f in ["easting", "northing"] {
+        assert!(
+            (num(&a, [f, "value"]) - num(&b, [f, "value"])).abs() < 1e-5,
+            "zones 2 and 3 disagree on {f}: {a} {b}"
+        );
+    }
+    assert_eq!(a["result"]["zone"], 32, "{a}");
+
+    for (gk, east, north) in [
+        (4u8, 4_599_289.0_f64, 5_820_787.0_f64),
+        (3u8, 3_392_332.0, 5_644_501.0),
+        (2u8, 2_567_468.0, 5_644_890.0),
+        (4u8, 4_468_390.0, 5_333_776.0),
+        (4u8, 4_641_000.0, 6_002_000.0),
+    ] {
+        let f = fwd(serde_json::json!({
+            "easting": format!("{east} m"), "northing": format!("{north} m"),
+        }));
+        assert_eq!(f["ok"], true, "zone {gk}: {f}");
+        let zone = f["result"]["zone"].as_u64().unwrap();
+        assert!((32..=33).contains(&zone), "UTM zone {zone} in Germany: {f}");
+        // The datum move between DHDN90 and ETRS89 is metres across Germany,
+        // never zero and never the hundreds of metres a wrong ellipsoid gives.
+        let shift = num(&f, ["shift", "value"]);
+        assert!(
+            (10.0..1000.0).contains(&shift),
+            "{shift} m at {east}, {north}"
+        );
+        // UTM's scale stays near 0.9996 and grid north leans under 3° from
+        // true north anywhere in Germany. A convergence in radians or in the
+        // wrong units would be far outside this.
+        let k = f["result"]["scale_factor"].as_f64().unwrap();
+        assert!(
+            (0.9996..1.0006).contains(&k),
+            "scale {k} at {east}, {north}"
+        );
+        assert!(num(&f, ["convergence", "value"]).abs() < 3.0, "{f}");
+
+        // And back onto the same Gauss-Krüger zone, to a tenth of a millimetre.
+        let r = inv(serde_json::json!({
+            "easting": format!("{} m", num(&f, ["easting", "value"])),
+            "northing": format!("{} m", num(&f, ["northing", "value"])),
+            "utm_zone": zone,
+            "gk_zone": gk,
+        }));
+        assert_eq!(r["ok"], true, "{r}");
+        assert_eq!(r["result"]["zone"], gk, "{r}");
+        assert!((num(&r, ["easting", "value"]) - east).abs() < 1e-4, "{r}");
+        assert!((num(&r, ["northing", "value"]) - north).abs() < 1e-4, "{r}");
+        // Both directions report the same datum shift at the same point.
+        assert!((num(&r, ["shift", "value"]) - shift).abs() < 1e-3, "{r}");
+    }
+
+    // A forced zone says so, and still answers.
+    let f = fwd(serde_json::json!({
+        "easting": "3399371.190396 m", "northing": "5930724.531323 m", "utm_zone": 33,
+    }));
+    assert_eq!(f["ok"], true, "{f}");
+    assert_eq!(f["result"]["zone"], 33, "{f}");
+    assert!(
+        f["meta"]["warnings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|w| w["code"] == "NONSTANDARD_ZONE"),
+        "{f}"
+    );
+
+    // An easting with no zone in front of it is refused, and so is a point
+    // off the grid.
+    let f = fwd(serde_json::json!({"easting": "399340.602 m", "northing": "5928794.178 m"}));
+    assert_eq!(f["error"]["code"], "INVALID_INPUT", "{f}");
+    let f = fwd(serde_json::json!({"easting": "2300000 m", "northing": "5100000 m"}));
+    assert_eq!(f["error"]["code"], "OUT_OF_DOMAIN", "{f}");
+    let r = inv(serde_json::json!({
+        "easting": "500000 m", "northing": "4000000 m", "utm_zone": 32,
+    }));
+    assert_eq!(r["error"]["code"], "OUT_OF_DOMAIN", "{r}");
+}

@@ -85,6 +85,14 @@ fn catalog_lint_examples_vectors() {
         );
     }
     gp_base::assets::put(
+        "beta2007@2009/beta2007.grid",
+        &std::fs::read(format!(
+            "{}/../../../assets/data/beta2007/2009/beta2007.grid",
+            env!("CARGO_MANIFEST_DIR")
+        ))
+        .unwrap(),
+    );
+    gp_base::assets::put(
         "chenyx06@2009/chenyx06a.grid",
         &std::fs::read(format!(
             "{}/../../../assets/data/chenyx06/2009/chenyx06a.grid",

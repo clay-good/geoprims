@@ -22,6 +22,14 @@
       "relatedTools": []
     },
     {
+      "id": "adv",
+      "term": "AdV",
+      "expansion": "Arbeitsgemeinschaft der Vermessungsverwaltungen der Länder der Bundesrepublik Deutschland",
+      "definition": "The working group of Germany's state survey authorities, which agrees the national geodetic reference systems and publishes BeTA2007.",
+      "source": "adv-beta2007",
+      "relatedTools": []
+    },
+    {
       "id": "aer",
       "term": "AER",
       "expansion": "azimuth, elevation, range",
@@ -156,6 +164,14 @@
       "relatedTools": [
         "geodesy.datum.plate-motion"
       ]
+    },
+    {
+      "id": "beta2007",
+      "term": "BeTA2007",
+      "expansion": "Bundeseinheitliche Transformation für ATKIS 2007",
+      "definition": "The single national grid AdV publishes for transforming German coordinates between DHDN90 and ETRS89, which replaced the state-by-state transformations.",
+      "source": "adv-beta2007",
+      "relatedTools": []
     },
     {
       "id": "bs",
@@ -311,6 +327,14 @@
         "raster.terrain.hillshade",
         "raster.terrain.slope"
       ]
+    },
+    {
+      "id": "dhdn",
+      "term": "DHDN",
+      "expansion": "Deutsches Hauptdreiecksnetz",
+      "definition": "Germany's historic triangulation network and the datum built on it, on the Bessel 1841 ellipsoid, which German survey data used before the move to ETRS89.",
+      "source": "adv-beta2007",
+      "relatedTools": []
     },
     {
       "id": "dlos",
@@ -536,6 +560,8 @@
       "definition": "The reference system European national grids are built on, fixed to the European plate, so it does not drift with it as ITRF and WGS 84 do.",
       "source": "epsg-crs-registry",
       "relatedTools": [
+        "geodesy.datum.beta2007",
+        "geodesy.datum.beta2007-inverse",
         "geodesy.datum.etrf",
         "geodesy.datum.osi-polynomial",
         "geodesy.datum.osi-polynomial-inverse",
@@ -2314,6 +2340,8 @@
       "definition": "A grid of 60 zones, each 6° of longitude wide, that turns latitude and longitude into eastings and northings in meters.",
       "source": "nga-utmups",
       "relatedTools": [
+        "geodesy.datum.beta2007",
+        "geodesy.datum.beta2007-inverse",
         "geodesy.magnetic.grivation",
         "geodesy.projection.convergence",
         "geodesy.projection.scale-factor",

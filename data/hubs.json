@@ -895,6 +895,13 @@
           ]
         },
         {
+          "want": "move German coordinates between Gauss-Kr\u00fcger and ETRS89 UTM by BeTA2007",
+          "tools": [
+            "beta2007",
+            "beta2007-inverse"
+          ]
+        },
+        {
           "want": "move Swiss coordinates between LV03 and LV95 by swisstopo's CHENyx06",
           "tools": [
             "chenyx06"

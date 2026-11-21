@@ -383,6 +383,30 @@
       "interpolation": "Bilinear on a 1 km Irish Transverse Mercator grid resampled bilinearly from the 48\" by 72\" geodetic grid, as Ordnance Survey's Transformations and OSGM15 User Guide (v1.3, 2020) describes"
     },
     {
+      "id": "beta2007",
+      "version": "2009",
+      "title": "BeTA2007: AdV's national DHDN to ETRS89 transformation for Germany",
+      "issuer": "Arbeitsgemeinschaft der Vermessungsverwaltungen der Länder der Bundesrepublik Deutschland (AdV)",
+      "license": "Free redistribution allowed by AdV",
+      "attribution": "Derived from work by AdV. Free redistribution is allowed and welcome.",
+      "sourceUrl": "https://cdn.proj.org/de_adv_BETA2007.tif",
+      "retrievedAt": "2026-11-21",
+      "files": {
+        "beta2007.grid": {
+          "sha256": "40fc5fae21874c9ca1904b9b5daac85822aff4228f1f4da6d02095683b3855c9",
+          "bytes": 41706
+        }
+      },
+      "tiling": "one file for Germany, 10° by 8°, far coarser than the 1° privacy floor",
+      "loadPolicy": "on-demand",
+      "offlinePack": "Move German coordinates between Gauss-Krüger and ETRS89 UTM offline with BeTA2007.",
+      "consumers": [
+        "web-assets",
+        "mcp-server"
+      ],
+      "interpolation": "Bilinear between the nodes, 10 arcminutes of longitude by 6 of latitude, the reverse by iteration, as AdV's documentation specifies and PROJ's hgridshift applies NTv2 grids"
+    },
+    {
       "id": "chenyx06",
       "version": "2009",
       "title": "CHENyx06: the LV03 to LV95 distortion of the Swiss triangulation",
@@ -393,8 +417,8 @@
       "retrievedAt": "2026-11-21",
       "files": {
         "chenyx06a.grid": {
-          "sha256": "c7b772302bd786b9a9f30f81a58473381f032e7038992ef5e401ce296483575d",
-          "bytes": 1655209
+          "sha256": "e26833f0e44444ad03a5d1b12a22003ee5b1a6e1a7ead713e8339d54338c644b",
+          "bytes": 1655217
         }
       },
       "tiling": "one file for Switzerland and its borders, 5.5° by 2.6°, far coarser than the 1° privacy floor",

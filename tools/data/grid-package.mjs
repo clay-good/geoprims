@@ -47,14 +47,22 @@ export function readGeoTiff(path, bands) {
 }
 
 /** A grid's header line, in degrees at the nodes, south-west corner first.
- * Twelve decimals, trailing zeros dropped: enough that a spacing that is not
- * a round decimal, like CHENyx06's 30 arcseconds, stays exact to a
- * hundredth of a millimetre across a grid, and clean enough that the float
- * noise in a computed corner does not reach the header. */
+ *
+ * The spacing goes in at full precision, the shortest string that reads back
+ * as the same float, because a spacing that is not a round decimal -- 30
+ * arcseconds, 10 arcminutes -- multiplies by the node count: rounded to nine
+ * decimals, CHENyx06's spacing moves the offsets it interpolates by up to
+ * 1.1 um, and this leaves 4 pm -- the spacing is GDAL's printed geotransform,
+ * which rounds to about fifteen significant digits. The two corners are rounded to twelve
+ * decimals instead, because the south corner is computed from the others and
+ * would otherwise carry that arithmetic's float noise into the header; at
+ * these sizes twelve decimals is under a nanometre. */
 function header(kind, g) {
   const south = g.north - (g.rows - 1) * g.dlat;
-  const r = (v) => v.toFixed(12).replace(/0+$/, '').replace(/\.$/, '');
-  return Buffer.from(`${kind} ${r(g.west)} ${r(south)} ${r(g.dlon)} ${r(g.dlat)} ${g.cols} ${g.rows}\n`);
+  const corner = (v) => v.toFixed(12).replace(/0+$/, '').replace(/\.$/, '');
+  return Buffer.from(
+    `${kind} ${corner(g.west)} ${corner(south)} ${g.dlon} ${g.dlat} ${g.cols} ${g.rows}\n`,
+  );
 }
 
 /** Node values south row first and west to east, `values` floats per node. */

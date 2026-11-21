@@ -1,6 +1,8 @@
 # verify
 
-The differential harness compares geoprims with independent reference implementations. Its container pins and builds GeographicLib C++ 2.7, PROJ 9.9.0, H3 C 4.5.0, S2 C++ 0.13.1, NOAA WMM2025 C, and NGS HTDP 3.6.0 from their official source archives. Every archive is checked against its committed SHA-256 digest before it is built.
+The differential harness compares geoprims with independent reference implementations. Its container pins and builds GeographicLib C++ 2.7, PROJ 9.9.0, H3 C 4.5.0, S2 C++ 0.13.1, NOAA WMM2025 C, NGS HTDP 3.6.0, RichDEM 2.3.1, and WhiteboxTools Open Core 2.4.0 from their official source archives. Every archive is checked against its committed SHA-256 digest before it is built.
+
+RichDEM is GPLv3, so it is built as command-line programs and run only as external processes, never linked into geoprims. WhiteboxTools publishes no release binaries, so the image installs a pinned rustup for its own architecture, builds the command-line crate alone, and removes the toolchain again.
 
 Build the container and run one known-answer smoke case through every reference:
 

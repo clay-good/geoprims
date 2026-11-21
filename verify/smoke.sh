@@ -60,11 +60,14 @@ esac
 # The hydrology references: a fill and a D8 pointer through each, on one grid
 # both of them read (add-raster-hydrology task 2).
 #
-# The checks are facts the test grid makes true by construction, not numbers
-# copied from a run: a 5 by 5 plane sloping east, rim at 100 m, with one cell
-# dug to 90 m. Filling it must raise that cell to the surrounding surface and
-# leave no depression behind, and a D8 pointer over a plane must send every
-# interior cell the same way. The two tools number their directions
+# The checks are facts the test grid makes true by construction: a 5 by 5
+# plane sloping east in 1 m steps, 104 m down to 100 m, with the middle cell
+# dug from 102 m to 90 m. Filling a depression raises it to its spill point --
+# the lowest neighbour it can escape over, which here is the 101 m cell to its
+# east, not the 102 m the plane would have put there. (CI run 44960054301
+# caught that: the first version of this script asserted 102 and both tools
+# rightly said 101.) Filling must also leave no depression behind, and a D8
+# pointer over a plane must send every interior cell the same way. The two tools number their directions
 # differently and nothing here has measured which code each version uses, so
 # the script prints both codes rather than asserting one; pin them once CI has
 # run this and the numbers are known.
@@ -102,8 +105,8 @@ esac
 whitebox_tools -r=FillDepressions --dem="$hydro/dem.tif" -o="$hydro/wbt_fill.tif" > /dev/null \
   || fail "WhiteboxTools FillDepressions"
 wbt_pit=$(at "$hydro/wbt_fill.tif" 2 2)
-awk -v v="$wbt_pit" 'BEGIN { exit !(v >= 102 && v < 103) }' \
-  || fail "WhiteboxTools filled the pit to $wbt_pit, not to the 102 m around it"
+awk -v v="$wbt_pit" 'BEGIN { exit !(v >= 101 && v < 102) }' \
+  || fail "WhiteboxTools filled the pit to $wbt_pit, not to its 101 m spill point"
 whitebox_tools -r=D8Pointer --dem="$hydro/wbt_fill.tif" -o="$hydro/wbt_d8.tif" > /dev/null \
   || fail "WhiteboxTools D8Pointer"
 wbt_dir=$(at "$hydro/wbt_d8.tif" 2 1)
@@ -121,8 +124,8 @@ esac
 rd_depressions_flood.exe "$hydro/dem.tif" "$hydro/rd_fill.tif" 0 > /dev/null \
   || fail "RichDEM rd_depressions_flood"
 rd_pit=$(at "$hydro/rd_fill.tif" 2 2)
-awk -v v="$rd_pit" 'BEGIN { exit !(v >= 102 && v < 103) }' \
-  || fail "RichDEM filled the pit to $rd_pit, not to the 102 m around it"
+awk -v v="$rd_pit" 'BEGIN { exit !(v >= 101 && v < 102) }' \
+  || fail "RichDEM filled the pit to $rd_pit, not to its 101 m spill point"
 rd_has=$(rd_depressions_has.exe "$hydro/rd_fill.tif" 2>&1)
 case "$rd_has" in
   *[Nn]o*depression*|*"0"*) ;;

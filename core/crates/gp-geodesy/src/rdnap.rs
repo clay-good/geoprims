@@ -151,6 +151,7 @@ fn height_in(ctx: &mut Ctx, name: &str, what: &str) -> Result<f64, ToolError> {
 
 pub static RDNAP_FORWARD: ToolDef = ToolDef {
     id: "geodesy.datum.rdnaptrans",
+    stability: gp_base::tool::Stability::Stable,
     title: "GNSS position to RD and NAP by RDNAPTRANS2018",
     summary: "Turns an ETRS89 latitude, longitude, and ellipsoidal height into Dutch RD easting and northing and a NAP height by NSGI's official RDNAPTRANS™2018 transformation, with the grid convergence and the point scale factor.",
     aliases: &[
@@ -218,7 +219,7 @@ pub static RDNAP_FORWARD: ToolDef = ToolDef {
         ErrorCode::AssetUnavailable,
         ErrorCode::AssetIntegrity,
     ],
-    warnings: &["REALIZATION_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["REALIZATION_ASSUMED"],
     model: "RDNAPTRANS™2018 as NSGI defines it: the ETRS89 position carried to real RD Bessel by the rdtrans2018 correction grid, which holds the datum difference and the correction together, iterated because the grid is indexed by the Bessel coordinates being solved for; then the RD map projection, a Gauss conformal projection onto a sphere of radius √(RM·RN) at Amersfoort followed by an oblique stereographic projection onto the plane; and the height by NLGEO2018, H = h − N",
     accuracy: ACCURACY,
     when_to_use: "Use this to put a GNSS survey onto Dutch mapping: RD and NAP are the coordinates every Kadaster parcel, BGT feature, and AHN height model is published in, and RDNAPTRANS™2018 is the transformation NSGI defines, so the easting and northing it gives are the right ones by definition. The grid convergence and the point scale factor come with the answer, which is what turns a true bearing into a grid bearing and a ground distance into a grid distance.",
@@ -317,6 +318,7 @@ fn run_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static RDNAP_INVERSE: ToolDef = ToolDef {
     id: "geodesy.datum.rdnaptrans-inverse",
+    stability: gp_base::tool::Stability::Stable,
     title: "RD and NAP to GNSS position by RDNAPTRANS2018",
     summary: "Turns a Dutch RD easting and northing and a NAP height back into the ETRS89 latitude, longitude, and ellipsoidal height a GNSS receiver works in, by NSGI's official RDNAPTRANS™2018 transformation.",
     aliases: &[
@@ -371,7 +373,7 @@ pub static RDNAP_INVERSE: ToolDef = ToolDef {
         ErrorCode::AssetUnavailable,
         ErrorCode::AssetIntegrity,
     ],
-    warnings: &["REALIZATION_ASSUMED", "EXPERIMENTAL_TOOL"],
+    warnings: &["REALIZATION_ASSUMED"],
     model: "RDNAPTRANS™2018 in reverse: the inverse RD map projection, oblique stereographic back onto the sphere at Amersfoort and then the inverse Gauss conformal projection onto Bessel 1841, giving real RD Bessel; the rdtrans2018 correction grid read once at that point, because it is indexed there, which gives ETRS89; and the height by NLGEO2018, h = H + N",
     accuracy: ACCURACY,
     when_to_use: "Use this to take RD and NAP coordinates off Dutch mapping, a Kadaster extract, or a BGT feature and get the ETRS89 latitude, longitude, and ellipsoidal height to put into a GNSS receiver, a web map, or a dataset in another frame.",

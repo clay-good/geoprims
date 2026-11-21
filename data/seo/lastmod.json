@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "943712a199a86056",
+    "hash": "ec66df4391316ca6",
     "lastmod": "2026-11-21"
   },
   "/accuracy/": {
@@ -8,8 +8,8 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "9bdffd3c67e60798",
-    "lastmod": "2026-11-17"
+    "hash": "068fd35f99794919",
+    "lastmod": "2026-11-21"
   },
   "/aviation/": {
     "hash": "4dcbefcaa54954ae",
@@ -316,7 +316,7 @@
     "lastmod": "2026-11-14"
   },
   "/changelog/": {
-    "hash": "0e416c62c0752033",
+    "hash": "8c6074ac06155d78",
     "lastmod": "2026-11-21"
   },
   "/disclaimer/": {
@@ -648,11 +648,11 @@
     "lastmod": "2026-11-21"
   },
   "/geodesy/datum/rdnaptrans-inverse/": {
-    "hash": "b0826bad42737170",
+    "hash": "2261f4e47b7e579d",
     "lastmod": "2026-11-21"
   },
   "/geodesy/datum/rdnaptrans/": {
-    "hash": "d27fd585b0ed5de8",
+    "hash": "169930b0d594fabc",
     "lastmod": "2026-11-21"
   },
   "/geodesy/datum/transform/": {
@@ -1668,7 +1668,7 @@
     "lastmod": "2026-11-21"
   },
   "/methodology/": {
-    "hash": "2ab9165755cd0448",
+    "hash": "bbb6cb08cd0d895a",
     "lastmod": "2026-11-21"
   },
   "/navigation/": {
@@ -2516,7 +2516,7 @@
     "lastmod": "2026-11-14"
   },
   "/tools/": {
-    "hash": "6ce4c6787e4ac360",
+    "hash": "fd9c45b53cf12965",
     "lastmod": "2026-11-21"
   },
   "/units/": {
@@ -2780,7 +2780,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "da3c8db2bae101e1",
+    "hash": "9f797ec984b39c2f",
     "lastmod": "2026-11-21"
   },
   "/workflows/": {

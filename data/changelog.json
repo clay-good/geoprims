@@ -3,6 +3,16 @@
   "entries": [
     {
       "date": "2026-11-21",
+      "kind": "changed",
+      "tools": [
+        "geodesy.datum.rdnaptrans",
+        "geodesy.datum.rdnaptrans-inverse"
+      ],
+      "vectors": [],
+      "summary": "Both RDNAPTRANS2018 tools are now stable. Each has NSGI's own published check point, a derivation note, fifty-two golden vectors between them from PROJ applying NSGI's grids with every convergence and scale factor pinned, and invariant tests; the promotion report finds no problems. Their answers do not change. For MCP clients they join the national-grids direct toolset."
+    },
+    {
+      "date": "2026-11-21",
       "kind": "added",
       "tools": [
         "geodesy.datum.rdnaptrans",

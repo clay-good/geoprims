@@ -109,6 +109,62 @@ RUN curl -fL https://geodesy.noaa.gov/TOOLS/Htdp/HTDP-download.zip -o htdp.zip \
         -o /usr/local/bin/htdp \
     && rm -rf htdp htdp.zip
 
+# The hydrology references (add-raster-hydrology task 2). GDAL is here for
+# RichDEM's raster I/O, and its command-line tools make the grid the smoke
+# cases run through both of them.
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y \
+        gdal-bin \
+        libgdal-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# RichDEM (GPLv3): built as command-line programs and used only as external
+# processes, never linked into geoprims, which is what its licence requires
+# of us.
+RUN curl -fL https://github.com/r-barnes/richdem/archive/refs/tags/v2.3.1.tar.gz -o richdem.tar.gz \
+    && echo 'b232484bcbbeec063de8b0d02bc33f616da4509e12a7137bc87ea0b838ddba83  richdem.tar.gz' | sha256sum -c - \
+    && tar -xzf richdem.tar.gz \
+    && cmake -S richdem-2.3.1 -B richdem-build -G Ninja \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DUSE_GDAL=ON \
+        -DRICHDEM_NO_PROGRESS=ON \
+    && cmake --build richdem-build \
+    && install -m 0755 \
+        richdem-build/apps/rd_depressions_flood.exe \
+        richdem-build/apps/rd_depressions_breach.exe \
+        richdem-build/apps/rd_depressions_has.exe \
+        richdem-build/apps/rd_d8_flowdirs.exe \
+        richdem-build/apps/rd_flow_accumulation.exe \
+        /usr/local/bin/ \
+    && rm -rf richdem-2.3.1 richdem-build richdem.tar.gz
+
+# WhiteboxTools Open Core (MIT). It publishes no release binaries, so this
+# builds the workspace's command-line crate -- not the whitebox-runner GUI,
+# which would pull in a window toolkit. rustup pins per target rather than as
+# one installer, so the architecture is read rather than assumed, and the
+# toolchain goes away with the sources.
+RUN arch="$(dpkg --print-architecture)" \
+    && case "$arch" in \
+        amd64) target=x86_64-unknown-linux-gnu; \
+               sum=b1c8cb14e30889e7e2999e6b69e62d9e9b9ffc0f4df8180564d306d9680e6c55 ;; \
+        arm64) target=aarch64-unknown-linux-gnu; \
+               sum=9f608c142e0e38a78957d0661ba1dfaf0b6fb37184cfaa4b9a0aa57af6184282 ;; \
+        *) echo "no pinned rustup for $arch" >&2; exit 1 ;; \
+    esac \
+    && curl -fL "https://static.rust-lang.org/rustup/archive/1.29.3/$target/rustup-init" -o rustup-init \
+    && echo "$sum  rustup-init" | sha256sum -c - \
+    && chmod 0755 rustup-init \
+    && ./rustup-init -y --no-modify-path --profile minimal --default-toolchain 1.98.0 \
+    && curl -fL https://github.com/jblindsay/whitebox-tools/archive/refs/tags/v2.4.0.tar.gz -o wbt.tar.gz \
+    && echo 'f99f47e3d362cd3a1e8ac3f1e060ad7d0426244520ebd968f3ef01870fc1a955  wbt.tar.gz' | sha256sum -c - \
+    && tar -xzf wbt.tar.gz \
+    && ( cd whitebox-tools-2.4.0 \
+        && . "$HOME/.cargo/env" \
+        && cargo build --release --locked -p whitebox_tools ) \
+    && install -m 0755 whitebox-tools-2.4.0/target/release/whitebox_tools /usr/local/bin/whitebox_tools \
+    && ( . "$HOME/.cargo/env" && rustup self uninstall -y ) \
+    && rm -rf whitebox-tools-2.4.0 wbt.tar.gz rustup-init "$HOME/.cargo" "$HOME/.rustup"
+
 COPY verify/smoke.sh /usr/local/bin/reference-smoke
 RUN chmod 0755 /usr/local/bin/reference-smoke \
     && ldconfig \

@@ -102,13 +102,21 @@ case "$whitebox_version" in
   *2.4.0*) ;;
   *) fail "WhiteboxTools version: $whitebox_version" ;;
 esac
-whitebox_tools -r=FillDepressions --dem="$hydro/dem.tif" -o="$hydro/wbt_fill.tif" > /dev/null \
-  || fail "WhiteboxTools FillDepressions"
+run_quietly() {
+  label=$1
+  shift
+  if ! "$@" > "$hydro/out.txt" 2>&1; then
+    sed -n '1,20p' "$hydro/out.txt" >&2
+    fail "$label"
+  fi
+}
+run_quietly "WhiteboxTools FillDepressions" \
+  whitebox_tools -r=FillDepressions --dem="$hydro/dem.tif" -o="$hydro/wbt_fill.tif"
 wbt_pit=$(at "$hydro/wbt_fill.tif" 2 2)
 awk -v v="$wbt_pit" 'BEGIN { exit !(v >= 101 && v < 102) }' \
   || fail "WhiteboxTools filled the pit to $wbt_pit, not to its 101 m spill point"
-whitebox_tools -r=D8Pointer --dem="$hydro/wbt_fill.tif" -o="$hydro/wbt_d8.tif" > /dev/null \
-  || fail "WhiteboxTools D8Pointer"
+run_quietly "WhiteboxTools D8Pointer" \
+  whitebox_tools -r=D8Pointer --dem="$hydro/wbt_fill.tif" -o="$hydro/wbt_d8.tif"
 wbt_dir=$(at "$hydro/wbt_d8.tif" 2 1)
 [ -n "$wbt_dir" ] || fail "WhiteboxTools D8Pointer wrote no value"
 for col in 1 2 3; do
@@ -121,8 +129,8 @@ case "$richdem_version" in
   *2.3*) ;;
   *) fail "RichDEM version banner: $richdem_version" ;;
 esac
-rd_depressions_flood.exe "$hydro/dem.tif" "$hydro/rd_fill.tif" 0 > /dev/null \
-  || fail "RichDEM rd_depressions_flood"
+run_quietly "RichDEM rd_depressions_flood" \
+  rd_depressions_flood.exe "$hydro/dem.tif" "$hydro/rd_fill.tif" 0
 rd_pit=$(at "$hydro/rd_fill.tif" 2 2)
 awk -v v="$rd_pit" 'BEGIN { exit !(v >= 101 && v < 102) }' \
   || fail "RichDEM filled the pit to $rd_pit, not to its 101 m spill point"
@@ -131,8 +139,8 @@ case "$rd_has" in
   *[Nn]o*depression*|*"0"*) ;;
   *) fail "RichDEM still finds a depression after filling: $rd_has" ;;
 esac
-rd_d8_flowdirs.exe "$hydro/rd_fill.tif" "$hydro/rd_d8" > /dev/null \
-  || fail "RichDEM rd_d8_flowdirs"
+run_quietly "RichDEM rd_d8_flowdirs" \
+  rd_d8_flowdirs.exe "$hydro/rd_fill.tif" "$hydro/rd_d8"
 rd_dir=$(at "$hydro/rd_d8-flowdirs.tif" 2 1)
 [ -n "$rd_dir" ] || fail "RichDEM rd_d8_flowdirs wrote no value"
 for col in 1 2 3; do

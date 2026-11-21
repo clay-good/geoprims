@@ -902,6 +902,12 @@
           ]
         },
         {
+          "want": "carry a Swiss position between CH1903+ and ETRS89 by swisstopo's parameters",
+          "tools": [
+            "ch1903plus"
+          ]
+        },
+        {
           "want": "move Swiss coordinates between LV03 and LV95 by swisstopo's CHENyx06",
           "tools": [
             "chenyx06"

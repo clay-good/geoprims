@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-11-21",
+      "kind": "added",
+      "tools": [
+        "geodesy.datum.ch1903plus"
+      ],
+      "vectors": [],
+      "summary": "The Swiss datum step, CH1903+ to ETRS89 and back, by the three parameters swisstopo publishes. LV95 is a projection of CH1903+ and a GNSS position is on ETRS89, so this is what carries one to the other — about 160 m south-west and 50 m up across Switzerland. It reproduces every intermediate swisstopo prints for its five EUREF points, in both directions, and it repeats swisstopo's own warning on every answer: these are CH1903+'s parameters, and using them on a CH1903 position can be out by up to 1.6 m, which the CHENyx06 tool removes first. The tool is experimental."
+    },
+    {
+      "date": "2026-11-21",
       "kind": "changed",
       "tools": [
         "geodesy.datum.beta2007",

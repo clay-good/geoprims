@@ -1326,3 +1326,81 @@ fn beta2007_crosses_the_german_grids_and_picks_its_zones() {
     }));
     assert_eq!(r["error"]["code"], "OUT_OF_DOMAIN", "{r}");
 }
+
+#[test]
+fn ch1903plus_moves_switzerland_south_west_and_up_and_round_trips() {
+    // add-international-grids, geodesy/national-grids: the CH1903+ to ETRS89
+    // datum step by swisstopo's three parameters.
+    let call = |input: serde_json::Value| -> Value {
+        serde_json::from_str(&REGISTRY.invoke("geodesy.datum.ch1903plus", &input.to_string()))
+            .unwrap()
+    };
+    let num = |v: &Value, path: [&str; 2]| v["result"][path[0]][path[1]].as_f64().unwrap();
+    for (lat, lon, h) in [
+        (46.947975_f64, 7.447447_f64, 590.0_f64),
+        (47.370080, 8.544200, 455.0),
+        (46.207400, 6.155800, 420.0),
+        (46.497800, 9.838300, 1870.0),
+        (46.004400, 8.951600, 320.0),
+    ] {
+        let f = call(serde_json::json!({
+            "lat": lat, "lon": lon, "height": format!("{h} m"),
+        }));
+        assert_eq!(f["ok"], true, "{f}");
+        let (a, b) = (num(&f, ["lat", "value"]), num(&f, ["lon", "value"]));
+        // The translation carries a Swiss position south, west and up: about
+        // 145 m of latitude, 70 m of longitude, and 50 m of height.
+        assert!(a < lat && b < lon, "south and west: {f}");
+        let shift = num(&f, ["shift", "value"]);
+        assert!((140.0..190.0).contains(&shift), "{shift} m at {lat}, {lon}");
+        let up = num(&f, ["height_change", "value"]);
+        assert!(
+            (45.0..55.0).contains(&up),
+            "{up} m of height at {lat}, {lon}"
+        );
+        // The azimuth is into the third quadrant, south-west.
+        let az = num(&f, ["azimuth", "value"]);
+        assert!((180.0..270.0).contains(&az), "azimuth {az} at {lat}, {lon}");
+        // The reported shift is the horizontal move the answer implies.
+        assert!(
+            (num(&f, ["height", "value"]) - (h + up)).abs() < 1e-9,
+            "the height change is the difference: {f}"
+        );
+
+        // And back, to a nanodegree and a tenth of a millimetre.
+        let r = call(serde_json::json!({
+            "lat": a, "lon": b, "height": format!("{} m", num(&f, ["height", "value"])),
+            "direction": "to-ch1903-plus",
+        }));
+        assert_eq!(r["ok"], true, "{r}");
+        assert!((num(&r, ["lat", "value"]) - lat).abs() < 1e-11, "{r}");
+        assert!((num(&r, ["lon", "value"]) - lon).abs() < 1e-11, "{r}");
+        assert!((num(&r, ["height", "value"]) - h).abs() < 1e-4, "{r}");
+        // Going back moves it the other way, by the same amount. The two
+        // directions measure the move on different ellipsoids and from
+        // different latitudes, so they agree to centimetres rather than
+        // exactly.
+        assert!((num(&r, ["shift", "value"]) - shift).abs() < 0.05, "{r}");
+        assert!(
+            (num(&r, ["height_change", "value"]) + up).abs() < 1e-6,
+            "{r}"
+        );
+
+        // Every answer carries swisstopo's warning about CH1903 against
+        // CH1903+, which is the 1.6 m trap this tool cannot detect for you.
+        let note = f["meta"]["context"]["ch1903_note"]
+            .as_str()
+            .or_else(|| f["context"]["ch1903_note"].as_str())
+            .unwrap_or("");
+        assert!(note.contains("1.6 m"), "the CH1903 warning is missing: {f}");
+    }
+    // The height is part of the step: 100 m of height error moves the
+    // latitude about 2 mm, which is the figure the tool's limitations give.
+    let a = call(serde_json::json!({"lat": 46.95, "lon": 7.45, "height": "500 m"}));
+    let b = call(serde_json::json!({"lat": 46.95, "lon": 7.45, "height": "600 m"}));
+    let d = (num(&a, ["lat", "value"]) - num(&b, ["lat", "value"])).abs() * 111_320.0;
+    assert!(
+        (0.001..0.004).contains(&d),
+        "100 m of height moved the latitude {d} m"
+    );
+}

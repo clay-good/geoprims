@@ -37,20 +37,6 @@ fn qv(q: QT, s: &str, value: f64) -> Q {
     }
 }
 
-/// North and east, metres, between two nearby points on GRS 80.
-fn ground(lat: f64, dlat_deg: f64, dlon_deg: f64) -> (f64, f64) {
-    let (a, f) = (6_378_137.0, 1.0 / 298.257_222_101);
-    let e2 = f * (2.0 - f);
-    let s = lat.to_radians().sin();
-    let w = 1.0 - e2 * s * s;
-    let m = a * (1.0 - e2) / w.powf(1.5);
-    let n = a / w.sqrt();
-    (
-        dlat_deg.to_radians() * m,
-        dlon_deg.to_radians() * n * lat.to_radians().cos(),
-    )
-}
-
 pub static NZGD2000: ToolDef = ToolDef {
     id: "geodesy.datum.nzgd2000",
     title: "NZGD1949 to NZGD2000 by LINZ's grid",
@@ -241,7 +227,7 @@ fn run_nzgd2000(ctx: &mut Ctx) -> Result<Json, ToolError> {
     // The grid's offsets, NZGD1949 to NZGD2000, at the NZGD1949 point.
     let (old_lat, old_lon) = if to_2000 { (lat, lon) } else { (lat2, lon2) };
     let (dp, dl) = grid.offsets(old_lat, old_lon).ok_or_else(outside)?;
-    let (north, east) = ground(lat, lat2 - lat, lon2 - lon);
+    let (north, east) = gp_geo::beta2007::grs80().ground_offset(lat, lat2 - lat, lon2 - lon);
     let shift = north.hypot(east);
     let az = if shift == 0.0 {
         0.0

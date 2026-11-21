@@ -129,20 +129,6 @@ fn plane(ctx: &mut Ctx) -> Result<(f64, f64), ToolError> {
     Ok((e, n))
 }
 
-/// The ground distance between two nearby points, by the mean of the two
-/// ellipsoids' radii at the latitude, which is enough to report a datum shift.
-fn ground(lat: f64, dlat: f64, dlon: f64) -> f64 {
-    let (a, f) = beta2007::grs80();
-    let e2 = f * (2.0 - f);
-    let s = lat.to_radians().sin();
-    let w = 1.0 - e2 * s * s;
-    let meridian = a * (1.0 - e2) / w.powf(1.5);
-    let prime = a / w.sqrt();
-    let north = dlat.to_radians() * meridian;
-    let east = dlon.to_radians() * prime * lat.to_radians().cos();
-    north.hypot(east)
-}
-
 pub static BETA2007_FORWARD: ToolDef = ToolDef {
     id: "geodesy.datum.beta2007",
     stability: gp_base::tool::Stability::Stable,
@@ -280,11 +266,12 @@ fn run_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
     };
     let ((e, n), p, step) =
         beta2007::to_utm(&grid, gk, zone, east, north).ok_or_else(|| outside("/easting"))?;
-    let shift = ground(
+    let (north, east) = beta2007::grs80().ground_offset(
         step.dhdn.0,
         step.etrs89.0 - step.dhdn.0,
         step.etrs89.1 - step.dhdn.1,
     );
+    let shift = north.hypot(east);
     ctx.warnings
         .push(Warning::new("REALIZATION_ASSUMED", FRAME));
     ctx.accuracy = Some(ACCURACY.into());
@@ -473,11 +460,12 @@ fn run_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
     };
     let ((e, n), p, step) = beta2007::to_gauss_kruger(&grid, utm, gk, east, north)
         .ok_or_else(|| outside("/easting"))?;
-    let shift = ground(
+    let (north, east) = beta2007::grs80().ground_offset(
         step.dhdn.0,
         step.etrs89.0 - step.dhdn.0,
         step.etrs89.1 - step.dhdn.1,
     );
+    let shift = north.hypot(east);
     ctx.warnings
         .push(Warning::new("REALIZATION_ASSUMED", FRAME));
     ctx.accuracy = Some(ACCURACY.into());

@@ -12,22 +12,31 @@
 use crate::hgrid::Grid;
 use crate::proj;
 
+/// One of the ellipsoid catalog's entries, by id.
+fn ellipsoid(id: &str) -> crate::ellipsoid::Ellipsoid {
+    crate::ellipsoid::CATALOG
+        .iter()
+        .find(|e| e.id == id)
+        .copied()
+        .expect("the ellipsoid catalog lists it")
+}
+
 /// Bessel 1841, which the Gauss-Krüger zones are defined on.
-pub fn bessel() -> (f64, f64) {
-    (6_377_397.155, 1.0 / 299.152_812_8)
+pub fn bessel() -> crate::ellipsoid::Ellipsoid {
+    ellipsoid("bessel1841")
 }
 /// GRS 80, which ETRS89 and its UTM zones are defined on.
-pub fn grs80() -> (f64, f64) {
-    (6_378_137.0, 1.0 / 298.257_222_101)
+pub fn grs80() -> crate::ellipsoid::Ellipsoid {
+    ellipsoid("grs80")
 }
 
 /// A three-degree Gauss-Krüger zone: central meridian 3n, scale 1, and a
 /// false easting of n,500,000 m, so the easting states its own zone.
 pub fn gk_grid(zone: u8) -> proj::TmGrid {
-    let (a, f) = bessel();
+    let e = bessel();
     proj::TmGrid::new(
-        a,
-        f,
+        e.a,
+        e.f,
         0.0,
         3.0 * f64::from(zone),
         1.0,
@@ -38,10 +47,10 @@ pub fn gk_grid(zone: u8) -> proj::TmGrid {
 
 /// A UTM zone on GRS 80.
 pub fn utm_grid(zone: u8) -> proj::TmGrid {
-    let (a, f) = grs80();
+    let e = grs80();
     proj::TmGrid::new(
-        a,
-        f,
+        e.a,
+        e.f,
         0.0,
         6.0 * f64::from(zone) - 183.0,
         0.9996,

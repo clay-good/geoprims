@@ -92,6 +92,17 @@ impl Ellipsoid {
     pub fn quarter_meridian(&self) -> f64 {
         self.meridian_arc(90.0 * DEG)
     }
+
+    /// North and east on the ground, metres, for a small latitude and
+    /// longitude difference in degrees at a latitude in degrees. This is how
+    /// a datum shift is reported as a distance.
+    pub fn ground_offset(&self, lat: f64, dlat: f64, dlon: f64) -> (f64, f64) {
+        let phi = lat * DEG;
+        (
+            dlat * DEG * self.meridional_radius(phi),
+            dlon * DEG * self.prime_vertical_radius(phi) * cos(phi),
+        )
+    }
 }
 
 /// Carlson's RF by the duplication method, with the 7th-order series and

@@ -252,6 +252,14 @@
       ]
     },
     {
+      "id": "ch1903plus",
+      "term": "CH1903+",
+      "expansion": "Swiss datum of 1903, readjusted",
+      "definition": "The datum Switzerland's LV95 grid is defined on, tied to the Swiss frame CHTRS95 and so to ETRS89 by a fixed three-parameter translation; the earlier CH1903 differs from it by up to 1.6 m.",
+      "source": "swisstopo-formulas",
+      "relatedTools": []
+    },
+    {
       "id": "chenyx06",
       "term": "CHENyx06",
       "expansion": "swisstopo's LV03 to LV95 distortion data set",

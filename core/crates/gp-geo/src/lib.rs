@@ -1,6 +1,7 @@
 //! Shared geodesy math linked into several domain modules.
 pub mod beta2007;
 pub mod buffer;
+pub mod ch1903;
 pub mod chenyx06;
 pub mod civil;
 pub mod codes;

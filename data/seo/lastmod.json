@@ -1,7 +1,7 @@
 {
   "/": {
-    "hash": "0cbccad56b1b3044",
-    "lastmod": "2026-11-17"
+    "hash": "943712a199a86056",
+    "lastmod": "2026-11-21"
   },
   "/accuracy/": {
     "hash": "c114ed2bae28332d",
@@ -316,8 +316,8 @@
     "lastmod": "2026-11-14"
   },
   "/changelog/": {
-    "hash": "504718e2f770dc30",
-    "lastmod": "2026-11-17"
+    "hash": "0e416c62c0752033",
+    "lastmod": "2026-11-21"
   },
   "/disclaimer/": {
     "hash": "e80b39ff27cd55c5",
@@ -576,8 +576,8 @@
     "lastmod": "2026-11-14"
   },
   "/geodesy/": {
-    "hash": "54fbd64815cb1d05",
-    "lastmod": "2026-11-17"
+    "hash": "019c829637321bcd",
+    "lastmod": "2026-11-21"
   },
   "/geodesy/crs/": {
     "hash": "8e9dec7fe4cbd30b",
@@ -592,8 +592,8 @@
     "lastmod": "2026-11-14"
   },
   "/geodesy/datum/": {
-    "hash": "54489db2fccbdf49",
-    "lastmod": "2026-11-17"
+    "hash": "fd11f01b25c34df2",
+    "lastmod": "2026-11-21"
   },
   "/geodesy/datum/etrf/": {
     "hash": "197812efeefdcdfe",
@@ -644,12 +644,20 @@
     "lastmod": "2026-11-17"
   },
   "/geodesy/datum/plate-motion/": {
-    "hash": "5de1d2910889be99",
-    "lastmod": "2026-11-16"
+    "hash": "056c296912da89a2",
+    "lastmod": "2026-11-21"
+  },
+  "/geodesy/datum/rdnaptrans-inverse/": {
+    "hash": "b0826bad42737170",
+    "lastmod": "2026-11-21"
+  },
+  "/geodesy/datum/rdnaptrans/": {
+    "hash": "d27fd585b0ed5de8",
+    "lastmod": "2026-11-21"
   },
   "/geodesy/datum/transform/": {
-    "hash": "55f3e5d75a982f9b",
-    "lastmod": "2026-11-14"
+    "hash": "7b3300939789f92f",
+    "lastmod": "2026-11-21"
   },
   "/geodesy/ellipsoid/": {
     "hash": "651cccb9f0ada55c",
@@ -1656,12 +1664,12 @@
     "lastmod": "2026-11-14"
   },
   "/licenses/": {
-    "hash": "d67ecda8ece3b9ad",
-    "lastmod": "2026-11-17"
+    "hash": "a3c6316269adbb3a",
+    "lastmod": "2026-11-21"
   },
   "/methodology/": {
-    "hash": "8c57386a7fcc44be",
-    "lastmod": "2026-11-17"
+    "hash": "2ab9165755cd0448",
+    "lastmod": "2026-11-21"
   },
   "/navigation/": {
     "hash": "d1235b1179725f44",
@@ -1916,8 +1924,8 @@
     "lastmod": "2026-10-20"
   },
   "/quality/": {
-    "hash": "4320d24532c4f959",
-    "lastmod": "2026-11-17"
+    "hash": "8d16c7844f8ecf9d",
+    "lastmod": "2026-11-21"
   },
   "/raster/": {
     "hash": "4e92b0b57ee810e6",
@@ -2072,8 +2080,8 @@
     "lastmod": "2026-09-23"
   },
   "/sources/": {
-    "hash": "bc30540ed5fdce8d",
-    "lastmod": "2026-11-17"
+    "hash": "9ea70cd7f42cf498",
+    "lastmod": "2026-11-21"
   },
   "/survey/": {
     "hash": "3ec77c55d5c6b549",
@@ -2508,8 +2516,8 @@
     "lastmod": "2026-11-14"
   },
   "/tools/": {
-    "hash": "e25fae3cf7f4b200",
-    "lastmod": "2026-11-17"
+    "hash": "6ce4c6787e4ac360",
+    "lastmod": "2026-11-21"
   },
   "/units/": {
     "hash": "227e11d074c56226",
@@ -2772,8 +2780,8 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "240d17f0914bc6e0",
-    "lastmod": "2026-11-17"
+    "hash": "da3c8db2bae101e1",
+    "lastmod": "2026-11-21"
   },
   "/workflows/": {
     "hash": "266be28b6b5199c8",

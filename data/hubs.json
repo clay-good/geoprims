@@ -895,6 +895,13 @@
           ]
         },
         {
+          "want": "put a GNSS position onto Dutch RD coordinates and NAP heights by RDNAPTRANS2018",
+          "tools": [
+            "rdnaptrans",
+            "rdnaptrans-inverse"
+          ]
+        },
+        {
           "want": "move a New Zealand position between NZGD1949 and NZGD2000 by LINZ's grid",
           "tools": [
             "nzgd2000"

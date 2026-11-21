@@ -405,6 +405,34 @@
       ],
       "offlinePack": "Move New Zealand positions between NZGD1949 and NZGD2000 offline with LINZ's distortion grid.",
       "interpolation": "Bilinear between the 0.1° nodes, the reverse by iteration, as PROJ's hgridshift applies NTv2 grids"
+    },
+    {
+      "id": "rdnaptrans",
+      "version": "2018",
+      "title": "RDNAPTRANS™2018: the ETRS89 to RD correction grid and the NLGEO2018 quasi-geoid for the Netherlands",
+      "issuer": "Nederlandse Samenwerking Geodetische Infrastructuur (NSGI)",
+      "license": "CC BY 4.0",
+      "attribution": "Derived from work by Nederlandse Samenwerking Geodetische Infrastructuur (NSGI), licensed under CC BY 4.0.",
+      "sourceUrl": "https://cdn.proj.org/nl_nsgi_rdtrans2018.tif",
+      "retrievedAt": "2026-11-21",
+      "files": {
+        "rdtrans2018.grid": {
+          "sha256": "7c8cccebe3bf21f259a03435968632af9d9a126f910ea180e82ad650dabced0b",
+          "bytes": 738603
+        },
+        "nlgeo2018.grid": {
+          "sha256": "787857bb4ef7747871fae5f2e65bcc3db73718a21bf1b6bf38aca4438e4ad52a",
+          "bytes": 579155
+        }
+      },
+      "tiling": "one file per grid, each covering the European Netherlands and its North Sea EEZ, 6° by 6°, far coarser than the 1° privacy floor",
+      "loadPolicy": "on-demand",
+      "offlinePack": "Transform GNSS positions to RD and NAP offline with RDNAPTRANS2018.",
+      "consumers": [
+        "web-assets",
+        "mcp-server"
+      ],
+      "interpolation": "Bilinear between the nodes of the finer of NSGI's two nested grids that reaches the point, the ETRS89 to RD direction by iteration, as RDNAPTRANS™2018 sections 2.3 and 2.5 specify"
     }
   ]
 }

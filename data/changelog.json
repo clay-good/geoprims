@@ -2,6 +2,16 @@
   "note": "User-facing changes, newest first. kind is result-change (a published result moved: every superseded golden vector must be listed here), added, fixed, or changed. A result change beyond tolerance also bumps the tool version. Rendered at /changelog/ and checked by tools/trust/changelog.test.mjs.",
   "entries": [
     {
+      "date": "2026-11-21",
+      "kind": "added",
+      "tools": [
+        "geodesy.datum.rdnaptrans",
+        "geodesy.datum.rdnaptrans-inverse"
+      ],
+      "vectors": [],
+      "summary": "Dutch RD coordinates and NAP heights, by NSGI's official RDNAPTRANS2018. A GNSS latitude, longitude, and ellipsoidal height on ETRS89 becomes an RD easting and northing and a height above NAP, or the other way round, by the correction grid and quasi-geoid NSGI publishes and the RD double projection its specification defines, with the grid convergence and the point scale factor beside the answer. It reproduces the published check point to a tenth of a millimetre both ways and PROJ applying the same NSGI grids to the same tenth of a millimetre. The two grids are a 1.3 MB download the first time either tool runs, and an offline pack. Both tools are experimental."
+    },
+    {
       "date": "2026-11-16",
       "kind": "fixed",
       "tools": [

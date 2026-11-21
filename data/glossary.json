@@ -533,6 +533,7 @@
         "geodesy.datum.osi-polynomial-inverse",
         "geodesy.datum.ostn15",
         "geodesy.datum.ostn15-inverse",
+        "geodesy.datum.rdnaptrans",
         "geodesy.grid-ref.itm-inverse"
       ]
     },
@@ -727,7 +728,9 @@
       "relatedTools": [
         "geodesy.datum.osi-polynomial-inverse",
         "geodesy.datum.ostn15",
-        "geodesy.datum.ostn15-inverse"
+        "geodesy.datum.ostn15-inverse",
+        "geodesy.datum.rdnaptrans",
+        "geodesy.datum.rdnaptrans-inverse"
       ]
     },
     {
@@ -1359,6 +1362,17 @@
       ]
     },
     {
+      "id": "nap",
+      "term": "NAP",
+      "expansion": "Normaal Amsterdams Peil",
+      "definition": "The Dutch height datum, close to mean sea level at Amsterdam, which Dutch levels and the AHN height model are given above.",
+      "source": "nsgi-rdnaptrans2018",
+      "relatedTools": [
+        "geodesy.datum.rdnaptrans",
+        "geodesy.datum.rdnaptrans-inverse"
+      ]
+    },
+    {
       "id": "nasa",
       "term": "NASA",
       "expansion": "National Aeronautics and Space Administration",
@@ -1510,6 +1524,14 @@
       "relatedTools": [
         "aviation.airspace.tfr-area"
       ]
+    },
+    {
+      "id": "nsgi",
+      "term": "NSGI",
+      "expansion": "Nederlandse Samenwerking Geodetische Infrastructuur",
+      "definition": "The Dutch partnership that keeps the national geodetic infrastructure and publishes RDNAPTRANS, the official transformation between ETRS89 and RD and NAP.",
+      "source": "nsgi-rdnaptrans2018",
+      "relatedTools": []
     },
     {
       "id": "nsps",
@@ -1848,6 +1870,17 @@
         "navigation.geodesic.haversine",
         "navigation.geodesic.spherical-direct",
         "navigation.geodesic.spherical-inverse"
+      ]
+    },
+    {
+      "id": "rd",
+      "term": "RD",
+      "expansion": "Rijksdriehoeksmeting",
+      "definition": "The Netherlands' national coordinate grid, in metres east and north of a false origin near Amersfoort, which Dutch maps, parcels, and public datasets are drawn in.",
+      "source": "nsgi-rdnaptrans2018",
+      "relatedTools": [
+        "geodesy.datum.rdnaptrans",
+        "geodesy.datum.rdnaptrans-inverse"
       ]
     },
     {

@@ -12,6 +12,7 @@ pub mod nzgd;
 pub mod osi;
 pub mod ostn15;
 pub mod pairs;
+pub mod rdnap;
 pub mod spcs;
 pub mod spcs2022;
 
@@ -3292,6 +3293,8 @@ pub static TOOLS: &[&ToolDef] = &[
     &osi::OSI_POLYNOMIAL,
     &osi::OSI_POLYNOMIAL_INVERSE,
     &nzgd::NZGD2000,
+    &rdnap::RDNAP_FORWARD,
+    &rdnap::RDNAP_INVERSE,
     &pairs::LATLON_TO_BNG,
     &pairs::BNG_TO_LATLON,
     &pairs::MGA_TO_LATLON,

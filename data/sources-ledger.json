@@ -4396,6 +4396,26 @@
       "editionCheck": false
     },
     {
+      "id": "nsgi-rdnaptrans2018",
+      "name": "RDNAPTRANS™2018: Coordinate transformation to and from Stelsel van de Rijksdriehoeksmeting and Normaal Amsterdams Peil",
+      "issuer": "Nederlandse Samenwerking Geodetische Infrastructuur (NSGI)",
+      "currentEdition": "Version 27 June 2022",
+      "currentReleaseDate": "2022-06-27",
+      "cycleMonths": null,
+      "nextExpected": null,
+      "validFrom": null,
+      "validTo": null,
+      "lastVerified": "2026-11-21",
+      "verificationNote": "Read 2026-11-21: NSGI's own 49-page specification, sections 2 and 3, which give every formula and constant of the transformation both ways: the 3D similarity parameters with their fixed ellipsoidal height of 43 m, the correction grid and its iteration, the RD map projection (Amersfoort at 52°9′22.178″N 5°23′15.500″E, scale 0.9999079, false origin 155,000 m east and 463,000 m north, on Bessel 1841), and the NLGEO2018 quasi-geoid with H = h − N. NSGI states the transformation at 0.001 m inside the administrative borders of the Netherlands and 0.05 m outside them, and states that its two implementation variants agree to well under 0.001 m inside the grid bounds; the tools implement variant 2 for the horizontal step and variant 1 for the vertical, which is the pair PROJ applies. Access notes: nsgi.nl answered 404 to every scripted request from here, document paths included, so the specification was read from the copy at berthub.eu/articles/RDNAPTRANS2018_v220627.pdf, whose title page, authors, version date and CC BY-ND 4.0 notice are NSGI's own; the validation data set Z001_ETRS89andRDNAP.TXT could not be fetched for the same reason, and NSGI's Transformation API needs a key, so the published check point in the national-grids specification is the issuer figure the tools are held to, together with PROJ 9.9.0 applying NSGI's own grids. The grids themselves are PROJ-data's copies of nl_nsgi_rdtrans2018.tif (sha256 76538311…bf41de) and nl_nsgi_nlgeo2018.tif (sha256 f8e32c56…8992c0), both CC BY 4.0.",
+      "freeAccessUrl": "https://docs.geostandaarden.nl/crs/crs/",
+      "matchTerms": [
+        "RDNAPTRANS"
+      ],
+      "editionStatus": "current",
+      "legalStatus": null,
+      "editionCheck": false
+    },
+    {
       "id": "os-coordinate-systems-guide",
       "name": "A Guide to Coordinate Systems in Great Britain",
       "issuer": "Ordnance Survey",

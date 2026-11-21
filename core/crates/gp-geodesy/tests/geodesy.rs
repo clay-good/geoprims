@@ -84,6 +84,16 @@ fn catalog_lint_examples_vectors() {
             .unwrap(),
         );
     }
+    for g in ["rdtrans2018", "nlgeo2018"] {
+        gp_base::assets::put(
+            &format!("rdnaptrans@2018/{g}.grid"),
+            &std::fs::read(format!(
+                "{}/../../../assets/data/rdnaptrans/2018/{g}.grid",
+                env!("CARGO_MANIFEST_DIR")
+            ))
+            .unwrap(),
+        );
+    }
     gp_base::assets::put(
         "ostn15@2016/ostn15-osgm15.grid",
         &std::fs::read(format!(

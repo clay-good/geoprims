@@ -1350,3 +1350,204 @@ mod swiss_tests {
         }
     }
 }
+
+/// Oblique Stereographic (EPSG 9809), the double projection: a Gauss
+/// conformal projection from the ellipsoid to a sphere of radius
+/// √(RM·RN) at the origin, then an oblique stereographic projection of that
+/// sphere onto the plane. The formulas are NSGI's, as RDNAPTRANS™2018
+/// (27 June 2022) sections 2.4 and 3.1 write them for the Netherlands' RD;
+/// they are the general method, so the parameters are free.
+pub struct Sterea {
+    e: f64,
+    r: f64,
+    n: f64,
+    m: f64,
+    /// The origin's latitude on the sphere, radians.
+    phi0: f64,
+    lon0: f64,
+    k: f64,
+    fe: f64,
+    fn_: f64,
+    geod: Geodesic,
+}
+
+impl Sterea {
+    pub fn new(a: f64, f: f64, lat0: f64, lon0: f64, k: f64, fe: f64, fn_: f64) -> Sterea {
+        let (e2, e) = (f * (2.0 - f), sqrt(f * (2.0 - f)));
+        let p0 = lat0.to_radians();
+        let w = 1.0 - e2 * sin(p0) * sin(p0);
+        let rn = a / sqrt(w);
+        let rm = rn * (1.0 - e2) / w;
+        let n = sqrt(1.0 + e2 * pow(cos(p0), 4.0) / (1.0 - e2));
+        let phi0 = atan(sqrt(rm) / sqrt(rn) * tan(p0));
+        let q0 = isometric(p0, e);
+        let w0 = log(tan(FRAC_PI_4 + phi0 / 2.0));
+        Sterea {
+            e,
+            r: sqrt(rm * rn),
+            n,
+            m: w0 - n * q0,
+            phi0,
+            lon0,
+            k,
+            fe,
+            fn_,
+            geod: Geodesic::new(a, f),
+        }
+    }
+
+    /// The point on the conformal sphere: latitude and longitude, radians,
+    /// the longitude not wrapped.
+    fn sphere(&self, lat: f64, lon: f64) -> (f64, f64) {
+        let phi = lat.to_radians().clamp(-FRAC_PI_2, FRAC_PI_2);
+        let big = if phi.abs() >= FRAC_PI_2 - 1e-14 {
+            phi
+        } else {
+            2.0 * atan(exp(self.n * isometric(phi, self.e) + self.m)) - FRAC_PI_2
+        };
+        (
+            big,
+            self.n * dlon(lon, self.lon0).to_radians() + self.lon0.to_radians(),
+        )
+    }
+
+    fn en(&self, lat: f64, lon: f64) -> (f64, f64) {
+        let (big_phi, big_lam) = self.sphere(lat, lon);
+        let dl = big_lam - self.lon0.to_radians();
+        let half = sqrt(
+            pow(sin((big_phi - self.phi0) / 2.0), 2.0)
+                + pow(sin(dl / 2.0), 2.0) * cos(big_phi) * cos(self.phi0),
+        )
+        .clamp(0.0, 1.0);
+        if half < 1e-15 {
+            return (self.fe, self.fn_);
+        }
+        let cos_half = sqrt(1.0 - half * half);
+        if cos_half < 1e-15 {
+            return (f64::NAN, f64::NAN);
+        }
+        let den = 2.0 * half * cos_half;
+        let sa = sin(dl) * cos(big_phi) / den;
+        let ca = (sin(big_phi) - sin(self.phi0) + 2.0 * sin(self.phi0) * half * half)
+            / (2.0 * cos(self.phi0) * half * cos_half);
+        let r = 2.0 * self.k * self.r * (half / cos_half);
+        (self.fe + r * sa, self.fn_ + r * ca)
+    }
+
+    pub fn forward(&self, lat: f64, lon: f64) -> Grid {
+        let (e, n) = self.en(lat, lon);
+        if !e.is_finite() {
+            return Grid {
+                e,
+                n,
+                convergence: 0.0,
+                h: f64::INFINITY,
+                k: 0.0,
+            };
+        }
+        let (convergence, h, k) = factors(|la, lo| self.en(la, lo), &self.geod, lat, lon);
+        Grid {
+            e,
+            n,
+            convergence,
+            h,
+            k,
+        }
+    }
+
+    /// Latitude and longitude in degrees. The point opposite the origin on
+    /// the sphere is infinitely far away, so every plane coordinate has an
+    /// answer and this does not fail.
+    pub fn inverse(&self, x: f64, y: f64) -> (f64, f64) {
+        let (dx, dy) = (x - self.fe, y - self.fn_);
+        let r = dx.hypot(dy);
+        let psi = 2.0 * atan(r / (2.0 * self.k * self.r));
+        let (sa, ca) = if r < 1e-12 {
+            (0.0, 1.0)
+        } else {
+            (dx / r, dy / r)
+        };
+        let xb = cos(self.phi0) * cos(psi) - ca * sin(self.phi0) * sin(psi);
+        let yb = sa * sin(psi);
+        let zb = (ca * cos(self.phi0) * sin(psi) + sin(self.phi0) * cos(psi)).clamp(-1.0, 1.0);
+        let big_phi = asin(zb);
+        let big_lam = self.lon0.to_radians() + atan2(yb, xb);
+        // Back onto the ellipsoid: the inverse Gauss conformal projection,
+        // the latitude by the fixed-point iteration NSGI gives.
+        let w = log(tan(FRAC_PI_4 + big_phi / 2.0));
+        let q = (w - self.m) / self.n;
+        let mut phi = 0.0;
+        for _ in 0..40 {
+            let next =
+                2.0 * atan(exp(
+                    q + self.e / 2.0 * log((1.0 + self.e * sin(phi)) / (1.0 - self.e * sin(phi)))
+                )) - FRAC_PI_2;
+            let done = (next - phi).abs() < 1e-15;
+            phi = next;
+            if done {
+                break;
+            }
+        }
+        let lam = (big_lam - self.lon0.to_radians()) / self.n + self.lon0.to_radians();
+        (phi.to_degrees(), wrap(lam.to_degrees()))
+    }
+}
+
+/// The isometric latitude q of a geodetic latitude φ (radians) on an
+/// ellipsoid of first eccentricity e.
+fn isometric(phi: f64, e: f64) -> f64 {
+    log(tan(FRAC_PI_4 + phi / 2.0)) - e / 2.0 * log((1.0 + e * sin(phi)) / (1.0 - e * sin(phi)))
+}
+
+#[cfg(test)]
+mod sterea_tests {
+    use super::Sterea;
+
+    /// The Netherlands' RD projection, EPSG 28992's parameters on Bessel 1841.
+    fn rd() -> Sterea {
+        Sterea::new(
+            6_377_397.155,
+            1.0 / 299.152_812_8,
+            52.0 + 9.0 / 60.0 + 22.178 / 3600.0,
+            5.0 + 23.0 / 60.0 + 15.5 / 3600.0,
+            0.999_907_9,
+            155_000.0,
+            463_000.0,
+        )
+    }
+
+    #[test]
+    fn rd_agrees_with_proj_and_round_trips() {
+        // PROJ 9.9.0, +proj=sterea with EPSG 28992's parameters on Bessel.
+        for (lat, lon, e, n) in [
+            (52.0, 5.0, 128_383.474_527, 445_698.804_306),
+            (53.2, 6.5, 229_323.394_170, 579_711.597_578),
+            (51.0, 3.5, 22_517.133_388, 336_098.595_946),
+            (
+                52.0 + 9.0 / 60.0 + 22.178 / 3600.0,
+                5.0 + 23.0 / 60.0 + 15.5 / 3600.0,
+                155_000.0,
+                463_000.0,
+            ),
+            (55.0, 7.9, 315_816.318_667, 782_348.572_387),
+            (50.2, 2.1, -79_695.591_881, 250_645.908_356),
+        ] {
+            let g = rd().forward(lat, lon);
+            assert!((g.e - e).abs() < 1e-5, "{lat} {lon}: easting {} {e}", g.e);
+            assert!((g.n - n).abs() < 1e-5, "{lat} {lon}: northing {} {n}", g.n);
+            // Conformal: the two scales are the same.
+            assert!((g.h - g.k).abs() < 1e-9, "{lat} {lon}: {} {}", g.h, g.k);
+            let (p, l) = rd().inverse(e, n);
+            assert!((p - lat).abs() < 1e-10, "{lat}: {p}");
+            assert!((l - lon).abs() < 1e-10, "{lon}: {l}");
+        }
+        // At the origin the scale is the projection's own scale factor and
+        // grid north is true north.
+        let g = rd().forward(
+            52.0 + 9.0 / 60.0 + 22.178 / 3600.0,
+            5.0 + 23.0 / 60.0 + 15.5 / 3600.0,
+        );
+        assert!((g.k - 0.999_907_9).abs() < 1e-9, "scale {}", g.k);
+        assert!(g.convergence.abs() < 1e-7, "convergence {}", g.convergence);
+    }
+}

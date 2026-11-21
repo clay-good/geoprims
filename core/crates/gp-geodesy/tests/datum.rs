@@ -1016,3 +1016,131 @@ fn the_nzgd2000_grid_round_trips_and_moves_new_zealand_north_east() {
     let r = call(serde_json::json!({"lat": -33.0, "lon": 172.0}));
     assert_eq!(r["error"]["code"], "OUT_OF_DOMAIN", "{r}");
 }
+
+#[test]
+fn rdnaptrans_round_trips_and_its_factors_behave() {
+    // add-international-grids, geodesy/national-grids: RDNAPTRANS2018, read
+    // from the committed packages.
+    for g in ["rdtrans2018", "nlgeo2018"] {
+        gp_base::assets::put(
+            &format!("rdnaptrans@2018/{g}.grid"),
+            &std::fs::read(format!(
+                "{}/../../../assets/data/rdnaptrans/2018/{g}.grid",
+                env!("CARGO_MANIFEST_DIR")
+            ))
+            .unwrap(),
+        );
+    }
+    let fwd = |input: serde_json::Value| -> Value {
+        serde_json::from_str(&REGISTRY.invoke("geodesy.datum.rdnaptrans", &input.to_string()))
+            .unwrap()
+    };
+    let inv = |input: serde_json::Value| -> Value {
+        serde_json::from_str(
+            &REGISTRY.invoke("geodesy.datum.rdnaptrans-inverse", &input.to_string()),
+        )
+        .unwrap()
+    };
+    let num = |v: &Value, path: [&str; 2]| v["result"][path[0]][path[1]].as_f64().unwrap();
+    // The central point of the projection, Amersfoort, is the false origin.
+    let c = fwd(serde_json::json!({
+        "lat": 52.0 + 9.0 / 60.0 + 22.178 / 3600.0,
+        "lon": 5.0 + 23.0 / 60.0 + 15.5 / 3600.0,
+        "height": "43 m",
+    }));
+    assert_eq!(c["ok"], true, "{c}");
+    // The correction grid moves the point about 100 m before it is projected,
+    // so the answer is near the false origin, not on it.
+    assert!(
+        (num(&c, ["easting", "value"]) - 155_000.0).abs() < 200.0
+            && (num(&c, ["northing", "value"]) - 463_000.0).abs() < 200.0,
+        "{c}"
+    );
+    assert!(
+        (c["result"]["scale_factor"].as_f64().unwrap() - 0.999_907_9).abs() < 1e-7,
+        "the scale at the central point is the projection's own: {c}"
+    );
+    assert!(
+        num(&c, ["convergence", "value"]).abs() < 0.01,
+        "grid north is true north at the central point: {c}"
+    );
+
+    for (lat, lon, h) in [
+        (52.373_056_f64, 4.892_778_f64, 45.0_f64),
+        (51.909_400, 4.486_800, 43.5),
+        (53.219_400, 6.568_100, 45.5),
+        (50.848_900, 5.688_900, 92.0),
+        (52.223_300, 6.890_000, 48.0),
+        (51.498_900, 3.613_100, 41.0),
+    ] {
+        let f = fwd(serde_json::json!({"lat": lat, "lon": lon, "height": format!("{h} m")}));
+        assert_eq!(f["ok"], true, "{f}");
+        let (x, y) = (
+            num(&f, ["easting", "value"]),
+            num(&f, ["northing", "value"]),
+        );
+        // RD puts the whole country in the first quadrant, under 300 km east
+        // and between 300 and 620 km north.
+        assert!((0.0..300_000.0).contains(&x), "{x} at {lat}, {lon}");
+        assert!((300_000.0..620_000.0).contains(&y), "{y} at {lat}, {lon}");
+        // NLGEO2018 is 39 to 49 m over its whole grid, and H = h − N.
+        let n = num(&f, ["geoid_height", "value"]);
+        assert!((39.0..49.0).contains(&n), "quasi-geoid {n} at {lat}, {lon}");
+        assert!(
+            (num(&f, ["nap_height", "value"]) - (h - n)).abs() < 1e-9,
+            "H = h − N: {f}"
+        );
+        // Grid north leans the way the meridian does: east of the central
+        // meridian the convergence is positive, west of it negative, and it
+        // is small, under 2.5° anywhere the grids reach. A convergence in the
+        // wrong units would be 57 times this.
+        let conv = num(&f, ["convergence", "value"]);
+        let lon0 = 5.0_f64 + 23.0 / 60.0 + 15.5 / 3600.0;
+        assert!(conv.abs() < 2.5, "convergence {conv} at {lat}, {lon}");
+        assert!(
+            conv.signum() == (lon - lon0).signum(),
+            "convergence {conv} at {lon} against the central meridian {lon0}"
+        );
+        // Roughly (λ − λ₀) sin φ, the spherical value, within a tenth.
+        let about = (lon - lon0) * lat.to_radians().sin();
+        assert!(
+            (conv - about).abs() < 0.1,
+            "convergence {conv} against {about}"
+        );
+        // The scale factor stays near unity over the country.
+        let k = f["result"]["scale_factor"].as_f64().unwrap();
+        assert!((0.9999..1.0004).contains(&k), "scale {k} at {lat}, {lon}");
+
+        // And back: the same point, to a nanodegree and a tenth of a millimetre.
+        let r = inv(serde_json::json!({
+            "easting": format!("{x} m"),
+            "northing": format!("{y} m"),
+            "nap_height": format!("{} m", h - n),
+        }));
+        assert_eq!(r["ok"], true, "{r}");
+        assert!((num(&r, ["lat", "value"]) - lat).abs() < 1e-9, "{r}");
+        assert!((num(&r, ["lon", "value"]) - lon).abs() < 1e-9, "{r}");
+        assert!((num(&r, ["height", "value"]) - h).abs() < 1e-4, "{r}");
+        // The two tools report the same factors at the same point.
+        assert!(
+            (num(&r, ["convergence", "value"]) - conv).abs() < 1e-9,
+            "{r}"
+        );
+    }
+
+    // Outside the grids there is no answer, on any side.
+    for (lat, lon) in [
+        (48.858_200, 2.294_500),
+        (53.550_000, 9.993_000),
+        (51.034_800, 1.900_000),
+        (49.950_000, 5.000_000),
+        (56.100_000, 5.000_000),
+    ] {
+        let f = fwd(serde_json::json!({"lat": lat, "lon": lon, "height": "43 m"}));
+        assert_eq!(f["error"]["code"], "OUT_OF_DOMAIN", "{lat}, {lon}: {f}");
+    }
+    let r = inv(serde_json::json!({
+        "easting": "1500000 m", "northing": "463000 m", "nap_height": "0 m",
+    }));
+    assert_eq!(r["error"]["code"], "OUT_OF_DOMAIN", "{r}");
+}

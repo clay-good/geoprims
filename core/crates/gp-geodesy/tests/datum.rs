@@ -1144,3 +1144,76 @@ fn rdnaptrans_round_trips_and_its_factors_behave() {
     }));
     assert_eq!(r["error"]["code"], "OUT_OF_DOMAIN", "{r}");
 }
+
+#[test]
+fn chenyx06_removes_the_swiss_distortion_and_round_trips() {
+    // add-international-grids, geodesy/national-grids: LV03 to LV95 by
+    // swisstopo's CHENyx06, read from the committed package.
+    gp_base::assets::put(
+        "chenyx06@2009/chenyx06a.grid",
+        &std::fs::read(format!(
+            "{}/../../../assets/data/chenyx06/2009/chenyx06a.grid",
+            env!("CARGO_MANIFEST_DIR")
+        ))
+        .unwrap(),
+    );
+    let call = |input: serde_json::Value| -> Value {
+        serde_json::from_str(&REGISTRY.invoke("geodesy.datum.chenyx06", &input.to_string()))
+            .unwrap()
+    };
+    let num = |v: &Value, path: [&str; 2]| v["result"][path[0]][path[1]].as_f64().unwrap();
+    for (e03, n03) in [
+        (600_421.0_f64, 199_498.0_f64),
+        (683_206.0, 248_234.0),
+        (500_675.0, 117_769.0),
+        (717_252.0, 96_025.0),
+        (745_509.0, 254_309.0),
+        (624_222.0, 97_277.0),
+    ] {
+        let f = call(serde_json::json!({
+            "easting": format!("{e03} m"), "northing": format!("{n03} m"),
+        }));
+        assert_eq!(f["ok"], true, "{f}");
+        let (e, n) = (
+            num(&f, ["easting", "value"]),
+            num(&f, ["northing", "value"]),
+        );
+        // LV95 is LV03 plus a round 2,000 km and the distortion, which
+        // swisstopo puts at up to 1.6 m and is never zero.
+        let (de, dn) = (
+            num(&f, ["east_shift", "value"]),
+            num(&f, ["north_shift", "value"]),
+        );
+        assert!(
+            (e - (e03 + 2_000_000.0) - de).abs() < 1e-9,
+            "the shift is the difference: {f}"
+        );
+        assert!(
+            (n - (n03 + 1_000_000.0) - dn).abs() < 1e-9,
+            "the shift is the difference: {f}"
+        );
+        let shift = num(&f, ["shift", "value"]);
+        assert!((shift - de.hypot(dn)).abs() < 1e-9, "{f}");
+        assert!(
+            (0.01..1.7).contains(&shift),
+            "{shift} m of distortion at {e03}, {n03}"
+        );
+        // And the reverse lands back on the LV03 point, to a tenth of a
+        // millimetre.
+        let r = call(serde_json::json!({
+            "easting": format!("{e} m"), "northing": format!("{n} m"), "direction": "to-lv03",
+        }));
+        assert_eq!(r["ok"], true, "{r}");
+        assert!((num(&r, ["easting", "value"]) - e03).abs() < 1e-4, "{r}");
+        assert!((num(&r, ["northing", "value"]) - n03).abs() < 1e-4, "{r}");
+        // Both directions report the same distortion, LV03 to LV95.
+        assert!((num(&r, ["east_shift", "value"]) - de).abs() < 1e-6, "{r}");
+        assert!((num(&r, ["north_shift", "value"]) - dn).abs() < 1e-6, "{r}");
+    }
+    // Outside the grid there is no answer.
+    for (e, n) in [(530_000.0, -40_000.0), (1_000_000.0, 300_000.0)] {
+        let f =
+            call(serde_json::json!({"easting": format!("{e} m"), "northing": format!("{n} m")}));
+        assert_eq!(f["error"]["code"], "OUT_OF_DOMAIN", "{e}, {n}: {f}");
+    }
+}

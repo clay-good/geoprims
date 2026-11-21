@@ -3,6 +3,15 @@
   "entries": [
     {
       "date": "2026-11-21",
+      "kind": "added",
+      "tools": [
+        "geodesy.datum.chenyx06"
+      ],
+      "vectors": [],
+      "summary": "Swiss LV03 to LV95 by swisstopo's CHENyx06, and back. LV95's false origin is a round 2,000 km from LV03's, so subtracting it looks like the conversion — but that leaves the distortion of the 1903 triangulation behind, which swisstopo puts at up to 1.6 m. This applies the grid swisstopo publishes for it and reports the distortion itself, so you can see what the round shift would have cost. It reproduces the five EUREF points swisstopo publishes within 8 mm. The grid is a 1.7 MB download the first time it runs, and an offline pack. The tool is experimental."
+    },
+    {
+      "date": "2026-11-21",
       "kind": "changed",
       "tools": [
         "geodesy.datum.rdnaptrans",

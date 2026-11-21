@@ -290,6 +290,11 @@
       "tool": "geodesy.projection.etrs89-forward",
       "source": "IOGP Guidance Note 7-2 (September 2019), section 3.3.2",
       "reason": "Guidance Note 7-2 prints its ETRS-LAEA example to the centimetre, so the printed values carry half a centimetre of rounding; the exact projection, PROJ, and this core agree on 3962799.4510 m and 2999718.8532 m, inside it."
+    },
+    {
+      "tool": "geodesy.datum.chenyx06",
+      "source": "swisstopo, Formulas and constants (December 2016), section 7",
+      "reason": "swisstopo's five published EUREF points are transformed with FINELTRA, its triangulated affine transformation of CHENyx06, which it distributes as a triangle file rather than a grid; this tool applies the grid approximation of the same differences that swisstopo's own documentation offers beside FINELTRA, and the two differ by up to 8.0 mm at these five points (the worst is Monte Generoso's northing). The tolerance is that measured difference, not a margin: against PROJ on the same grid the vectors hold to 0.01 mm, and the round 2,000 km shift these replace is out by up to 1.48 m."
     }
   ]
 }

@@ -236,6 +236,14 @@
       ]
     },
     {
+      "id": "chenyx06",
+      "term": "CHENyx06",
+      "expansion": "swisstopo's LV03 to LV95 distortion data set",
+      "definition": "The data set swisstopo publishes for the up to 1.6 m distortion between Switzerland's LV03 and LV95 grids, applied by its FINELTRA triangulated transformation or by a grid approximation of the same differences.",
+      "source": "swisstopo-formulas",
+      "relatedTools": []
+    },
+    {
       "id": "cmv",
       "term": "CMV",
       "expansion": "converted meteorological visibility",
@@ -1171,6 +1179,7 @@
       "definition": "The older Swiss national grid, the same projection with a false origin of 600,000 east and 200,000 north.",
       "source": "swisstopo-formulas",
       "relatedTools": [
+        "geodesy.datum.chenyx06",
         "geodesy.projection.lv95-forward"
       ]
     },
@@ -1181,6 +1190,7 @@
       "definition": "The Swiss national grid in use since 1995, whose coordinates start at 2,600,000 east and 1,200,000 north.",
       "source": "swisstopo-formulas",
       "relatedTools": [
+        "geodesy.datum.chenyx06",
         "geodesy.projection.lv95-forward",
         "geodesy.projection.lv95-inverse"
       ]

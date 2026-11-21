@@ -1,5 +1,6 @@
 //! Shared geodesy math linked into several domain modules.
 pub mod buffer;
+pub mod chenyx06;
 pub mod civil;
 pub mod codes;
 pub mod compass;

@@ -84,6 +84,14 @@ fn catalog_lint_examples_vectors() {
             .unwrap(),
         );
     }
+    gp_base::assets::put(
+        "chenyx06@2009/chenyx06a.grid",
+        &std::fs::read(format!(
+            "{}/../../../assets/data/chenyx06/2009/chenyx06a.grid",
+            env!("CARGO_MANIFEST_DIR")
+        ))
+        .unwrap(),
+    );
     for g in ["rdtrans2018", "nlgeo2018"] {
         gp_base::assets::put(
             &format!("rdnaptrans@2018/{g}.grid"),

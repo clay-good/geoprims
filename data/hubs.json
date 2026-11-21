@@ -895,6 +895,12 @@
           ]
         },
         {
+          "want": "move Swiss coordinates between LV03 and LV95 by swisstopo's CHENyx06",
+          "tools": [
+            "chenyx06"
+          ]
+        },
+        {
           "want": "put a GNSS position onto Dutch RD coordinates and NAP heights by RDNAPTRANS2018",
           "tools": [
             "rdnaptrans",

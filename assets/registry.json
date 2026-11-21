@@ -383,6 +383,30 @@
       "interpolation": "Bilinear on a 1 km Irish Transverse Mercator grid resampled bilinearly from the 48\" by 72\" geodetic grid, as Ordnance Survey's Transformations and OSGM15 User Guide (v1.3, 2020) describes"
     },
     {
+      "id": "chenyx06",
+      "version": "2009",
+      "title": "CHENyx06: the LV03 to LV95 distortion of the Swiss triangulation",
+      "issuer": "Federal Office of Topography swisstopo",
+      "license": "CC0 1.0",
+      "attribution": "Derived from work by swisstopo, released under CC0 1.0.",
+      "sourceUrl": "https://cdn.proj.org/ch_swisstopo_CHENyx06a.tif",
+      "retrievedAt": "2026-11-21",
+      "files": {
+        "chenyx06a.grid": {
+          "sha256": "c7b772302bd786b9a9f30f81a58473381f032e7038992ef5e401ce296483575d",
+          "bytes": 1655209
+        }
+      },
+      "tiling": "one file for Switzerland and its borders, 5.5° by 2.6°, far coarser than the 1° privacy floor",
+      "loadPolicy": "on-demand",
+      "offlinePack": "Move Swiss coordinates between LV03 and LV95 offline with CHENyx06.",
+      "consumers": [
+        "web-assets",
+        "mcp-server"
+      ],
+      "interpolation": "Bilinear between the 30-arcsecond nodes, the reverse by iteration, as PROJ's hgridshift applies NTv2 grids; the grid is the approximation swisstopo's own documentation offers beside its FINELTRA transformation"
+    },
+    {
       "id": "nzgd2000-grid",
       "version": "0005",
       "title": "NZGD1949 to NZGD2000 distortion grid (nzgd2kgrid0005)",

@@ -143,6 +143,12 @@ RUN curl -fL https://github.com/r-barnes/richdem/archive/refs/tags/v2.3.1.tar.gz
 # which would pull in a window toolkit. rustup pins per target rather than as
 # one installer, so the architecture is read rather than assumed, and the
 # toolchain goes away with the sources.
+#
+# Not --locked: upstream's committed Cargo.lock carries a checksum for
+# tsp-rs 0.1.0 that no longer matches what crates.io serves, so --locked
+# refuses to build at all (CI run 44957292545). What is pinned here is the
+# source archive's digest and, in the smoke case, the version the binary
+# reports; the dependency tree is cargo's to resolve.
 RUN arch="$(dpkg --print-architecture)" \
     && case "$arch" in \
         amd64) target=x86_64-unknown-linux-gnu; \
@@ -160,7 +166,7 @@ RUN arch="$(dpkg --print-architecture)" \
     && tar -xzf wbt.tar.gz \
     && ( cd whitebox-tools-2.4.0 \
         && . "$HOME/.cargo/env" \
-        && cargo build --release --locked -p whitebox_tools ) \
+        && cargo build --release -p whitebox_tools ) \
     && install -m 0755 whitebox-tools-2.4.0/target/release/whitebox_tools /usr/local/bin/whitebox_tools \
     && ( . "$HOME/.cargo/env" && rustup self uninstall -y ) \
     && rm -rf whitebox-tools-2.4.0 wbt.tar.gz rustup-init "$HOME/.cargo" "$HOME/.rustup"

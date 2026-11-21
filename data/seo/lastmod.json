@@ -1,6 +1,6 @@
 {
   "/": {
-    "hash": "a94f735bcb5f89ee",
+    "hash": "45c64770153b0ac4",
     "lastmod": "2026-11-21"
   },
   "/accuracy/": {
@@ -8,7 +8,7 @@
     "lastmod": "2026-09-23"
   },
   "/agents/": {
-    "hash": "37dc23c1a402bf7b",
+    "hash": "77eb7866de29b828",
     "lastmod": "2026-11-21"
   },
   "/aviation/": {
@@ -316,7 +316,7 @@
     "lastmod": "2026-11-14"
   },
   "/changelog/": {
-    "hash": "0eea59d0b3a8b468",
+    "hash": "ef459d3dfccb4bfc",
     "lastmod": "2026-11-21"
   },
   "/disclaimer/": {
@@ -596,11 +596,11 @@
     "lastmod": "2026-11-21"
   },
   "/geodesy/datum/beta2007-inverse/": {
-    "hash": "e94abb0eb602315f",
+    "hash": "1534e2be1d5ea06b",
     "lastmod": "2026-11-21"
   },
   "/geodesy/datum/beta2007/": {
-    "hash": "26018e1063aa26f8",
+    "hash": "386423fa19c00837",
     "lastmod": "2026-11-21"
   },
   "/geodesy/datum/chenyx06/": {
@@ -1680,7 +1680,7 @@
     "lastmod": "2026-11-21"
   },
   "/methodology/": {
-    "hash": "1205183b101b3bc6",
+    "hash": "008c088f191292e8",
     "lastmod": "2026-11-21"
   },
   "/navigation/": {
@@ -2528,7 +2528,7 @@
     "lastmod": "2026-11-14"
   },
   "/tools/": {
-    "hash": "80c40009d14b32b6",
+    "hash": "a91081f5e6014c09",
     "lastmod": "2026-11-21"
   },
   "/units/": {
@@ -2792,7 +2792,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "f4dab77657156f4e",
+    "hash": "116925d2dc237d7e",
     "lastmod": "2026-11-21"
   },
   "/workflows/": {

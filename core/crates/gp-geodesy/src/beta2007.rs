@@ -145,6 +145,7 @@ fn ground(lat: f64, dlat: f64, dlon: f64) -> f64 {
 
 pub static BETA2007_FORWARD: ToolDef = ToolDef {
     id: "geodesy.datum.beta2007",
+    stability: gp_base::tool::Stability::Stable,
     title: "Gauss-Krüger to ETRS89 UTM by BeTA2007",
     summary: "Turns a German DHDN Gauss-Krüger easting and northing into ETRS89 UTM by AdV's BeTA2007 grid, the one national transformation that replaced the state-by-state ones, with the UTM zone picked for you.",
     aliases: &[
@@ -208,11 +209,7 @@ pub static BETA2007_FORWARD: ToolDef = ToolDef {
         ErrorCode::AssetUnavailable,
         ErrorCode::AssetIntegrity,
     ],
-    warnings: &[
-        "REALIZATION_ASSUMED",
-        "NONSTANDARD_ZONE",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["REALIZATION_ASSUMED", "NONSTANDARD_ZONE"],
     model: "AdV's BeTA2007 NTv2 grid, latitude and longitude offsets at 10 arcminutes of longitude and 6 of latitude across Germany, interpolated bilinearly: the Gauss-Krüger coordinates unprojected on the three-degree zone their easting names, on Bessel 1841, the offsets added to give ETRS89, and the result projected on UTM, on GRS 80, by Karney's series",
     accuracy: ACCURACY,
     when_to_use: "Use this to bring older German data onto current mapping: Gauss-Krüger on DHDN is what state cadastral and topographic data was published in before the ETRS89 UTM changeover, and BeTA2007 is the transformation AdV defines for the move, so it is the one that matches official conversions. The easting already names its Gauss-Krüger zone, so there is no zone to look up, and the UTM zone is picked from where the point lands.",
@@ -333,6 +330,7 @@ fn run_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
 
 pub static BETA2007_INVERSE: ToolDef = ToolDef {
     id: "geodesy.datum.beta2007-inverse",
+    stability: gp_base::tool::Stability::Stable,
     title: "ETRS89 UTM to Gauss-Krüger by BeTA2007",
     summary: "Turns a German ETRS89 UTM easting and northing back into DHDN Gauss-Krüger by AdV's BeTA2007 grid, with the three-degree zone picked for you and its number in front of the easting as German data carries it.",
     aliases: &[
@@ -406,11 +404,7 @@ pub static BETA2007_INVERSE: ToolDef = ToolDef {
         ErrorCode::AssetUnavailable,
         ErrorCode::AssetIntegrity,
     ],
-    warnings: &[
-        "REALIZATION_ASSUMED",
-        "NONSTANDARD_ZONE",
-        "EXPERIMENTAL_TOOL",
-    ],
+    warnings: &["REALIZATION_ASSUMED", "NONSTANDARD_ZONE"],
     model: "AdV's BeTA2007 NTv2 grid in reverse: the UTM coordinates unprojected on their zone, on GRS 80, the grid iterated until the DHDN90 point whose offsets land on that ETRS89 position settles, and the result projected on the three-degree Gauss-Krüger zone, on Bessel 1841, with the zone number put in front of the easting",
     accuracy: ACCURACY,
     when_to_use: "Use this to give a position in the Gauss-Krüger coordinates older German records, plans, and datasets are kept in, when the job itself is in ETRS89 UTM. The answer carries the zone number in front of the easting, which is how German data writes it.",

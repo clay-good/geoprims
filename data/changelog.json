@@ -3,6 +3,16 @@
   "entries": [
     {
       "date": "2026-11-21",
+      "kind": "changed",
+      "tools": [
+        "geodesy.datum.beta2007",
+        "geodesy.datum.beta2007-inverse"
+      ],
+      "vectors": [],
+      "summary": "Both BeTA2007 tools are now stable. Each has AdV's own printed test records as its worked example, a derivation note, fifty-five golden vectors between them with every zone pinned exactly, and invariant tests; the promotion report finds no problems. Their answers do not change. For MCP clients they join the national-grids direct toolset."
+    },
+    {
+      "date": "2026-11-21",
       "kind": "added",
       "tools": [
         "geodesy.datum.beta2007",

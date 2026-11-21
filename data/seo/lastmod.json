@@ -316,7 +316,7 @@
     "lastmod": "2026-11-14"
   },
   "/changelog/": {
-    "hash": "3f978675b6c65c25",
+    "hash": "76c1e0c139ec6e0b",
     "lastmod": "2026-11-21"
   },
   "/disclaimer/": {
@@ -596,15 +596,15 @@
     "lastmod": "2026-11-21"
   },
   "/geodesy/datum/beta2007-inverse/": {
-    "hash": "8e43e1333b3c215b",
+    "hash": "e91d13a5d5cfa034",
     "lastmod": "2026-11-21"
   },
   "/geodesy/datum/beta2007/": {
-    "hash": "2f4f9a2719e0d5fd",
+    "hash": "a50eac321a1dac71",
     "lastmod": "2026-11-21"
   },
   "/geodesy/datum/ch1903plus/": {
-    "hash": "78a8d4ec333345e1",
+    "hash": "17ba60e77e2b86b4",
     "lastmod": "2026-11-21"
   },
   "/geodesy/datum/chenyx06/": {
@@ -664,11 +664,11 @@
     "lastmod": "2026-11-21"
   },
   "/geodesy/datum/rdnaptrans-inverse/": {
-    "hash": "2261f4e47b7e579d",
+    "hash": "99f9dd5815b7b217",
     "lastmod": "2026-11-21"
   },
   "/geodesy/datum/rdnaptrans/": {
-    "hash": "169930b0d594fabc",
+    "hash": "a12ba4abbe2f1e34",
     "lastmod": "2026-11-21"
   },
   "/geodesy/datum/transform/": {
@@ -2796,7 +2796,7 @@
     "lastmod": "2026-09-19"
   },
   "/verification/0.1.0/": {
-    "hash": "b22d91328f72ad5e",
+    "hash": "0b33268bbfeca923",
     "lastmod": "2026-11-21"
   },
   "/workflows/": {

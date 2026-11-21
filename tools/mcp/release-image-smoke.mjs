@@ -4,7 +4,9 @@ import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { verifyRelease } from '../../mcp/verify.mjs';
 
-assert.equal(verifyRelease(), 12);
+// One per shipped artifact: the Wasm modules, the catalog and the server's
+// own files. The national-grids module took this from 12 to 13.
+assert.equal(verifyRelease(), 13);
 const child = spawn(process.execPath, ['mcp/server.mjs'], { stdio: ['pipe', 'pipe', 'inherit'] });
 const replies = [];
 child.stdout.setEncoding('utf8');

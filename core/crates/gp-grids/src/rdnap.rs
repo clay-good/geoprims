@@ -287,21 +287,21 @@ fn run_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
             format!("Δφ {:.6}\", Δλ {:.6}\"", step.offsets.0, step.offsets.1),
         );
         ctx.step(
-            "The RD projection",
-            "Gauss conformal onto the sphere at Amersfoort, then oblique stereographic onto the plane, scale 0.9999079",
-            format!("{:.9}°, {:.9}°", step.bessel.0, step.bessel.1),
-            format!(
-                "{} m east",
-                gp_base::display::number(p.e, Precision::Decimals(4), ctx.options.format)
-            ),
-        );
-        ctx.step(
             "The height",
             "H = h − N, the quasi-geoid height from NLGEO2018 at the ETRS89 position",
             format!("{h:.4} m − {n:.4} m"),
             format!(
                 "{} m",
                 gp_base::display::number(nap, Precision::Decimals(4), ctx.options.format)
+            ),
+        );
+        ctx.step(
+            "The RD projection",
+            "Gauss conformal onto the sphere at Amersfoort, then oblique stereographic onto the plane, scale 0.9999079",
+            format!("{:.9}°, {:.9}°", step.bessel.0, step.bessel.1),
+            format!(
+                "{} m",
+                gp_base::display::number(p.e, Precision::Decimals(4), ctx.options.format)
             ),
         );
     }
@@ -447,21 +447,21 @@ fn run_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
             format!("Δφ {:.6}\", Δλ {:.6}\"", step.offsets.0, step.offsets.1),
         );
         ctx.step(
-            "On ETRS89",
-            "the offsets added",
-            format!("{:.9}°, {:.9}°", step.bessel.0, step.bessel.1),
-            format!(
-                "{}°",
-                gp_base::display::number(lat, Precision::Decimals(9), ctx.options.format)
-            ),
-        );
-        ctx.step(
             "The height",
             "h = H + N, the quasi-geoid height from NLGEO2018 at the ETRS89 position",
             format!("{nap:.4} m + {n:.4} m"),
             format!(
                 "{} m",
                 gp_base::display::number(h, Precision::Decimals(4), ctx.options.format)
+            ),
+        );
+        ctx.step(
+            "On ETRS89",
+            "the offsets added",
+            format!("{:.9}°, {:.9}°", step.bessel.0, step.bessel.1),
+            format!(
+                "{}°",
+                gp_base::display::number(lat, Precision::Decimals(9), ctx.options.format)
             ),
         );
     }

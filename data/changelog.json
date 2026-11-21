@@ -3,6 +3,19 @@
   "entries": [
     {
       "date": "2026-11-21",
+      "kind": "fixed",
+      "tools": [
+        "geodesy.datum.rdnaptrans",
+        "geodesy.datum.rdnaptrans-inverse",
+        "geodesy.datum.beta2007",
+        "geodesy.datum.beta2007-inverse",
+        "geodesy.datum.ch1903plus"
+      ],
+      "vectors": [],
+      "summary": "The “How we got this” panel on the five newest national-grid tools now finishes on the answer the page leads with, instead of on a side calculation or a line with the zone number folded into it. Every number is the same; only the order of the steps and the wording of the last one changed."
+    },
+    {
+      "date": "2026-11-21",
       "kind": "changed",
       "tools": [],
       "vectors": [],

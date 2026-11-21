@@ -250,9 +250,8 @@ fn run_ch1903plus(ctx: &mut Ctx) -> Result<Json, ToolError> {
             },
             format!("X {:.3} m, Y {:.3} m, Z {:.3} m", b.0, b.1, b.2),
             format!(
-                "{}°, {:.4} m",
-                gp_base::display::number(lat2, Precision::Decimals(9), ctx.options.format),
-                h2
+                "{}°",
+                gp_base::display::number(lat2, Precision::Decimals(9), ctx.options.format)
             ),
         );
     }

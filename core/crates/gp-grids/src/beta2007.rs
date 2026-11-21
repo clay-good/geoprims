@@ -296,10 +296,12 @@ fn run_forward(ctx: &mut Ctx) -> Result<Json, ToolError> {
         );
         ctx.step(
             "Onto UTM",
-            "the offsets added to reach ETRS89, then transverse Mercator on GRS 80, scale 0.9996",
+            format!(
+                "the offsets added to reach ETRS89, then transverse Mercator on GRS 80, scale 0.9996, on zone {zone}"
+            ),
             format!("{:.9}°, {:.9}°", step.etrs89.0, step.etrs89.1),
             format!(
-                "zone {zone}, {} m east",
+                "{} m",
                 gp_base::display::number(e, Precision::Decimals(4), ctx.options.format)
             ),
         );
@@ -487,10 +489,12 @@ fn run_inverse(ctx: &mut Ctx) -> Result<Json, ToolError> {
         );
         ctx.step(
             "Onto the Gauss-Krüger zone",
-            "transverse Mercator on Bessel 1841, scale 1, with the zone number in front of the easting",
+            format!(
+                "transverse Mercator on Bessel 1841, scale 1, on zone {gk}, with the zone number in front of the easting"
+            ),
             format!("{:.9}°, {:.9}°", step.dhdn.0, step.dhdn.1),
             format!(
-                "zone {gk}, {} m east",
+                "{} m",
                 gp_base::display::number(e, Precision::Decimals(4), ctx.options.format)
             ),
         );

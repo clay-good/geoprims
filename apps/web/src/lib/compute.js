@@ -1,6 +1,7 @@
 // Main-thread client for the compute worker. Only the latest request per key
 // resolves; older ones are dropped as stale (web "stale-result" behavior).
 import { fileBytes, rangeSource } from '../../../../packages/runtime/src/files.mjs';
+import { moduleFor } from '../../../../packages/runtime/src/modules.mjs';
 import { exportRasterScene, processRasterScene } from '../../../../packages/runtime/src/raster.mjs';
 
 let worker;
@@ -8,7 +9,6 @@ let seq = 0;
 const waiting = new Map();
 const latest = new Map();
 const files = new Map();
-const moduleFor = (tool) => (tool.startsWith('units.') ? 'base' : tool.split('.')[0]);
 const fileKey = (tool, handle) => `${moduleFor(tool)}\0${handle}`;
 
 function ensure() {

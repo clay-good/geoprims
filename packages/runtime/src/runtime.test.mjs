@@ -17,6 +17,23 @@ import { moduleFor, nodeHost } from './node.mjs';
 
 const root = new URL('../../..', import.meta.url).pathname;
 
+test('only modules.mjs decides which module a tool is in', () => {
+  // The website's main thread, its compute worker, the worker host and the
+  // Node host all need this mapping. Each had grown its own copy of
+  // "the domain, except units", and when the national grids moved into their
+  // own module three of the four were left behind: the site answered
+  // UNSUPPORTED for eleven tools, which only the nightly browser run caught.
+  // One definition now, and this fails if another appears.
+  const sources = [
+    'packages/runtime/src/node.mjs',
+    'packages/runtime/src/worker-host.mjs',
+    'apps/web/src/lib/compute.js',
+    'apps/web/src/lib/compute.worker.js',
+  ];
+  const defines = sources.filter((f) => /(const|function)\s+moduleFor\s*[=(]/.test(readFileSync(join(root, f), 'utf8')));
+  assert.deepEqual(defines, [], 'these define their own moduleFor instead of importing it');
+});
+
 test('every tool\'s module matches the one the catalog reports', () => {
   // moduleFor derives a tool's Wasm module from its id, with a short list of
   // exceptions where a module boundary does not follow the domain. The

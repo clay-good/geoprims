@@ -2,6 +2,7 @@
 // the same Wasm modules as the MCP server through packages/runtime.
 import { assetProvider } from '../../../../packages/runtime/src/assets.mjs';
 import { loadModule } from '../../../../packages/runtime/src/module.mjs';
+import { moduleFor } from '../../../../packages/runtime/src/modules.mjs';
 import { detectValues } from './detect.js';
 import { prefillActions } from './prefill.js';
 import { readCoordinate } from './coordinate.mjs';
@@ -49,7 +50,6 @@ const assets = async (want) => {
 };
 
 const modules = new Map();
-const moduleFor = (id) => (id.startsWith('units.') ? 'base' : id.split('.')[0]);
 const get = (name) => {
   if (!modules.has(name)) {
     modules.set(

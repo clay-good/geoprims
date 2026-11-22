@@ -4,7 +4,7 @@
 // robustness"). Calls run one at a time, in order.
 import { Worker } from 'node:worker_threads';
 import { fileBytes } from './files.mjs';
-import { MODULE_EXCEPTIONS } from './node.mjs';
+import { moduleFor } from './modules.mjs';
 
 const workerUrl = new URL('./worker-main.mjs', import.meta.url);
 
@@ -22,12 +22,6 @@ export function workerHost(wasmDir, {
   let searchIndex = null; // re-sent to a fresh worker after a restart
   const files = new Map(); // private file bytes re-sent after a worker restart
 
-  const moduleFor = (tool) => {
-    for (const [prefix, module] of MODULE_EXCEPTIONS) {
-      if (tool.startsWith(prefix)) return module;
-    }
-    return tool.split('.')[0];
-  };
   const fileKey = (tool, handle) => `${moduleFor(tool)}\0${handle}`;
   const restoreState = () => {
     if (searchIndex) worker.postMessage({ id: -1, method: 'searchLoad', args: [searchIndex] });
